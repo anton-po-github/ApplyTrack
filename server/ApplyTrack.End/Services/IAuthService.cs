@@ -13,7 +13,19 @@ public abstract record SignupResult
     public sealed record EmailTaken : SignupResult;
 }
 
+/// <summary>Every expected outcome of signin.</summary>
+public abstract record SigninResult
+{
+    private SigninResult() { }
+
+    public sealed record Succeeded(AuthResponse Auth) : SigninResult;
+
+    public sealed record InvalidCredentials : SigninResult;
+}
+
 public interface IAuthService
 {
     Task<SignupResult> SignupAsync(SignupInput input, CancellationToken ct);
+
+    Task<SigninResult> SigninAsync(SigninInput input, CancellationToken ct);
 }

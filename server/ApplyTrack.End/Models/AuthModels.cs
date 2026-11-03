@@ -9,3 +9,8 @@ public sealed record SignupRequest(string? Email, string? Password, string? Disp
 public sealed record UserProfile(Guid Id, string Email, string DisplayName);
 
 public sealed record AuthResponse(string Token, long ExpiresAtUnixSeconds, UserProfile User);
+
+public sealed record SigninRequest(string? Email, string? Password)
+{
+    public override string ToString() => nameof(SigninRequest); // never print the password
+}

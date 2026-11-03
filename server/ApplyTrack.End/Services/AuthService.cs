@@ -55,4 +55,41 @@ public sealed class AuthService(
             new AuthResponse(token.Token, token.ExpiresAtUnixSeconds, profile)
         );
     }
+
+    public async Task<SigninResult> SigninAsync(SigninInput input, CancellationToken ct)
+    {
+        // O(1): one seek on the unique index of Email.
+        SigninRow? user = await db
+            .Database.SqlQuery<SigninRow>(
+                $@"SELECT ""Id"", ""DisplayName"", ""PasswordHash""
+                   FROM ""Users""
+                   WHERE ""Email"" = {input.Email}"
+            )
+            .FirstOrDefaultAsync(ct);
+
+        // ALWAYS run the hash check, even when the user does not exist.
+        // With a null hash, Verify does the same work against a dummy hash.
+        bool passwordOk = hasher.Verify(input.Password, user?.PasswordHash);
+
+        if (user is null || !passwordOk)
+        {
+            logger.LogWarning("[AUTH FAULT] Failed signin attempt.");
+            return new SigninResult.InvalidCredentials();
+        }
+
+        TokenResult token = tokens.Create(user.Id);
+        var profile = new UserProfile(user.Id, input.Email, user.DisplayName);
+
+        return new SigninResult.Succeeded(
+            new AuthResponse(token.Token, token.ExpiresAtUnixSeconds, profile)
+        );
+    }
+}
+
+/// <summary>The only columns signin needs. Never contains the whole user row.</summary>
+internal sealed class SigninRow
+{
+    public Guid Id { get; set; }
+    public string DisplayName { get; set; } = string.Empty;
+    public string PasswordHash { get; set; } = string.Empty;
 }

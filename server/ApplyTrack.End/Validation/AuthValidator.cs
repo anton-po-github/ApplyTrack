@@ -2,6 +2,16 @@ using ApplyTrack.End.Models;
 
 namespace ApplyTrack.End.Validation;
 
+public sealed record SigninInput(string Email, string Password)
+{
+    public override string ToString() => nameof(SigninInput); // never print the password
+}
+
+public sealed record SigninValidation(
+    SigninInput? Input,
+    IReadOnlyDictionary<string, string> Errors
+);
+
 /// <summary>Clean, validated signup data. Only the validator can make it.</summary>
 public sealed record SignupInput(string Email, string Password, string DisplayName)
 {
@@ -43,6 +53,29 @@ public static class AuthValidator
         return errors.Count == 0
             ? new SignupValidation(new SignupInput(email, password, displayName), errors)
             : new SignupValidation(null, errors);
+    }
+
+    // Signin checks only "is it there" and "is it sane". It never explains the password rules.
+    public static SigninValidation ValidateSignin(SigninRequest? request)
+    {
+        var errors = new Dictionary<string, string>();
+
+        string email = (request?.Email ?? string.Empty).Trim().ToLowerInvariant();
+        string password = request?.Password ?? string.Empty;
+
+        if (email.Length == 0)
+            errors["email"] = "Email is required.";
+        else if (email.Length > MaxEmailLength)
+            errors["email"] = "Email is too long.";
+
+        if (string.IsNullOrWhiteSpace(password))
+            errors["password"] = "Password is required.";
+        else if (password.Length > MaxPasswordLength)
+            errors["password"] = "Password is too long."; // stops CPU abuse in PBKDF2
+
+        return errors.Count == 0
+            ? new SigninValidation(new SigninInput(email, password), errors)
+            : new SigninValidation(null, errors);
     }
 
     private static string? CheckEmail(string email)
