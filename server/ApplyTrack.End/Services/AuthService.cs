@@ -84,6 +84,27 @@ public sealed class AuthService(
             new AuthResponse(token.Token, token.ExpiresAtUnixSeconds, profile)
         );
     }
+
+    public async Task<UserProfile?> GetProfileAsync(Guid userId, CancellationToken ct)
+    {
+        // O(1): read by primary key.
+        ProfileRow? row = await db
+            .Database.SqlQuery<ProfileRow>(
+                $@"SELECT ""Id"", ""Email"", ""DisplayName""
+                   FROM ""Users""
+                   WHERE ""Id"" = {userId}"
+            )
+            .FirstOrDefaultAsync(ct);
+
+        return row is null ? null : new UserProfile(row.Id, row.Email, row.DisplayName);
+    }
+}
+
+internal sealed class ProfileRow
+{
+    public Guid Id { get; set; }
+    public string Email { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
 }
 
 /// <summary>The only columns signin needs. Never contains the whole user row.</summary>

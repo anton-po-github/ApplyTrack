@@ -28,4 +28,7 @@ public interface IAuthService
     Task<SignupResult> SignupAsync(SignupInput input, CancellationToken ct);
 
     Task<SigninResult> SigninAsync(SigninInput input, CancellationToken ct);
+
+    /// <summary>Null when the user does not exist (for example, was deleted).</summary>
+    Task<UserProfile?> GetProfileAsync(Guid userId, CancellationToken ct);
 }

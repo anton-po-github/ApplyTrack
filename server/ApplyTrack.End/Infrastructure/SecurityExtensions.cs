@@ -3,6 +3,7 @@ using System.Text;
 using System.Threading.RateLimiting;
 using ApplyTrack.End.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
@@ -57,7 +58,11 @@ public static class SecurityExtensions
                 };
             });
 
-        services.AddAuthorization();
+        // Secure by default: every endpoint needs a signed-in user,
+        // unless it is marked .AllowAnonymous() on purpose.
+        services
+            .AddAuthorizationBuilder()
+            .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
         return services;
     }
 

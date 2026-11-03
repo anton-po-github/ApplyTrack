@@ -47,30 +47,31 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // ---------- Endpoints ----------
-app.MapGet("/api/ping", () => Results.Ok(new { status = "ok" }));
+app.MapGet("/api/ping", () => Results.Ok(new { status = "ok" })).AllowAnonymous();
 
 app.MapMethods(
-    "/health",
-    new[] { HttpMethods.Get, HttpMethods.Head },
-    IResult (HttpContext context, IConfiguration config) =>
-    {
-        string? expected = config["CronJob:KeepAliveToken"];
-
-        // No token configured = endpoint closed (fail safe).
-        if (
-            string.IsNullOrWhiteSpace(expected)
-            || !context.Request.Headers.TryGetValue("X-ApplyTrack-KeepAlive", out var token)
-            || token != expected
-        )
+        "/health",
+        new[] { HttpMethods.Get, HttpMethods.Head },
+        IResult (HttpContext context, IConfiguration config) =>
         {
-            return Results.Unauthorized();
-        }
+            string? expected = config["CronJob:KeepAliveToken"];
 
-        return HttpMethods.IsHead(context.Request.Method)
-            ? Results.Ok()
-            : Results.Ok("ApplyTrack_Systems_Online");
-    }
-);
+            // No token configured = endpoint closed (fail safe).
+            if (
+                string.IsNullOrWhiteSpace(expected)
+                || !context.Request.Headers.TryGetValue("X-ApplyTrack-KeepAlive", out var token)
+                || token != expected
+            )
+            {
+                return Results.Unauthorized();
+            }
+
+            return HttpMethods.IsHead(context.Request.Method)
+                ? Results.Ok()
+                : Results.Ok("ApplyTrack_Systems_Online");
+        }
+    )
+    .AllowAnonymous();
 
 app.MapAuthEndpoints();
 
