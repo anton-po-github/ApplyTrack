@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:phase2_widgets/app.dart';
-import 'package:phase2_widgets/features/counter/counter_screen.dart';
-import 'package:phase2_widgets/features/home/home_screen.dart';
-import 'package:phase2_widgets/router/app_router.dart';
+import 'package:apply_track/app.dart';
+import 'package:apply_track/features/counter/counter_screen.dart';
+import 'package:apply_track/features/home/home_screen.dart';
+import 'package:apply_track/router/app_router.dart';
 
 void main() {
   Future<void> pumpApp(

@@ -1,6 +1,6 @@
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:phase2_widgets/theme/app_theme.dart';
+import 'package:apply_track/theme/app_theme.dart';
 
 import 'package:http/http.dart' as http;
 
@@ -28,7 +28,7 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Phase 2 Widgets',
+      title: 'ApplyTrack',
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: ThemeMode.system,

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:phase2_widgets/features/counter/counter.dart';
+import 'package:apply_track/features/counter/counter.dart';
 
 void main() {
   test('starts at 0', () {

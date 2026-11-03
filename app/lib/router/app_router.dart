@@ -1,10 +1,10 @@
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:phase2_widgets/features/counter/counter_screen.dart';
-import 'package:phase2_widgets/features/home/home_screen.dart';
-import 'package:phase2_widgets/features/home/not_found_screen.dart';
-import 'package:phase2_widgets/features/layout_demo/widgets/layout_demo_screen.dart';
-import 'package:phase2_widgets/features/signup/signup_screen.dart';
+import 'package:apply_track/features/counter/counter_screen.dart';
+import 'package:apply_track/features/home/home_screen.dart';
+import 'package:apply_track/features/home/not_found_screen.dart';
+import 'package:apply_track/features/layout_demo/widgets/layout_demo_screen.dart';
+import 'package:apply_track/features/signup/signup_screen.dart';
 
 abstract final class AppRoutes {
   static const String home = '/';

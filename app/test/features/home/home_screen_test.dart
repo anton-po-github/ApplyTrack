@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:phase2_widgets/features/home/home_screen.dart';
+import 'package:apply_track/features/home/home_screen.dart';
 
 void main() {
   Future<List<Offset>> cardPositions(WidgetTester tester, double width) async {

@@ -1,5 +1,5 @@
-import 'package:phase2_widgets/features/counter/counter.dart';
-import 'package:phase2_widgets/features/counter/counter_store.dart';
+import 'package:apply_track/features/counter/counter.dart';
+import 'package:apply_track/features/counter/counter_store.dart';
 
 final class FakeCounterStore implements CounterStore {
   FakeCounterStore([this.initial = const Counter()]);

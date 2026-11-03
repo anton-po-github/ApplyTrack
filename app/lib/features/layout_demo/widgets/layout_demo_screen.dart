@@ -1,6 +1,6 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:phase2_widgets/features/layout_demo/widgets/demo_box.dart';
-import 'package:phase2_widgets/features/layout_demo/widgets/section_title.dart';
+import 'package:apply_track/features/layout_demo/widgets/demo_box.dart';
+import 'package:apply_track/features/layout_demo/widgets/section_title.dart';
 
 class LayoutDemoScreen extends StatelessWidget {
   const LayoutDemoScreen({super.key});

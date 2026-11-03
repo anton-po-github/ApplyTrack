@@ -1,6 +1,6 @@
 {
-    "name": "phase2_widgets",
-    "short_name": "phase2_widgets",
+    "name": "apply_track",
+    "short_name": "apply_track",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

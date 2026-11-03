@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:phase2_widgets/features/signup/signup_validators.dart';
+import 'package:apply_track/features/signup/signup_validators.dart';
 
 void main() {
   group('name', () {

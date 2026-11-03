@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:phase2_widgets/features/counter/counter.dart';
-import 'package:phase2_widgets/features/counter/counter_providers.dart';
+import 'package:apply_track/features/counter/counter.dart';
+import 'package:apply_track/features/counter/counter_providers.dart';
 
 class CounterScreen extends ConsumerWidget {
   const CounterScreen({super.key});

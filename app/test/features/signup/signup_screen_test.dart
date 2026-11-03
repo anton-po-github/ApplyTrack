@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:phase2_widgets/features/signup/signup_gateway.dart';
-import 'package:phase2_widgets/features/signup/signup_providers.dart';
-import 'package:phase2_widgets/features/signup/signup_screen.dart';
+import 'package:apply_track/features/signup/signup_gateway.dart';
+import 'package:apply_track/features/signup/signup_providers.dart';
+import 'package:apply_track/features/signup/signup_screen.dart';
 
 final class FakeSignupGateway implements SignupGateway {
   FakeSignupGateway(this.result);

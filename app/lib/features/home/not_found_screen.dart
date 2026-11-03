@@ -1,6 +1,6 @@
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:phase2_widgets/router/app_router.dart';
+import 'package:apply_track/router/app_router.dart';
 
 class NotFoundScreen extends StatelessWidget {
   const NotFoundScreen({super.key, required this.location});

@@ -8,7 +8,7 @@ class WelcomeScreen extends StatelessWidget {
     final ThemeData theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Phase 2: Widgets !!')),
+      appBar: AppBar(title: const Text('ApplyTrack')),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),

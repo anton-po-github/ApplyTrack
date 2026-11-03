@@ -1,8 +1,8 @@
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:phase2_widgets/core/layout/max_content_width.dart';
-import 'package:phase2_widgets/core/layout/window_size.dart';
-import 'package:phase2_widgets/router/app_router.dart';
+import 'package:apply_track/core/layout/max_content_width.dart';
+import 'package:apply_track/core/layout/window_size.dart';
+import 'package:apply_track/router/app_router.dart';
 
 final class HomeDestination {
   const HomeDestination({
@@ -47,7 +47,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Phase 2')),
+      appBar: AppBar(title: const Text('ApplyTrack')),
       body: MaxContentWidth(
         maxWidth: 1000,
         child: LayoutBuilder(

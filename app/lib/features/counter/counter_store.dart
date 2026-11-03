@@ -1,4 +1,4 @@
-import 'package:phase2_widgets/features/counter/counter.dart';
+import 'package:apply_track/features/counter/counter.dart';
 
 abstract interface class CounterStore {
   Counter load();

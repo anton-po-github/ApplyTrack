@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:phase2_widgets/features/signup/signup_gateway.dart';
-import 'package:phase2_widgets/features/signup/signup_providers.dart';
-import 'package:phase2_widgets/features/signup/signup_validators.dart';
-import 'package:phase2_widgets/core/layout/max_content_width.dart';
+import 'package:apply_track/features/signup/signup_gateway.dart';
+import 'package:apply_track/features/signup/signup_providers.dart';
+import 'package:apply_track/features/signup/signup_validators.dart';
+import 'package:apply_track/core/layout/max_content_width.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});

@@ -1,4 +1,4 @@
-package com.example.phase2_widgets
+package com.antonpo.applytrack
 
 import io.flutter.embedding.android.FlutterActivity
 

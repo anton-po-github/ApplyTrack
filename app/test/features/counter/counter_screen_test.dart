@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:phase2_widgets/features/counter/counter.dart';
-import 'package:phase2_widgets/features/counter/counter_providers.dart';
-import 'package:phase2_widgets/features/counter/counter_screen.dart';
+import 'package:apply_track/features/counter/counter.dart';
+import 'package:apply_track/features/counter/counter_providers.dart';
+import 'package:apply_track/features/counter/counter_screen.dart';
 
 import 'fake_counter_store.dart';
 

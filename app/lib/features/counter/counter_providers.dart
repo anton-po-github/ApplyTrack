@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phase2_widgets/features/counter/counter.dart';
-import 'package:phase2_widgets/features/counter/counter_store.dart';
+import 'package:apply_track/features/counter/counter.dart';
+import 'package:apply_track/features/counter/counter_store.dart';
 
 final Provider<CounterStore> counterStoreProvider = Provider<CounterStore>(
   (Ref ref) => InMemoryCounterStore(),

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:phase2_widgets/features/layout_demo/widgets/demo_box.dart';
-import 'package:phase2_widgets/features/layout_demo/widgets/layout_demo_screen.dart';
+import 'package:apply_track/features/layout_demo/widgets/demo_box.dart';
+import 'package:apply_track/features/layout_demo/widgets/layout_demo_screen.dart';
 
 void main() {
   Future<void> pumpScreen(WidgetTester tester) async {
