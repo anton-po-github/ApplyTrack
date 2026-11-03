@@ -89,11 +89,11 @@ var defaultConnection =
     ?? throw new InvalidOperationException("Database connection string is missing.");
 
 builder.Services.AddDbContextPool<ApplyTrackDbContext>(options =>
-    options.UseNpgsql(defaultConnection, b => b.MigrationsAssembly("ApplyTrackDbContext.DB"))
+    options.UseNpgsql(defaultConnection, b => b.MigrationsAssembly("ApplyTrack.DB"))
 );
 
 builder.Services.AddPooledDbContextFactory<ApplyTrackDbContext>(options =>
-    options.UseNpgsql(defaultConnection, b => b.MigrationsAssembly("ApplyTrackDbContext.DB"))
+    options.UseNpgsql(defaultConnection, b => b.MigrationsAssembly("ApplyTrack.DB"))
 );
 
 var app = builder.Build();
