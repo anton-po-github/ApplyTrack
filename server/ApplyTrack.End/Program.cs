@@ -1,7 +1,9 @@
 // ApplyTrack.End/Program.cs
 using ApplyTrack.DB;
+using ApplyTrack.End.Endpoints;
 using ApplyTrack.End.Infrastructure;
 using ApplyTrack.End.Security;
+using ApplyTrack.End.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -32,6 +34,7 @@ builder.Services.AddProblemDetails();
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
 builder.Services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
 builder.Services.AddSingleton<ITokenService, JwtTokenService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 var app = builder.Build();
 
@@ -69,4 +72,8 @@ app.MapMethods(
     }
 );
 
+app.MapAuthEndpoints();
+
 app.Run();
+
+public partial class Program;

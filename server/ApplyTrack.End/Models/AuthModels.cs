@@ -1,0 +1,11 @@
+namespace ApplyTrack.End.Models;
+
+/// <summary>Signup body. Fields are nullable on purpose: the client can send anything.</summary>
+public sealed record SignupRequest(string? Email, string? Password, string? DisplayName)
+{
+    public override string ToString() => nameof(SignupRequest); // never print the password
+}
+
+public sealed record UserProfile(Guid Id, string Email, string DisplayName);
+
+public sealed record AuthResponse(string Token, long ExpiresAtUnixSeconds, UserProfile User);
