@@ -4,6 +4,5 @@ import 'package:apply_track/app.dart';
 import 'package:apply_track/router/app_router.dart';
 
 void main() {
-  pingServer();
   runApp(ProviderScope(child: App(router: createAppRouter())));
 }
