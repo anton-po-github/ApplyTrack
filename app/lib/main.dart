@@ -4,5 +4,6 @@ import 'package:phase2_widgets/app.dart';
 import 'package:phase2_widgets/router/app_router.dart';
 
 void main() {
+  pingServer();
   runApp(ProviderScope(child: App(router: createAppRouter())));
 }

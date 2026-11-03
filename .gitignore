@@ -70,7 +70,7 @@ model.onnx.data
 /wwwroot/node_modules
 
 #appsettings.Development.json
-#appsettings.json
+appsettings.json
 
 ### VisualStudio ###
 ## Ignore Visual Studio temporary files, build results, and

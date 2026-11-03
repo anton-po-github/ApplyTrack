@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="ApplyTrack.DB/ApplyTrack.DB.csproj" />
+  <Project Path="ApplyTrack.End/ApplyTrack.End.csproj" />
+</Solution>
