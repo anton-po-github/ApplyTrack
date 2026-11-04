@@ -23,12 +23,42 @@ public sealed record SignupValidation(
     IReadOnlyDictionary<string, string> Errors
 );
 
+public sealed record GoogleSigninInput(string Credential)
+{
+    public override string ToString() => nameof(GoogleSigninInput); // never print the token
+}
+
+public sealed record GoogleSigninValidation(
+    GoogleSigninInput? Input,
+    IReadOnlyDictionary<string, string> Errors
+);
+
 public static class AuthValidator
 {
     public const int MaxEmailLength = 255;
     public const int MinPasswordLength = 8;
     public const int MaxPasswordLength = 128; // stops huge passwords from burning CPU in PBKDF2
     public const int MaxDisplayNameLength = 80;
+
+    public const int MaxGoogleCredentialLength = 4096; // real Google ID tokens are about 1 KB
+
+    public static GoogleSigninValidation ValidateGoogleSignin(GoogleSigninRequest? request)
+    {
+        string credential = (request?.Credential ?? string.Empty).Trim();
+        var errors = new Dictionary<string, string>();
+
+        if (credential.Length == 0)
+            errors["credential"] = "Google credential is required.";
+        else if (credential.Length > MaxGoogleCredentialLength)
+            errors["credential"] = "Google credential is too long.";
+
+        return errors.Count == 0
+            ? new GoogleSigninValidation(new GoogleSigninInput(credential), errors)
+            : new GoogleSigninValidation(null, errors);
+    }
+
+    /// <summary>Same email rules as signup. The email must already be trimmed and lowercase.</summary>
+    internal static bool IsValidEmail(string email) => CheckEmail(email) is null;
 
     public static SignupValidation ValidateSignup(SignupRequest? request)
     {

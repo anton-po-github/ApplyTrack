@@ -10,4 +10,10 @@ public interface IPasswordHasher
     /// and the CPU work stays the same, so response time leaks nothing.
     /// </summary>
     bool Verify(string password, string? storedHash);
+
+    /// <summary>
+    /// A well-formed hash that no password can ever match.
+    /// For accounts that sign in only with Google.
+    /// </summary>
+    string CreateUnusableHash();
 }

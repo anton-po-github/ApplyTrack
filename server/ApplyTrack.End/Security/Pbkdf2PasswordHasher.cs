@@ -60,4 +60,8 @@ public sealed class Pbkdf2PasswordHasher : IPasswordHasher
         hash.CopyTo(combined, SaltSize);
         return Convert.ToBase64String(combined);
     }
+
+    // Random bytes with the same shape as a real hash. No password produces them.
+    public string CreateUnusableHash() =>
+        Convert.ToBase64String(RandomNumberGenerator.GetBytes(TotalSize));
 }

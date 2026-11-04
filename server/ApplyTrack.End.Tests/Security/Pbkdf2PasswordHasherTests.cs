@@ -54,4 +54,29 @@ public class Pbkdf2PasswordHasherTests
     {
         Assert.False(_hasher.Verify("whatever", broken));
     }
+
+    [Fact]
+    public void CreateUnusableHash_IsWellFormed_AndFitsTheDatabaseColumn()
+    {
+        string hash = _hasher.CreateUnusableHash();
+
+        Assert.Equal(48, Convert.FromBase64String(hash).Length);
+        Assert.True(hash.Length <= 128);
+    }
+
+    [Fact]
+    public void CreateUnusableHash_NeverMatchesAnyPassword()
+    {
+        string hash = _hasher.CreateUnusableHash();
+
+        Assert.False(_hasher.Verify("password123", hash));
+        Assert.False(_hasher.Verify("", hash));
+        Assert.False(_hasher.Verify(hash, hash));
+    }
+
+    [Fact]
+    public void CreateUnusableHash_IsDifferentEveryTime()
+    {
+        Assert.NotEqual(_hasher.CreateUnusableHash(), _hasher.CreateUnusableHash());
+    }
 }

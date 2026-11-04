@@ -14,3 +14,8 @@ public sealed record SigninRequest(string? Email, string? Password)
 {
     public override string ToString() => nameof(SigninRequest); // never print the password
 }
+
+public sealed record GoogleSigninRequest(string? Credential)
+{
+    public override string ToString() => nameof(GoogleSigninRequest); // never print the token
+}

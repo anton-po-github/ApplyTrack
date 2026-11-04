@@ -106,6 +106,60 @@ public static class AuthEndpoints
             .AllowAnonymous();
 
         group
+            .MapPost(
+                "/google",
+                async Task<
+                    Results<
+                        Ok<AuthResponse>,
+                        BadRequest<ErrorResponse>,
+                        JsonHttpResult<ErrorResponse>
+                    >
+                > (
+                    [FromBody] GoogleSigninRequest? request,
+                    IGoogleAuthService google,
+                    CancellationToken ct
+                ) =>
+                {
+                    GoogleSigninValidation check = AuthValidator.ValidateGoogleSignin(request);
+                    if (check.Input is null)
+                    {
+                        return TypedResults.BadRequest(
+                            new ErrorResponse("validation", "Please fix the fields.", check.Errors)
+                        );
+                    }
+
+                    GoogleSigninResult result = await google.SigninAsync(check.Input, ct);
+
+                    switch (result)
+                    {
+                        case GoogleSigninResult.Succeeded ok:
+                            return TypedResults.Ok(ok.Auth);
+
+                        case GoogleSigninResult.EmailNotSupported:
+                            return TypedResults.BadRequest(
+                                new ErrorResponse(
+                                    "google_email_unsupported",
+                                    "This Google email cannot be used."
+                                )
+                            );
+
+                        case GoogleSigninResult.InvalidToken:
+                            return TypedResults.Json(
+                                new ErrorResponse(
+                                    "invalid_google_token",
+                                    "Google sign-in failed. Please try again."
+                                ),
+                                statusCode: StatusCodes.Status401Unauthorized
+                            );
+
+                        default:
+                            throw new InvalidOperationException("Unknown Google sign-in result.");
+                    }
+                }
+            )
+            .AllowAnonymous();
+
+        group
             .MapGet(
                 "/me",
                 async Task<Results<Ok<UserProfile>, JsonHttpResult<ErrorResponse>>> (

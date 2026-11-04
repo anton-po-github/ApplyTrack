@@ -1,8 +1,11 @@
 using ApplyTrack.DB;
+using ApplyTrack.End.Security;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 
 namespace ApplyTrack.End.Tests.Support;
@@ -33,8 +36,19 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         Environment.SetEnvironmentVariable("ConnectionStrings__DefaultConnection", connection);
     }
 
-    protected override void ConfigureWebHost(IWebHostBuilder builder) =>
+    public FakeGoogleTokenVerifier Google { get; } = new();
+
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
         builder.UseEnvironment("Development");
+
+        builder.ConfigureTestServices(services =>
+        {
+            // Tests never call the real Google.
+            services.RemoveAll<IGoogleTokenVerifier>();
+            services.AddSingleton<IGoogleTokenVerifier>(Google);
+        });
+    }
 
     protected override IHost CreateHost(IHostBuilder builder)
     {

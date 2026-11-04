@@ -41,6 +41,18 @@ builder.Services.AddScoped<IProposalService, ProposalService>();
 // Bad JSON or wrong types always go to our exception handler (same ErrorResponse in every environment).
 builder.Services.Configure<RouteHandlerOptions>(o => o.ThrowOnBadRequest = true);
 
+string googleClientId =
+    builder.Configuration["GoogleClientId"]
+    ?? throw new InvalidOperationException("GoogleClientId is missing.");
+if (string.IsNullOrWhiteSpace(googleClientId))
+    throw new InvalidOperationException("GoogleClientId is empty.");
+
+builder.Services.AddSingleton<IGoogleTokenVerifier>(sp => new GoogleTokenVerifier(
+    googleClientId,
+    sp.GetRequiredService<ILogger<GoogleTokenVerifier>>()
+));
+builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
+
 var app = builder.Build();
 
 // ---------- Middleware (order matters) ----------
