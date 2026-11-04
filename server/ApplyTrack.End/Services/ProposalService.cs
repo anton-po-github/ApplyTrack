@@ -1,3 +1,4 @@
+using System.Text;
 using ApplyTrack.DB;
 using ApplyTrack.End.Models;
 using ApplyTrack.End.Validation;
@@ -95,5 +96,55 @@ public sealed class ProposalService(ApplyTrackDbContext db, TimeProvider time) :
             .FirstOrDefaultAsync(ct);
 
         return row?.ToResponse();
+    }
+
+    public async Task<ProposalListResponse> ListAsync(
+        Guid userId,
+        ProposalListQuery query,
+        Guid? cursor,
+        CancellationToken ct
+    )
+    {
+        // The SQL text is made ONLY from fixed pieces and numbered placeholders.
+        // Every value (user id, cursor, status, search, limit) travels as a parameter.
+        var sql = new StringBuilder(
+            @"SELECT ""Id"", ""Title"", ""Company"", ""Platform"", ""Status"", ""Budget"",
+                     ""FollowUpDate"", ""Link"", ""Notes"", ""CreatedAtMs"", ""UpdatedAtMs""
+              FROM ""Proposals""
+              WHERE ""UserId"" = {0} AND ""DeletedAtMs"" IS NULL"
+        );
+        var args = new List<object> { userId };
+
+        if (cursor is Guid after)
+        {
+            args.Add(after);
+            sql.Append(" AND \"Id\" < {").Append(args.Count - 1).Append('}');
+        }
+
+        if (query.Status is short status)
+        {
+            args.Add(status);
+            sql.Append(" AND \"Status\" = {").Append(args.Count - 1).Append('}');
+        }
+
+        if (query.Search is string search)
+        {
+            args.Add(LikeEscaper.ContainsPattern(search));
+            sql.Append(" AND \"Title\" ILIKE {").Append(args.Count - 1).Append('}');
+        }
+
+        // One extra row tells us if a next page exists.
+        args.Add(query.Limit + 1);
+        sql.Append(" ORDER BY \"Id\" DESC LIMIT {").Append(args.Count - 1).Append('}');
+
+        List<ProposalRow> rows = await db
+            .Database.SqlQueryRaw<ProposalRow>(sql.ToString(), args.ToArray())
+            .ToListAsync(ct);
+
+        bool hasMore = rows.Count > query.Limit;
+        List<ProposalRow> page = hasMore ? rows.GetRange(0, query.Limit) : rows;
+        Guid? nextCursor = hasMore ? page[^1].Id : null;
+
+        return new ProposalListResponse(page.Select(r => r.ToResponse()).ToList(), nextCursor);
     }
 }

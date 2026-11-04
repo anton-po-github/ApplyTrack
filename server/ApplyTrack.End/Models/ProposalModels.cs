@@ -25,3 +25,5 @@ public sealed record ProposalResponse(
     long CreatedAtMs,
     long UpdatedAtMs
 );
+
+public sealed record ProposalListResponse(IReadOnlyList<ProposalResponse> Items, Guid? NextCursor);

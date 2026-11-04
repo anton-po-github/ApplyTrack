@@ -20,4 +20,11 @@ public interface IProposalService
 
     /// <summary>Null when the proposal does not exist, is deleted, or belongs to someone else.</summary>
     Task<ProposalResponse?> GetAsync(Guid userId, Guid id, CancellationToken ct);
+
+    Task<ProposalListResponse> ListAsync(
+        Guid userId,
+        ProposalListQuery query,
+        Guid? cursor,
+        CancellationToken ct
+    );
 }

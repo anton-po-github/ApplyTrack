@@ -147,7 +147,7 @@ public static class ProposalValidator
     }
 
     // Postgres cannot store NUL, and Npgsql fails on broken UTF-16. Reject both here.
-    private static bool HasBadChars(string value, bool allowLineBreaks)
+    internal static bool HasBadChars(string value, bool allowLineBreaks)
     {
         foreach (char c in value)
         {

@@ -15,6 +15,41 @@ public static class ProposalEndpoints
     {
         RouteGroupBuilder group = app.MapGroup("/api/proposals").RequireAuthorization();
 
+        group.MapGet(
+            "/",
+            async Task<
+                Results<
+                    Ok<ProposalListResponse>,
+                    BadRequest<ErrorResponse>,
+                    JsonHttpResult<ErrorResponse>
+                >
+            > (
+                int? status,
+                string? q,
+                Guid? cursor, // a bad value like "abc" gives 400 bad_request from the global handler
+                int? limit,
+                ClaimsPrincipal user,
+                IProposalService proposals,
+                CancellationToken ct
+            ) =>
+            {
+                if (!user.TryGetUserId(out Guid userId))
+                {
+                    return ApiErrors.Unauthorized();
+                }
+
+                ProposalListValidation check = ProposalListValidator.Validate(status, q, limit);
+                if (check.Query is null)
+                {
+                    return TypedResults.BadRequest(
+                        new ErrorResponse("validation", "Please fix the fields.", check.Errors)
+                    );
+                }
+
+                return TypedResults.Ok(await proposals.ListAsync(userId, check.Query, cursor, ct));
+            }
+        );
+
         group.MapPost(
             "/",
             async Task<

@@ -23,6 +23,29 @@ public static class ApiTestHelpers
         return await client.SendAsync(request);
     }
 
+    public static async Task<ProposalResponse> CreateProposalAsync(
+        this HttpClient client,
+        string token,
+        object body
+    )
+    {
+        var response = await client.PostProposalAsync(token, body);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        return (await response.Content.ReadFromJsonAsync<ProposalResponse>())!;
+    }
+
+    public static async Task<ProposalListResponse> ListProposalsAsync(
+        this HttpClient client,
+        string token,
+        string query = ""
+    )
+    {
+        string url = query.Length == 0 ? "/api/proposals" : $"/api/proposals?{query}";
+        var response = await client.SendAsync(Authed(HttpMethod.Get, url, token));
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        return (await response.Content.ReadFromJsonAsync<ProposalListResponse>())!;
+    }
+
     public static async Task<StatsResponse> GetStatsAsync(this HttpClient client, string token)
     {
         var response = await client.SendAsync(Authed(HttpMethod.Get, "/api/stats", token));
