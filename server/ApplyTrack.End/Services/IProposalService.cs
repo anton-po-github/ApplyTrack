@@ -17,4 +17,7 @@ public abstract record CreateProposalResult
 public interface IProposalService
 {
     Task<CreateProposalResult> CreateAsync(Guid userId, ProposalInput input, CancellationToken ct);
+
+    /// <summary>Null when the proposal does not exist, is deleted, or belongs to someone else.</summary>
+    Task<ProposalResponse?> GetAsync(Guid userId, Guid id, CancellationToken ct);
 }

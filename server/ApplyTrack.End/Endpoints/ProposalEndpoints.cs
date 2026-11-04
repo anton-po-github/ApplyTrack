@@ -71,5 +71,29 @@ public static class ProposalEndpoints
                 }
             }
         );
+
+        group.MapGet(
+            "/{id}",
+            async Task<Results<Ok<ProposalResponse>, JsonHttpResult<ErrorResponse>>> (
+                Guid id, // a bad id like "abc" gives 400 bad_request from the global handler
+                ClaimsPrincipal user,
+                IProposalService proposals,
+                CancellationToken ct
+            ) =>
+            {
+                if (!user.TryGetUserId(out Guid userId))
+                {
+                    return ApiErrors.Unauthorized();
+                }
+
+                ProposalResponse? proposal = await proposals.GetAsync(userId, id, ct);
+                if (proposal is null)
+                {
+                    return ApiErrors.ProposalNotFound();
+                }
+
+                return TypedResults.Ok(proposal);
+            }
+        );
     }
 }

@@ -81,4 +81,19 @@ public sealed class ProposalService(ApplyTrackDbContext db, TimeProvider time) :
             )
         );
     }
+
+    public async Task<ProposalResponse?> GetAsync(Guid userId, Guid id, CancellationToken ct)
+    {
+        // O(1): primary key seek. Owner and soft-delete checks are part of the same query.
+        ProposalRow? row = await db
+            .Database.SqlQuery<ProposalRow>(
+                $@"SELECT ""Id"", ""Title"", ""Company"", ""Platform"", ""Status"", ""Budget"",
+                          ""FollowUpDate"", ""Link"", ""Notes"", ""CreatedAtMs"", ""UpdatedAtMs""
+                   FROM ""Proposals""
+                   WHERE ""Id"" = {id} AND ""UserId"" = {userId} AND ""DeletedAtMs"" IS NULL"
+            )
+            .FirstOrDefaultAsync(ct);
+
+        return row?.ToResponse();
+    }
 }

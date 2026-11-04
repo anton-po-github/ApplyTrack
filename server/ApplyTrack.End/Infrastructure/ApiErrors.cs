@@ -11,4 +11,10 @@ public static class ApiErrors
             new ErrorResponse("unauthorized", "Please sign in again."),
             statusCode: StatusCodes.Status401Unauthorized
         );
+
+    public static JsonHttpResult<ErrorResponse> ProposalNotFound() =>
+        TypedResults.Json(
+            new ErrorResponse("not_found", "Proposal not found."),
+            statusCode: StatusCodes.Status404NotFound
+        );
 }
