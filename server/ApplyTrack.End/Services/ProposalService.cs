@@ -147,4 +147,98 @@ public sealed class ProposalService(ApplyTrackDbContext db, TimeProvider time) :
 
         return new ProposalListResponse(page.Select(r => r.ToResponse()).ToList(), nextCursor);
     }
+
+    public async Task<UpdateProposalResult> UpdateAsync(
+        Guid userId,
+        Guid id,
+        ProposalInput input,
+        CancellationToken ct
+    )
+    {
+        long nowMs = time.GetUtcNow().ToUnixTimeMilliseconds();
+        int newStatus = input.Status;
+
+        await using var tx = await db.Database.BeginTransactionAsync(ct);
+
+        // 1) Lock the row and read the old status.
+        //    Owner and soft-delete checks are part of the same query.
+        List<ProposalLockRow> locked = await db
+            .Database.SqlQuery<ProposalLockRow>(
+                $@"SELECT ""Status"", ""CreatedAtMs""
+                   FROM ""Proposals""
+                   WHERE ""Id"" = {id} AND ""UserId"" = {userId} AND ""DeletedAtMs"" IS NULL
+                   FOR UPDATE"
+            )
+            .ToListAsync(ct);
+
+        if (locked.Count == 0)
+        {
+            return new UpdateProposalResult.NotFound(); // transaction is disposed = rollback
+        }
+
+        int oldStatus = locked[0].Status;
+        long createdAtMs = locked[0].CreatedAtMs;
+        long updatedAtMs = Math.Max(nowMs, createdAtMs); // never older than the creation time
+
+        // 2) Replace all editable fields. Id, UserId and CreatedAtMs never change.
+        int updated = await db.Database.ExecuteSqlInterpolatedAsync(
+            $@"UPDATE ""Proposals"" SET
+                   ""Title"" = {input.Title},
+                   ""Company"" = {input.Company},
+                   ""Platform"" = {input.Platform},
+                   ""Status"" = {input.Status},
+                   ""Budget"" = {input.Budget},
+                   ""FollowUpDate"" = {input.FollowUpDate},
+                   ""Link"" = {input.Link},
+                   ""Notes"" = {input.Notes},
+                   ""UpdatedAtMs"" = {updatedAtMs}
+               WHERE ""Id"" = {id} AND ""UserId"" = {userId}",
+            ct
+        );
+
+        if (updated != 1)
+        {
+            throw new InvalidOperationException("The locked proposal row was not updated.");
+        }
+
+        // 3) Move one count from the old status to the new status. Total stays the same.
+        if (oldStatus != newStatus)
+        {
+            int statsUpdated = await db.Database.ExecuteSqlInterpolatedAsync(
+                $@"UPDATE ""UserStats"" SET
+                       ""Draft""     = ""Draft""     - CASE WHEN {oldStatus} = 0 THEN 1 ELSE 0 END + CASE WHEN {newStatus} = 0 THEN 1 ELSE 0 END,
+                       ""Sent""      = ""Sent""      - CASE WHEN {oldStatus} = 1 THEN 1 ELSE 0 END + CASE WHEN {newStatus} = 1 THEN 1 ELSE 0 END,
+                       ""Viewed""    = ""Viewed""    - CASE WHEN {oldStatus} = 2 THEN 1 ELSE 0 END + CASE WHEN {newStatus} = 2 THEN 1 ELSE 0 END,
+                       ""Interview"" = ""Interview"" - CASE WHEN {oldStatus} = 3 THEN 1 ELSE 0 END + CASE WHEN {newStatus} = 3 THEN 1 ELSE 0 END,
+                       ""Won""       = ""Won""       - CASE WHEN {oldStatus} = 4 THEN 1 ELSE 0 END + CASE WHEN {newStatus} = 4 THEN 1 ELSE 0 END,
+                       ""Lost""      = ""Lost""      - CASE WHEN {oldStatus} = 5 THEN 1 ELSE 0 END + CASE WHEN {newStatus} = 5 THEN 1 ELSE 0 END
+                   WHERE ""UserId"" = {userId}",
+                ct
+            );
+
+            if (statsUpdated != 1)
+            {
+                // A proposal without a stats row means broken data. Roll everything back.
+                throw new InvalidOperationException("The stats row is missing.");
+            }
+        }
+
+        await tx.CommitAsync(ct);
+
+        return new UpdateProposalResult.Updated(
+            new ProposalResponse(
+                id,
+                input.Title,
+                input.Company,
+                input.Platform,
+                input.Status,
+                input.Budget,
+                input.FollowUpDate,
+                input.Link,
+                input.Notes,
+                createdAtMs,
+                updatedAtMs
+            )
+        );
+    }
 }

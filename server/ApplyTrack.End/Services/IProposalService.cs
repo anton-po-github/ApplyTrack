@@ -14,6 +14,15 @@ public abstract record CreateProposalResult
     public sealed record UserNotFound : CreateProposalResult;
 }
 
+public abstract record UpdateProposalResult
+{
+    private UpdateProposalResult() { }
+
+    public sealed record Updated(ProposalResponse Proposal) : UpdateProposalResult;
+
+    public sealed record NotFound : UpdateProposalResult;
+}
+
 public interface IProposalService
 {
     Task<CreateProposalResult> CreateAsync(Guid userId, ProposalInput input, CancellationToken ct);
@@ -25,6 +34,13 @@ public interface IProposalService
         Guid userId,
         ProposalListQuery query,
         Guid? cursor,
+        CancellationToken ct
+    );
+
+    Task<UpdateProposalResult> UpdateAsync(
+        Guid userId,
+        Guid id,
+        ProposalInput input,
         CancellationToken ct
     );
 }

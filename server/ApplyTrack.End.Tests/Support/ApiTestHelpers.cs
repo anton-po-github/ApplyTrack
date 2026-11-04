@@ -46,6 +46,31 @@ public static class ApiTestHelpers
         return (await response.Content.ReadFromJsonAsync<ProposalListResponse>())!;
     }
 
+    public static async Task<HttpResponseMessage> PutProposalAsync(
+        this HttpClient client,
+        string token,
+        Guid id,
+        object body
+    )
+    {
+        HttpRequestMessage request = Authed(HttpMethod.Put, $"/api/proposals/{id}", token);
+        request.Content = JsonContent.Create(body);
+        return await client.SendAsync(request);
+    }
+
+    public static async Task<ProposalResponse> GetProposalAsync(
+        this HttpClient client,
+        string token,
+        Guid id
+    )
+    {
+        var response = await client.SendAsync(
+            Authed(HttpMethod.Get, $"/api/proposals/{id}", token)
+        );
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        return (await response.Content.ReadFromJsonAsync<ProposalResponse>())!;
+    }
+
     public static async Task<StatsResponse> GetStatsAsync(this HttpClient client, string token)
     {
         var response = await client.SendAsync(Authed(HttpMethod.Get, "/api/stats", token));

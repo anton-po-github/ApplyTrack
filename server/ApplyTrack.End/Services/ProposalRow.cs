@@ -36,3 +36,10 @@ internal sealed class ProposalRow
             UpdatedAtMs
         );
 }
+
+/// <summary>What the update needs from the locked row.</summary>
+internal sealed class ProposalLockRow
+{
+    public short Status { get; set; }
+    public long CreatedAtMs { get; set; }
+}

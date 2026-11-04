@@ -130,5 +130,56 @@ public static class ProposalEndpoints
                 return TypedResults.Ok(proposal);
             }
         );
+
+        group.MapPut(
+            "/{id}",
+            async Task<
+                Results<
+                    Ok<ProposalResponse>,
+                    BadRequest<ErrorResponse>,
+                    JsonHttpResult<ErrorResponse>
+                >
+            > (
+                Guid id, // a bad id like "abc" gives 400 bad_request from the global handler
+                [FromBody] ProposalRequest? request,
+                ClaimsPrincipal user,
+                IProposalService proposals,
+                CancellationToken ct
+            ) =>
+            {
+                // The owner comes ONLY from the token.
+                if (!user.TryGetUserId(out Guid userId))
+                {
+                    return ApiErrors.Unauthorized();
+                }
+
+                ProposalValidation check = ProposalValidator.Validate(request);
+                if (check.Input is null)
+                {
+                    return TypedResults.BadRequest(
+                        new ErrorResponse("validation", "Please fix the fields.", check.Errors)
+                    );
+                }
+
+                UpdateProposalResult result = await proposals.UpdateAsync(
+                    userId,
+                    id,
+                    check.Input,
+                    ct
+                );
+
+                switch (result)
+                {
+                    case UpdateProposalResult.Updated updated:
+                        return TypedResults.Ok(updated.Proposal);
+
+                    case UpdateProposalResult.NotFound:
+                        return ApiErrors.ProposalNotFound();
+
+                    default:
+                        throw new InvalidOperationException("Unknown update result.");
+                }
+            }
+        );
     }
 }
