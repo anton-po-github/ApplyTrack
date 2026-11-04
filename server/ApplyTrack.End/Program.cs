@@ -35,6 +35,7 @@ builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptio
 builder.Services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
 builder.Services.AddSingleton<ITokenService, JwtTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IStatsService, StatsService>();
 
 var app = builder.Build();
 
@@ -74,6 +75,7 @@ app.MapMethods(
     .AllowAnonymous();
 
 app.MapAuthEndpoints();
+app.MapStatsEndpoints();
 
 app.Run();
 
