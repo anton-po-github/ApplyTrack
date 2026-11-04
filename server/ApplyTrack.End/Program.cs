@@ -36,6 +36,10 @@ builder.Services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
 builder.Services.AddSingleton<ITokenService, JwtTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IStatsService, StatsService>();
+builder.Services.AddScoped<IProposalService, ProposalService>();
+
+// Bad JSON or wrong types always go to our exception handler (same ErrorResponse in every environment).
+builder.Services.Configure<RouteHandlerOptions>(o => o.ThrowOnBadRequest = true);
 
 var app = builder.Build();
 
@@ -76,6 +80,7 @@ app.MapMethods(
 
 app.MapAuthEndpoints();
 app.MapStatsEndpoints();
+app.MapProposalEndpoints();
 
 app.Run();
 
