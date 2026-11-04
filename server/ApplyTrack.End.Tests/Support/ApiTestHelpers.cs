@@ -46,6 +46,30 @@ public static class ApiTestHelpers
         return (await response.Content.ReadFromJsonAsync<ProposalListResponse>())!;
     }
 
+    public static Task<HttpResponseMessage> DeleteProposalAsync(
+        this HttpClient client,
+        string token,
+        Guid id
+    ) => client.SendAsync(Authed(HttpMethod.Delete, $"/api/proposals/{id}", token));
+
+    /// <summary>The stats we expect for a list of proposal statuses (0-5).</summary>
+    public static StatsResponse StatsFor(IEnumerable<int> statuses)
+    {
+        int[] count = new int[6];
+        foreach (int status in statuses)
+            count[status]++;
+
+        return new StatsResponse(
+            count.Sum(),
+            count[0],
+            count[1],
+            count[2],
+            count[3],
+            count[4],
+            count[5]
+        );
+    }
+
     public static async Task<HttpResponseMessage> PutProposalAsync(
         this HttpClient client,
         string token,

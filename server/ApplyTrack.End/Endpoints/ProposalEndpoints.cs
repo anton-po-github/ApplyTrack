@@ -181,5 +181,35 @@ public static class ProposalEndpoints
                 }
             }
         );
+
+        group.MapDelete(
+            "/{id}",
+            async Task<Results<NoContent, JsonHttpResult<ErrorResponse>>> (
+                Guid id, // a bad id like "abc" gives 400 bad_request from the global handler
+                ClaimsPrincipal user,
+                IProposalService proposals,
+                CancellationToken ct
+            ) =>
+            {
+                if (!user.TryGetUserId(out Guid userId))
+                {
+                    return ApiErrors.Unauthorized();
+                }
+
+                DeleteProposalResult result = await proposals.DeleteAsync(userId, id, ct);
+
+                switch (result)
+                {
+                    case DeleteProposalResult.Deleted:
+                        return TypedResults.NoContent();
+
+                    case DeleteProposalResult.NotFound:
+                        return ApiErrors.ProposalNotFound();
+
+                    default:
+                        throw new InvalidOperationException("Unknown delete result.");
+                }
+            }
+        );
     }
 }

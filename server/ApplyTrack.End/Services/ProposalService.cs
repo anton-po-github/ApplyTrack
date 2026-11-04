@@ -241,4 +241,52 @@ public sealed class ProposalService(ApplyTrackDbContext db, TimeProvider time) :
             )
         );
     }
+
+    public async Task<DeleteProposalResult> DeleteAsync(Guid userId, Guid id, CancellationToken ct)
+    {
+        long nowMs = time.GetUtcNow().ToUnixTimeMilliseconds();
+
+        await using var tx = await db.Database.BeginTransactionAsync(ct);
+
+        // 1) Soft delete. O(1): primary key. Owner and "still alive" checks are in the same statement.
+        //    RETURNING gives us the status, so we know which counter to lower.
+        //    A second delete finds no live row, so it can never lower a counter twice.
+        List<DeletedRow> deleted = await db
+            .Database.SqlQuery<DeletedRow>(
+                $@"UPDATE ""Proposals"" SET ""DeletedAtMs"" = {nowMs}
+                   WHERE ""Id"" = {id} AND ""UserId"" = {userId} AND ""DeletedAtMs"" IS NULL
+                   RETURNING ""Status"""
+            )
+            .ToListAsync(ct);
+
+        if (deleted.Count == 0)
+        {
+            return new DeleteProposalResult.NotFound(); // transaction is disposed = rollback
+        }
+
+        int status = deleted[0].Status;
+
+        // 2) Lower Total and the counter of that status, in the same transaction.
+        int statsUpdated = await db.Database.ExecuteSqlInterpolatedAsync(
+            $@"UPDATE ""UserStats"" SET
+                   ""Total""     = ""Total"" - 1,
+                   ""Draft""     = ""Draft""     - CASE WHEN {status} = 0 THEN 1 ELSE 0 END,
+                   ""Sent""      = ""Sent""      - CASE WHEN {status} = 1 THEN 1 ELSE 0 END,
+                   ""Viewed""    = ""Viewed""    - CASE WHEN {status} = 2 THEN 1 ELSE 0 END,
+                   ""Interview"" = ""Interview"" - CASE WHEN {status} = 3 THEN 1 ELSE 0 END,
+                   ""Won""       = ""Won""       - CASE WHEN {status} = 4 THEN 1 ELSE 0 END,
+                   ""Lost""      = ""Lost""      - CASE WHEN {status} = 5 THEN 1 ELSE 0 END
+               WHERE ""UserId"" = {userId}",
+            ct
+        );
+
+        if (statsUpdated != 1)
+        {
+            // A proposal without a stats row means broken data. Roll everything back.
+            throw new InvalidOperationException("The stats row is missing.");
+        }
+
+        await tx.CommitAsync(ct);
+        return new DeleteProposalResult.Deleted();
+    }
 }

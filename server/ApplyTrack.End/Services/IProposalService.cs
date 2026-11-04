@@ -23,6 +23,15 @@ public abstract record UpdateProposalResult
     public sealed record NotFound : UpdateProposalResult;
 }
 
+public abstract record DeleteProposalResult
+{
+    private DeleteProposalResult() { }
+
+    public sealed record Deleted : DeleteProposalResult;
+
+    public sealed record NotFound : DeleteProposalResult;
+}
+
 public interface IProposalService
 {
     Task<CreateProposalResult> CreateAsync(Guid userId, ProposalInput input, CancellationToken ct);
@@ -43,4 +52,6 @@ public interface IProposalService
         ProposalInput input,
         CancellationToken ct
     );
+
+    Task<DeleteProposalResult> DeleteAsync(Guid userId, Guid id, CancellationToken ct);
 }

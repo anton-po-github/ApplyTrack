@@ -43,3 +43,9 @@ internal sealed class ProposalLockRow
     public short Status { get; set; }
     public long CreatedAtMs { get; set; }
 }
+
+/// <summary>What the soft delete returns from its UPDATE ... RETURNING.</summary>
+internal sealed class DeletedRow
+{
+    public short Status { get; set; }
+}
