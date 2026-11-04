@@ -23,6 +23,9 @@ abstract interface class AuthRepository {
   /// Current user from the server. It does not change the saved session.
   Future<AuthOutcome> me();
 
+  /// The saved session, or null. Does not call the server.
+  Future<Session?> readSession();
+
   /// Deletes the saved session. Can throw if the device storage fails.
   Future<void> signOut();
 }
@@ -70,6 +73,9 @@ final class DefaultAuthRepository implements AuthRepository {
       ApiErr<UserProfile>(:final ApiError error) => _failure(error),
     };
   }
+
+  @override
+  Future<Session?> readSession() => _storage.read();
 
   @override
   Future<void> signOut() => _storage.clear();

@@ -10,6 +10,7 @@ enum AuthFailureKind {
   unauthorized,
   network,
   server,
+  busy,
 
   /// Sign in worked, but the session could not be saved on this device.
   storage,
