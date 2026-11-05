@@ -75,10 +75,73 @@ final class DioApiClient implements ApiClient {
     requiresAuth: requiresAuth,
   );
 
+  @override
+  Future<ApiResult<T>> put<T>(
+    String path, {
+    required JsonParser<T> parse,
+    Map<String, Object?>? body,
+    bool requiresAuth = true,
+  }) => _send<T>(
+    'PUT',
+    path,
+    parse: parse,
+    body: body,
+    requiresAuth: requiresAuth,
+  );
+
+  @override
+  Future<ApiResult<void>> delete(
+    String path, {
+    bool requiresAuth = true,
+  }) async {
+    final ApiResult<Object?> raw = await _execute(
+      'DELETE',
+      path,
+      requiresAuth: requiresAuth,
+    );
+    return switch (raw) {
+      ApiOk<Object?>() => const ApiOk<void>(null),
+      ApiErr<Object?>(:final ApiError error) => ApiErr<void>(error),
+    };
+  }
+
   Future<ApiResult<T>> _send<T>(
     String method,
     String path, {
     required JsonParser<T> parse,
+    required bool requiresAuth,
+    Map<String, Object?>? query,
+    Map<String, Object?>? body,
+  }) async {
+    final ApiResult<Object?> raw = await _execute(
+      method,
+      path,
+      requiresAuth: requiresAuth,
+      query: query,
+      body: body,
+    );
+    switch (raw) {
+      case ApiErr<Object?>(:final ApiError error):
+        return ApiErr<T>(error);
+      case ApiOk<Object?>(:final Object? value):
+        if (value is! Map<String, Object?>) {
+          return ApiErr<T>(const ApiError.badResponse());
+        }
+        try {
+          return ApiOk<T>(parse(value));
+        } on FormatException {
+          return ApiErr<T>(const ApiError.badResponse());
+        } on TypeError {
+          return ApiErr<T>(const ApiError.badResponse());
+        }
+    }
+  }
+
+  /// Sends the request and maps every failure to [ApiErr].
+  /// On 2xx it returns the decoded JSON (null when the body is empty).
+  Future<ApiResult<Object?>> _execute(
+    String method,
+    String path, {
     required bool requiresAuth,
     Map<String, Object?>? query,
     Map<String, Object?>? body,
@@ -97,28 +160,17 @@ final class DioApiClient implements ApiClient {
         ),
       );
     } on DioException catch (e) {
-      return ApiErr<T>(_mapTransportError(e));
+      return ApiErr<Object?>(_mapTransportError(e));
     }
 
     final int status = response.statusCode ?? 0;
     final Object? json = _decode(response.data);
 
-    if (status >= 200 && status < 300) {
-      if (json is! Map<String, Object?>) {
-        return ApiErr<T>(const ApiError.badResponse());
-      }
-      try {
-        return ApiOk<T>(parse(json));
-      } on FormatException {
-        return ApiErr<T>(const ApiError.badResponse());
-      } on TypeError {
-        return ApiErr<T>(const ApiError.badResponse());
-      }
-    }
+    if (status >= 200 && status < 300) return ApiOk<Object?>(json);
 
     final ApiError error = _mapErrorResponse(status, response.headers, json);
     if (status == 401 && requiresAuth) _notifyUnauthorized();
-    return ApiErr<T>(error);
+    return ApiErr<Object?>(error);
   }
 
   void _notifyUnauthorized() {

@@ -23,4 +23,16 @@ abstract interface class ApiClient {
     Map<String, Object?>? body,
     bool requiresAuth = true,
   });
+
+  /// Sends [body] as JSON and replaces a resource (full replace).
+  Future<ApiResult<T>> put<T>(
+    String path, {
+    required JsonParser<T> parse,
+    Map<String, Object?>? body,
+    bool requiresAuth = true,
+  });
+
+  /// Success is any 2xx answer. The server sends `204` with no body, and
+  /// the body is ignored.
+  Future<ApiResult<void>> delete(String path, {bool requiresAuth = true});
 }

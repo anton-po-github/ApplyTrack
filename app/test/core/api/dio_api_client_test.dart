@@ -124,6 +124,131 @@ void main() {
     });
   });
 
+  group('PUT and DELETE', () {
+    test('PUT sends the JSON body with the Bearer header', () async {
+      setUpClient((_) async => _json('{"name":"updated"}', 200));
+
+      final ApiResult<String> r = await client.put<String>(
+        '/api/proposals/abc',
+        body: <String, Object?>{'title': 'New', 'company': null},
+        parse: _parseName,
+      );
+
+      expect((r as ApiOk<String>).value, 'updated');
+      final RequestOptions sent = adapter.requests.single;
+      expect(sent.method, 'PUT');
+      expect(sent.uri.toString(), 'https://example.test/api/proposals/abc');
+      // A null value stays in the body: PUT is a full replace.
+      expect(sent.data, <String, Object?>{'title': 'New', 'company': null});
+      expect(sent.headers['Authorization'], 'Bearer tok-123');
+    });
+
+    test('PUT 400 validation keeps the fields', () async {
+      setUpClient(
+        (_) async => _json(
+          '{"code":"validation","message":"Fix it.",'
+          '"fields":{"title":"Title is required."}}',
+          400,
+        ),
+      );
+
+      final ApiError e = errorOf(
+        await client.put<String>('/api/proposals/abc', parse: _parseName),
+      );
+
+      expect(e.code, ApiErrorCodes.validation);
+      expect(e.fields, <String, String>{'title': 'Title is required.'});
+      expect(unauthorizedCalls, 0);
+    });
+
+    test('DELETE 204 with no body is success', () async {
+      setUpClient((_) async => _json('', 204));
+
+      final ApiResult<void> r = await client.delete('/api/proposals/abc');
+
+      expect(r, isA<ApiOk<void>>());
+      final RequestOptions sent = adapter.requests.single;
+      expect(sent.method, 'DELETE');
+      expect(sent.headers['Authorization'], 'Bearer tok-123');
+      expect(unauthorizedCalls, 0);
+    });
+
+    test('DELETE ignores a body on a 2xx answer', () async {
+      setUpClient((_) async => _json('<html>x</html>', 200));
+
+      expect(await client.delete('/api/proposals/abc'), isA<ApiOk<void>>());
+    });
+
+    test('DELETE 404 becomes not_found (second delete)', () async {
+      setUpClient(
+        (_) async =>
+            _json('{"code":"not_found","message":"No proposal."}', 404),
+      );
+
+      final ApiResult<void> r = await client.delete('/api/proposals/abc');
+
+      expect((r as ApiErr<void>).error.code, ApiErrorCodes.notFound);
+      expect(unauthorizedCalls, 0);
+    });
+
+    test('DELETE 401 calls onUnauthorized once', () async {
+      setUpClient((_) async => _json('', 401));
+
+      final ApiResult<void> r = await client.delete('/api/proposals/abc');
+
+      expect((r as ApiErr<void>).error.code, ApiErrorCodes.unauthorized);
+      expect(unauthorizedCalls, 1);
+    });
+
+    test('PUT 401 calls onUnauthorized once', () async {
+      setUpClient((_) async => _json('', 401));
+
+      final ApiError e = errorOf(
+        await client.put<String>('/api/proposals/abc', parse: _parseName),
+      );
+
+      expect(e.code, ApiErrorCodes.unauthorized);
+      expect(unauthorizedCalls, 1);
+    });
+
+    test('DELETE 429 reads Retry-After', () async {
+      setUpClient(
+        (_) async => _json(
+          '{"code":"rate_limited","message":"Slow down."}',
+          429,
+          h: <String, List<String>>{
+            'retry-after': <String>['12'],
+          },
+        ),
+      );
+
+      final ApiResult<void> r = await client.delete('/api/proposals/abc');
+
+      final ApiError e = (r as ApiErr<void>).error;
+      expect(e.code, ApiErrorCodes.rateLimited);
+      expect(e.retryAfterSeconds, 12);
+    });
+
+    test('DELETE with no network becomes network_error', () async {
+      setUpClient(
+        (RequestOptions o) async => throw DioException(
+          requestOptions: o,
+          type: DioExceptionType.connectionError,
+        ),
+      );
+
+      final ApiResult<void> r = await client.delete('/api/proposals/abc');
+
+      expect((r as ApiErr<void>).error.code, ApiErrorCodes.network);
+    });
+
+    test('DELETE rejects a bad path', () {
+      setUpClient((_) async => _json('', 204));
+
+      expect(() => client.delete('https://evil.test/x'), throwsArgumentError);
+    });
+  });
+
   group('auth header', () {
     test('requiresAuth false: no header and the token is not read', () async {
       setUpClient((_) async => _json('{"name":"ok"}', 200));

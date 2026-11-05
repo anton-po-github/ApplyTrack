@@ -39,6 +39,18 @@ final class _FakeClient implements ApiClient {
     this.requiresAuth = requiresAuth;
     return ApiOk<T>(parse(json));
   }
+
+  @override
+  Future<ApiResult<T>> put<T>(
+    String path, {
+    required JsonParser<T> parse,
+    Map<String, Object?>? body,
+    bool requiresAuth = true,
+  }) => throw UnimplementedError('The auth API does not use PUT');
+
+  @override
+  Future<ApiResult<void>> delete(String path, {bool requiresAuth = true}) =>
+      throw UnimplementedError('The auth API does not use DELETE');
 }
 
 void main() {
