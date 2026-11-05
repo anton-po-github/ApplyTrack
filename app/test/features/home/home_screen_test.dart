@@ -1,15 +1,40 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
+
+import 'package:apply_track/features/auth/state/auth_dependencies.dart';
 import 'package:apply_track/features/home/home_screen.dart';
 
+import '../../support/auth_test_helpers.dart';
+
+const List<HomeDestination> _three = <HomeDestination>[
+  HomeDestination(title: 'A', subtitle: 'a', icon: Icons.home, route: '/a'),
+  HomeDestination(title: 'B', subtitle: 'b', icon: Icons.home, route: '/b'),
+  HomeDestination(title: 'C', subtitle: 'c', icon: Icons.home, route: '/c'),
+];
+
 void main() {
-  Future<List<Offset>> cardPositions(WidgetTester tester, double width) async {
+  Future<FakeAuthRepository> pumpHome(
+    WidgetTester tester, {
+    double width = 400,
+  }) async {
     tester.view.physicalSize = Size(width, 1000);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
 
-    await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
+    final FakeAuthRepository repo = FakeAuthRepository(session: validSession());
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [authRepositoryProvider.overrideWithValue(repo)],
+        child: const MaterialApp(home: HomeScreen(destinations: _three)),
+      ),
+    );
+    await tester.pumpAndSettle();
+    return repo;
+  }
 
+  Future<List<Offset>> cardPositions(WidgetTester tester, double width) async {
+    await pumpHome(tester, width: width);
     return <Offset>[
       for (int i = 0; i < 3; i++) tester.getTopLeft(find.byType(Card).at(i)),
     ];
@@ -46,5 +71,22 @@ void main() {
 
     // (1400 - 1000) / 2 = 200, plus 16 padding
     expect(p[0].dx, closeTo(216, 0.5));
+  });
+
+  testWidgets('shows the display name', (WidgetTester tester) async {
+    await pumpHome(tester);
+
+    expect(find.text('Anton'), findsOneWidget);
+  });
+
+  testWidgets('Sign out clears the session', (WidgetTester tester) async {
+    final FakeAuthRepository repo = await pumpHome(tester);
+
+    await tester.tap(find.byTooltip('Sign out'));
+    await tester.pumpAndSettle();
+
+    expect(repo.signOutCalls, 1);
+    expect(find.text('Anton'), findsNothing);
+    expect(find.byTooltip('Sign out'), findsNothing);
   });
 }
