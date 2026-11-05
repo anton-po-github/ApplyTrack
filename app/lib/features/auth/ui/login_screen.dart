@@ -6,6 +6,7 @@ import 'package:apply_track/core/layout/max_content_width.dart';
 import 'package:apply_track/features/auth/domain/auth_outcome.dart';
 import 'package:apply_track/features/auth/domain/auth_validators.dart';
 import 'package:apply_track/features/auth/state/auth_controller.dart';
+import 'package:apply_track/features/auth/ui/google_button.dart';
 import 'package:apply_track/features/auth/ui/auth_form_errors.dart';
 import 'package:apply_track/features/auth/ui/auth_widgets.dart';
 import 'package:apply_track/router/app_router.dart';
@@ -38,6 +39,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  /// Shows a failure. Busy and cancelled show nothing.
+  void _showFailure(AuthOutcome outcome) {
+    if (outcome is! AuthFailure) return; // Success: the router moves us.
+    if (outcome.kind == AuthFailureKind.busy ||
+        outcome.kind == AuthFailureKind.cancelled) {
+      return;
+    }
+    setState(() {
+      _errors = AuthFormErrors.fromFailure(outcome, knownFields: _knownFields);
+    });
+    _formKey.currentState?.validate();
+  }
+
   Future<void> _submit() async {
     final FormState? form = _formKey.currentState;
     if (form == null) return;
@@ -50,15 +64,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         .read(authControllerProvider.notifier)
         .signIn(email: _email.text, password: _password.text);
     if (!mounted) return;
-
-    // On success the router guard moves us to the main screen.
-    if (outcome is! AuthFailure || outcome.kind == AuthFailureKind.busy) return;
-
-    setState(() {
-      _errors = AuthFormErrors.fromFailure(outcome, knownFields: _knownFields);
-    });
-    form.validate();
+    _showFailure(outcome);
   }
+
+  void _clearErrors() => setState(() => _errors = AuthFormErrors.none);
 
   @override
   Widget build(BuildContext context) {
@@ -99,10 +108,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   busy: busy,
                   onPressed: _submit,
                 ),
-                // Enabled in Step 7.
-                const OutlinedButton(
-                  onPressed: null,
-                  child: Text('Continue with Google'),
+                GoogleSignInButton(
+                  onStarted: _clearErrors,
+                  onOutcome: _showFailure,
                 ),
                 TextButton(
                   onPressed: busy ? null : () => context.go(AppRoutes.signup),

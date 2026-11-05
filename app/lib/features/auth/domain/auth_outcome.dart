@@ -10,10 +10,18 @@ enum AuthFailureKind {
   unauthorized,
   network,
   server,
-  busy,
 
   /// Sign in worked, but the session could not be saved on this device.
   storage,
+
+  /// Another auth action is already running (double tap).
+  busy,
+
+  /// The user closed the Google dialog. The UI shows nothing.
+  cancelled,
+
+  /// The Google dialog or plugin failed (not our server).
+  googleSignIn,
   unknown,
 }
 

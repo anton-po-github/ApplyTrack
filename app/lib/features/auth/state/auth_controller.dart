@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:apply_track/features/auth/data/google_id_token_provider.dart';
 import 'package:apply_track/features/auth/data/session.dart';
 import 'package:apply_track/features/auth/domain/auth_outcome.dart';
 import 'package:apply_track/features/auth/domain/user_profile.dart';
@@ -27,6 +28,11 @@ class AuthController extends Notifier<AuthState> {
   static const AuthFailure _busyFailure = AuthFailure(
     kind: AuthFailureKind.busy,
     message: 'Please wait a moment.',
+  );
+
+  static const AuthFailure _cancelledFailure = AuthFailure(
+    kind: AuthFailureKind.cancelled,
+    message: 'Sign-in was cancelled.',
   );
 
   static const AuthFailure _unexpectedFailure = AuthFailure(
@@ -113,9 +119,36 @@ class AuthController extends Notifier<AuthState> {
         .signIn(email: email, password: password),
   );
 
-  Future<AuthOutcome> signInWithGoogle({required String idToken}) => _runAction(
-    () => ref.read(authRepositoryProvider).signInWithGoogle(idToken: idToken),
-  );
+  /// Mobile: opens the Google dialog, then sends the ID token to our server.
+  /// A closed dialog returns a `cancelled` failure (the UI shows nothing).
+  Future<AuthOutcome> signInWithGoogle() => _runAction(() async {
+    final GoogleTokenResult token = await ref
+        .read(googleSignInProvider)
+        .getIdToken();
+    if (!ref.mounted) return _unexpectedFailure;
+    return _exchangeGoogleToken(token);
+  });
+
+  /// Web: Google draws its own button and gives the token through a stream.
+  /// The button widget passes that result here.
+  Future<AuthOutcome> signInWithGoogleResult(GoogleTokenResult token) =>
+      _runAction(() => _exchangeGoogleToken(token));
+
+  Future<AuthOutcome> _exchangeGoogleToken(GoogleTokenResult token) async {
+    switch (token) {
+      case GoogleTokenOk(:final String idToken):
+        return ref
+            .read(authRepositoryProvider)
+            .signInWithGoogle(idToken: idToken);
+      case GoogleTokenCancelled():
+        return _cancelledFailure;
+      case GoogleTokenFailed(:final String message):
+        return AuthFailure(
+          kind: AuthFailureKind.googleSignIn,
+          message: message,
+        );
+    }
+  }
 
   /// Always ends signed out, even if the device storage fails.
   /// Does nothing while another action runs.
@@ -124,6 +157,7 @@ class AuthController extends Notifier<AuthState> {
     try {
       state = const AuthSignedOut();
       await _clearSession();
+      await _signOutGoogle();
     } finally {
       _end();
     }
@@ -152,6 +186,7 @@ class AuthController extends Notifier<AuthState> {
     if (state is! AuthSignedIn) return;
     state = const AuthSignedOut(); // Leave the screen at once.
     await _clearSession();
+    await _signOutGoogle();
   }
 
   // -------------------------------------------------------------- helpers
@@ -161,6 +196,15 @@ class AuthController extends Notifier<AuthState> {
       await ref.read(authRepositoryProvider).signOut();
     } on Exception {
       // The user is signed out in memory. Nothing more we can do.
+    }
+  }
+
+  Future<void> _signOutGoogle() async {
+    if (!ref.mounted) return;
+    try {
+      await ref.read(googleSignInProvider).signOut();
+    } on Exception {
+      // Best effort.
     }
   }
 

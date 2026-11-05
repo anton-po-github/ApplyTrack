@@ -8,6 +8,8 @@ import 'package:apply_track/features/auth/data/auth_api.dart';
 import 'package:apply_track/features/auth/data/auth_repository.dart';
 import 'package:apply_track/features/auth/data/storage_token_reader.dart';
 import 'package:apply_track/features/auth/data/token_storage.dart';
+import 'package:apply_track/features/auth/data/google_id_token_provider.dart';
+import 'package:apply_track/features/auth/data/plugin_google_id_token_provider.dart';
 
 // Wiring of the real objects. Tests override these providers.
 //
@@ -68,3 +70,12 @@ final Provider<AuthRepository> authRepositoryProvider =
         storage: ref.watch(tokenStorageProvider),
       ),
     );
+
+final Provider<GoogleIdTokenProvider> googleSignInProvider =
+    Provider<GoogleIdTokenProvider>((Ref ref) {
+      final PluginGoogleIdTokenProvider provider = PluginGoogleIdTokenProvider(
+        serverClientId: ref.watch(appConfigProvider).googleServerClientId,
+      );
+      ref.onDispose(provider.dispose);
+      return provider;
+    });

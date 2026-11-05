@@ -10,6 +10,9 @@ import 'package:apply_track/features/auth/domain/user_profile.dart';
 import 'package:apply_track/features/auth/state/auth_controller.dart';
 import 'package:apply_track/features/auth/state/auth_dependencies.dart';
 import 'package:apply_track/features/auth/state/auth_state.dart';
+import 'package:apply_track/features/auth/data/google_id_token_provider.dart';
+
+import '../../../support/auth_test_helpers.dart';
 
 const UserProfile _user = UserProfile(
   id: 'u1',
@@ -106,10 +109,16 @@ final class _FakeRepo implements AuthRepository {
   }
 }
 
-ProviderContainer _makeContainer(_FakeRepo repo) {
+ProviderContainer _makeContainer(
+  _FakeRepo repo, {
+  FakeGoogleIdTokenProvider? google,
+}) {
   final ProviderContainer container = ProviderContainer(
     overrides: [
       authRepositoryProvider.overrideWithValue(repo),
+      googleSignInProvider.overrideWithValue(
+        google ?? FakeGoogleIdTokenProvider(),
+      ),
       clockProvider.overrideWithValue(() => _now),
     ],
   );
@@ -118,8 +127,11 @@ ProviderContainer _makeContainer(_FakeRepo repo) {
 }
 
 /// Creates the controller and waits until the start check is done.
-Future<ProviderContainer> _start(_FakeRepo repo) async {
-  final ProviderContainer container = _makeContainer(repo);
+Future<ProviderContainer> _start(
+  _FakeRepo repo, {
+  FakeGoogleIdTokenProvider? google,
+}) async {
+  final ProviderContainer container = _makeContainer(repo, google: google);
   container.read(authControllerProvider);
   await pumpEventQueue();
   return container;
@@ -256,18 +268,6 @@ void main() {
       expect(repo.lastArgs['displayName'], 'Anton');
     });
 
-    test('Google success -> SignedIn', () async {
-      final _FakeRepo repo = _FakeRepo();
-      final ProviderContainer c = await _start(repo);
-
-      final AuthOutcome o = await _controllerOf(c)
-          .signInWithGoogle(idToken: 'g-token');
-
-      expect(o, isA<AuthSuccess>());
-      expect(_stateOf(c), isA<AuthSignedIn>());
-      expect(repo.lastArgs['idToken'], 'g-token');
-    });
-
     test('failure keeps SignedOut and returns the form fields', () async {
       final _FakeRepo repo = _FakeRepo()
         ..authOutcome = const AuthFailure(
@@ -400,6 +400,176 @@ void main() {
 
       expect(_stateOf(c), isA<AuthSignedOut>());
       expect(repo.signOutCalls, 0);
+    });
+  });
+
+  group('google', () {
+    test('success sends the id token and signs in', () async {
+      final _FakeRepo repo = _FakeRepo();
+      final FakeGoogleIdTokenProvider google = FakeGoogleIdTokenProvider();
+      final ProviderContainer c = await _start(repo, google: google);
+
+      final AuthOutcome o = await _controllerOf(c).signInWithGoogle();
+
+      expect(o, isA<AuthSuccess>());
+      expect(repo.lastArgs['idToken'], 'google-id-token');
+      expect(_stateOf(c), isA<AuthSignedIn>());
+      expect(_busyOf(c), isFalse);
+    });
+
+    test('a closed dialog is "cancelled" and calls no server', () async {
+      final _FakeRepo repo = _FakeRepo();
+      final FakeGoogleIdTokenProvider google = FakeGoogleIdTokenProvider()
+        ..result = const GoogleTokenCancelled();
+      final ProviderContainer c = await _start(repo, google: google);
+
+      final AuthFailure f = _failureOf(
+        await _controllerOf(c).signInWithGoogle(),
+      );
+
+      expect(f.kind, AuthFailureKind.cancelled);
+      expect(repo.lastArgs, isEmpty);
+      expect(_stateOf(c), isA<AuthSignedOut>());
+      expect(_busyOf(c), isFalse);
+    });
+
+    test('a plugin failure shows its message and calls no server', () async {
+      final _FakeRepo repo = _FakeRepo();
+      final FakeGoogleIdTokenProvider google = FakeGoogleIdTokenProvider()
+        ..result = const GoogleTokenFailed('Google sign-in failed.');
+      final ProviderContainer c = await _start(repo, google: google);
+
+      final AuthFailure f = _failureOf(
+        await _controllerOf(c).signInWithGoogle(),
+      );
+
+      expect(f.kind, AuthFailureKind.googleSignIn);
+      expect(f.message, 'Google sign-in failed.');
+      expect(repo.lastArgs, isEmpty);
+      expect(_stateOf(c), isA<AuthSignedOut>());
+    });
+
+    test('a server rejection is returned and keeps SignedOut', () async {
+      final _FakeRepo repo = _FakeRepo()
+        ..authOutcome = const AuthFailure(
+          kind: AuthFailureKind.invalidGoogleToken,
+          message: 'Google sign-in failed. Please try again.',
+        );
+      final ProviderContainer c = await _start(repo);
+
+      final AuthFailure f = _failureOf(
+        await _controllerOf(c).signInWithGoogle(),
+      );
+
+      expect(f.kind, AuthFailureKind.invalidGoogleToken);
+      expect(_stateOf(c), isA<AuthSignedOut>());
+    });
+
+    test('actions are blocked while the Google dialog is open', () async {
+      final _FakeRepo repo = _FakeRepo();
+      final FakeGoogleIdTokenProvider google = FakeGoogleIdTokenProvider()
+        ..gate = Completer<GoogleTokenResult>();
+      final ProviderContainer c = await _start(repo, google: google);
+      final AuthController controller = _controllerOf(c);
+
+      final Future<AuthOutcome> first = controller.signInWithGoogle();
+      expect(_busyOf(c), isTrue);
+
+      final AuthFailure second = _failureOf(
+        await controller.signIn(email: 'a@b.com', password: 'pw123456'),
+      );
+      expect(second.kind, AuthFailureKind.busy);
+
+      google.gate!.complete(const GoogleTokenOk('t'));
+      expect(await first, isA<AuthSuccess>());
+      expect(google.getCalls, 1);
+      expect(_busyOf(c), isFalse);
+    });
+
+    test('signOut also signs out of Google', () async {
+      final _FakeRepo repo = _FakeRepo()..session = _validSession;
+      final FakeGoogleIdTokenProvider google = FakeGoogleIdTokenProvider();
+      final ProviderContainer c = await _start(repo, google: google);
+
+      await _controllerOf(c).signOut();
+
+      expect(google.signOutCalls, 1);
+      expect(repo.signOutCalls, 1);
+    });
+
+    test('a global 401 also signs out of Google', () async {
+      final _FakeRepo repo = _FakeRepo()..session = _validSession;
+      final FakeGoogleIdTokenProvider google = FakeGoogleIdTokenProvider();
+      final ProviderContainer c = await _start(repo, google: google);
+
+      c.read(unauthorizedSignalProvider.notifier).notify();
+      await pumpEventQueue();
+
+      expect(_stateOf(c), isA<AuthSignedOut>());
+      expect(google.signOutCalls, 1);
+    });
+  });
+
+  group('google (web flow)', () {
+    test('a token from the web button signs the user in', () async {
+      final _FakeRepo repo = _FakeRepo();
+      final ProviderContainer c = await _start(repo);
+
+      final AuthOutcome o = await _controllerOf(c)
+          .signInWithGoogleResult(const GoogleTokenOk('web-token'));
+
+      expect(o, isA<AuthSuccess>());
+      expect(repo.lastArgs['idToken'], 'web-token');
+      expect(_stateOf(c), isA<AuthSignedIn>());
+      expect(_busyOf(c), isFalse);
+    });
+
+    test('a cancelled result calls no server', () async {
+      final _FakeRepo repo = _FakeRepo();
+      final ProviderContainer c = await _start(repo);
+
+      final AuthFailure f = _failureOf(
+        await _controllerOf(c)
+            .signInWithGoogleResult(const GoogleTokenCancelled()),
+      );
+
+      expect(f.kind, AuthFailureKind.cancelled);
+      expect(repo.lastArgs, isEmpty);
+      expect(_stateOf(c), isA<AuthSignedOut>());
+    });
+
+    test('a failed result shows its message and calls no server', () async {
+      final _FakeRepo repo = _FakeRepo();
+      final ProviderContainer c = await _start(repo);
+
+      final AuthFailure f = _failureOf(
+        await _controllerOf(c).signInWithGoogleResult(
+          const GoogleTokenFailed('Google sign-in failed.'),
+        ),
+      );
+
+      expect(f.kind, AuthFailureKind.googleSignIn);
+      expect(f.message, 'Google sign-in failed.');
+      expect(repo.lastArgs, isEmpty);
+    });
+
+    test('a second token is ignored while the first one runs', () async {
+      final _FakeRepo repo = _FakeRepo()..authGate = Completer<AuthOutcome>();
+      final ProviderContainer c = await _start(repo);
+      final AuthController controller = _controllerOf(c);
+
+      final Future<AuthOutcome> first = controller.signInWithGoogleResult(
+        const GoogleTokenOk('t1'),
+      );
+      final AuthFailure second = _failureOf(
+        await controller.signInWithGoogleResult(const GoogleTokenOk('t2')),
+      );
+
+      expect(second.kind, AuthFailureKind.busy);
+
+      repo.authGate!.complete(const AuthSuccess(_user));
+      expect(await first, isA<AuthSuccess>());
+      expect(repo.lastArgs['idToken'], 't1');
     });
   });
 }
