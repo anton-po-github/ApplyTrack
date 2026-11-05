@@ -8,18 +8,28 @@ import 'package:apply_track/features/auth/state/auth_state.dart';
 import 'package:apply_track/features/auth/ui/login_screen.dart';
 import 'package:apply_track/features/auth/ui/signup_screen.dart';
 import 'package:apply_track/features/auth/ui/startup_screen.dart';
-import 'package:apply_track/features/counter/counter_screen.dart';
-import 'package:apply_track/features/home/home_screen.dart';
 import 'package:apply_track/features/home/not_found_screen.dart';
-import 'package:apply_track/features/layout_demo/widgets/layout_demo_screen.dart';
+import 'package:apply_track/features/proposals/domain/proposal_id.dart';
+import 'package:apply_track/features/shell/app_shell.dart';
+import 'package:apply_track/features/shell/placeholder_screens.dart';
 
 abstract final class AppRoutes {
+  /// The proposal list (first tab).
   static const String home = '/';
-  static const String counter = '/counter';
-  static const String layout = '/layout';
+  static const String stats = '/stats';
+  static const String proposalNew = '/proposals/new';
   static const String login = '/login';
   static const String signup = '/signup';
   static const String startup = '/startup';
+
+  // Not routed any more. Step 12 deletes them with their screens.
+  static const String counter = '/counter';
+  static const String layout = '/layout';
+
+  /// The id must be a GUID. Anything else goes to the not found screen.
+  static String proposal(String id) => '/proposals/${Uri.encodeComponent(id)}';
+
+  static String proposalEdit(String id) => '${proposal(id)}/edit';
 }
 
 /// The guard (like a CanActivate in Angular). A pure function, so it is
@@ -36,6 +46,15 @@ String? authRedirect(AuthState auth, String location) {
   };
 }
 
+/// A page for one proposal. A bad id never reaches the screen.
+Widget _proposalPage(GoRouterState state, Widget Function(String id) build) {
+  final String? id = state.pathParameters['id'];
+  if (id == null || !ProposalId.isValid(id)) {
+    return NotFoundScreen(location: state.uri.toString());
+  }
+  return build(id);
+}
+
 GoRouter createAppRouter({
   required AuthState Function() authState,
   required Listenable refreshListenable,
@@ -47,20 +66,62 @@ GoRouter createAppRouter({
     redirect: (BuildContext context, GoRouterState state) =>
         authRedirect(authState(), state.uri.path),
     routes: <RouteBase>[
+      StatefulShellRoute.indexedStack(
+        builder: (
+          BuildContext context,
+          GoRouterState state,
+          StatefulNavigationShell navigationShell,
+        ) => AppShell(navigationShell: navigationShell),
+        // The order of the branches MUST match the tabs in `AppShell`.
+        branches: <StatefulShellBranch>[
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: AppRoutes.home,
+                builder: (BuildContext context, GoRouterState state) =>
+                    const PlaceholderBody(text: 'Proposal list - coming soon'),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: AppRoutes.stats,
+                builder: (BuildContext context, GoRouterState state) =>
+                    const PlaceholderBody(text: 'Stats - coming soon'),
+              ),
+            ],
+          ),
+        ],
+      ),
+      // `new` MUST come before `:id`, or "new" would be read as an id.
       GoRoute(
-        path: AppRoutes.home,
+        path: AppRoutes.proposalNew,
         builder: (BuildContext context, GoRouterState state) =>
-            const HomeScreen(),
+            const PlaceholderPage(
+              title: 'New proposal',
+              text: 'New proposal form - coming soon',
+            ),
       ),
       GoRoute(
-        path: AppRoutes.counter,
-        builder: (BuildContext context, GoRouterState state) =>
-            const CounterScreen(),
+        path: '/proposals/:id',
+        builder: (BuildContext context, GoRouterState state) => _proposalPage(
+          state,
+          (String id) => const PlaceholderPage(
+            title: 'Proposal',
+            text: 'Proposal details - coming soon',
+          ),
+        ),
       ),
       GoRoute(
-        path: AppRoutes.layout,
-        builder: (BuildContext context, GoRouterState state) =>
-            const LayoutDemoScreen(),
+        path: '/proposals/:id/edit',
+        builder: (BuildContext context, GoRouterState state) => _proposalPage(
+          state,
+          (String id) => const PlaceholderPage(
+            title: 'Edit proposal',
+            text: 'Edit proposal form - coming soon',
+          ),
+        ),
       ),
       GoRoute(
         path: AppRoutes.login,
