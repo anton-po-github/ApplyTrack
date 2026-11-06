@@ -2,11 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
-import 'package:apply_track/core/layout/max_content_width.dart';
 import 'package:apply_track/features/auth/domain/auth_outcome.dart';
 import 'package:apply_track/features/auth/domain/auth_validators.dart';
 import 'package:apply_track/features/auth/state/auth_controller.dart';
 import 'package:apply_track/features/auth/ui/auth_form_errors.dart';
+import 'package:apply_track/features/auth/ui/auth_layout.dart';
 import 'package:apply_track/features/auth/ui/auth_widgets.dart';
 import 'package:apply_track/router/app_router.dart';
 
@@ -18,6 +18,9 @@ class SignupScreen extends ConsumerStatefulWidget {
 }
 
 class _SignupScreenState extends ConsumerState<SignupScreen> {
+  static const String _description =
+      'Create an account to start tracking your proposals. Save each one, '
+      'set follow-up dates, and see how many you win.';
   static const Set<String> _knownFields = <String>{
     'displayName',
     'email',
@@ -72,62 +75,56 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   Widget build(BuildContext context) {
     final bool busy = ref.watch(authBusyProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Sign up')),
-      body: MaxContentWidth(
-        maxWidth: 480,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: 16,
-              children: <Widget>[
-                TextFormField(
-                  controller: _name,
-                  decoration: const InputDecoration(
-                    labelText: 'Name',
-                    border: OutlineInputBorder(),
-                  ),
-                  textCapitalization: TextCapitalization.words,
-                  textInputAction: TextInputAction.next,
-                  onChanged: (String _) => _clearError('displayName'),
-                  validator: (String? value) =>
-                      _errors.fields['displayName'] ??
-                      AuthValidators.displayName(value),
-                ),
-                EmailField(
-                  controller: _email,
-                  onChanged: (String _) => _clearError('email'),
-                  validator: (String? value) =>
-                      _errors.fields['email'] ?? AuthValidators.email(value),
-                ),
-                PasswordField(
-                  controller: _password,
-                  isNewPassword: true,
-                  helperText: '8 to 128 characters',
-                  onChanged: (String _) => _clearError('password'),
-                  onSubmitted: (String _) => _submit(),
-                  validator: (String? value) =>
-                      _errors.fields['password'] ??
-                      AuthValidators.signupPassword(value),
-                ),
-                if (_errors.message case final String message)
-                  AuthErrorBanner(message: message),
-                AuthSubmitButton(
-                  label: 'Create account',
-                  busy: busy,
-                  onPressed: _submit,
-                ),
-                TextButton(
-                  onPressed: busy ? null : () => context.go(AppRoutes.login),
-                  child: const Text('Have an account? Sign in'),
-                ),
-              ],
+    return AuthLayout(
+      description: _description,
+      child: Form(
+        key: _formKey,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: 16,
+          children: <Widget>[
+            TextFormField(
+              controller: _name,
+              decoration: const InputDecoration(
+                labelText: 'Name',
+                border: OutlineInputBorder(),
+              ),
+              textCapitalization: TextCapitalization.words,
+              textInputAction: TextInputAction.next,
+              onChanged: (String _) => _clearError('displayName'),
+              validator: (String? value) =>
+                  _errors.fields['displayName'] ??
+                  AuthValidators.displayName(value),
             ),
-          ),
+            EmailField(
+              controller: _email,
+              onChanged: (String _) => _clearError('email'),
+              validator: (String? value) =>
+                  _errors.fields['email'] ?? AuthValidators.email(value),
+            ),
+            PasswordField(
+              controller: _password,
+              isNewPassword: true,
+              helperText: '8 to 128 characters',
+              onChanged: (String _) => _clearError('password'),
+              onSubmitted: (String _) => _submit(),
+              validator: (String? value) =>
+                  _errors.fields['password'] ??
+                  AuthValidators.signupPassword(value),
+            ),
+            if (_errors.message case final String message)
+              AuthErrorBanner(message: message),
+            AuthSubmitButton(
+              label: 'Create account',
+              busy: busy,
+              onPressed: _submit,
+            ),
+            TextButton(
+              onPressed: busy ? null : () => context.go(AppRoutes.login),
+              child: const Text('Have an account? Sign in'),
+            ),
+          ],
         ),
       ),
     );
