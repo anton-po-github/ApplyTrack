@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:apply_track/features/proposals/domain/calendar_date.dart';
+import 'package:apply_track/features/proposals/domain/proposal_validators.dart';
 import 'package:apply_track/features/proposals/ui/proposal_formatters.dart';
 
 void main() {
@@ -40,6 +41,24 @@ void main() {
       expect(names.toSet(), hasLength(12));
       expect(names.first, 'Jan');
       expect(names.last, 'Dec');
+    });
+  });
+
+  group('formatBudgetInput', () {
+    test('whole numbers have no decimals', () {
+      expect(formatBudgetInput(0), '0');
+      expect(formatBudgetInput(1500), '1500');
+    });
+
+    test('other numbers have 2 decimals and no commas', () {
+      expect(formatBudgetInput(1234.5), '1234.50');
+      expect(formatBudgetInput(99.99), '99.99');
+    });
+
+    test('the text passes the budget validator', () {
+      for (final double value in <double>[0, 1, 1500, 1234.5, 0.05]) {
+        expect(ProposalValidators.budget(formatBudgetInput(value)), isNull);
+      }
     });
   });
 }

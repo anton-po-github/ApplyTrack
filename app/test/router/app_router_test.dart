@@ -7,6 +7,7 @@ import 'package:apply_track/features/auth/state/auth_state.dart';
 import 'package:apply_track/features/auth/ui/login_screen.dart';
 import 'package:apply_track/features/auth/ui/signup_screen.dart';
 import 'package:apply_track/features/auth/ui/startup_screen.dart';
+import 'package:apply_track/features/proposals/ui/proposal_form_screen.dart';
 import 'package:apply_track/features/proposals/ui/proposal_list_screen.dart';
 import 'package:apply_track/features/shell/app_shell.dart';
 import 'package:apply_track/router/app_router.dart';
@@ -194,7 +195,8 @@ void main() {
 
       await goTo(tester, AppRoutes.proposalNew);
 
-      expect(find.text('New proposal form - coming soon'), findsOneWidget);
+      expect(find.byType(ProposalFormScreen), findsOneWidget);
+      expect(find.text('New proposal'), findsOneWidget);
       expect(find.text('Page not found'), findsNothing);
       expect(find.byType(AppShell), findsNothing);
     });
@@ -212,7 +214,8 @@ void main() {
 
       await goTo(tester, AppRoutes.proposalEdit(routeTestId));
 
-      expect(find.text('Edit proposal form - coming soon'), findsOneWidget);
+      expect(find.byType(ProposalFormScreen), findsOneWidget);
+      expect(find.text('Edit proposal'), findsOneWidget);
     });
 
     testWidgets('an id that is not a GUID gives not found (detail)', (
@@ -235,7 +238,7 @@ void main() {
       await goTo(tester, '/proposals/12345/edit');
 
       expect(find.text('Page not found'), findsOneWidget);
-      expect(find.text('Edit proposal form - coming soon'), findsNothing);
+      expect(find.byType(ProposalFormScreen), findsNothing);
     });
 
     testWidgets('Go home on the not found screen returns to the shell', (
@@ -255,7 +258,7 @@ void main() {
 
       routerOf(tester, find.byType(AppShell)).push(AppRoutes.proposalNew);
       await tester.pumpAndSettle();
-      expect(find.text('New proposal form - coming soon'), findsOneWidget);
+      expect(find.byType(ProposalFormScreen), findsOneWidget);
 
       await tester.tap(find.byTooltip('Back'));
       await tester.pumpAndSettle();

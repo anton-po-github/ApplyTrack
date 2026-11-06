@@ -4,6 +4,7 @@ import 'package:apply_track/features/proposals/data/proposals_api.dart';
 import 'package:apply_track/features/proposals/domain/proposal.dart';
 import 'package:apply_track/features/proposals/domain/proposal_draft.dart';
 import 'package:apply_track/features/proposals/domain/proposal_page.dart';
+import 'package:apply_track/features/proposals/domain/proposal_platform.dart';
 import 'package:apply_track/features/proposals/domain/proposal_status.dart';
 
 /// The arguments of one `list` call.
@@ -23,11 +24,26 @@ typedef ListHandler = Future<ApiResult<ProposalPage>> Function(ListCall call);
 final class FakeProposalsApi implements ProposalsApi {
   final List<ListCall> listCalls = <ListCall>[];
   final List<ProposalDraft> createCalls = <ProposalDraft>[];
+  final List<String> getIds = <String>[];
   final List<String> updateIds = <String>[];
+  final List<ProposalDraft> updateDrafts = <ProposalDraft>[];
   final List<String> deleteIds = <String>[];
 
   ListHandler listHandler = (ListCall call) async =>
       const ApiOk<ProposalPage>(ProposalPage(items: <Proposal>[]));
+
+  /// By default it gives a proposal with the asked id.
+  Future<ApiResult<Proposal>> Function(String id) getHandler =
+      (String id) async => ApiOk<Proposal>(
+        Proposal(
+          id: id,
+          title: 'Proposal from server',
+          platform: ProposalPlatform.upwork,
+          status: ProposalStatus.draft,
+          createdAtMs: 1,
+          updatedAtMs: 1,
+        ),
+      );
 
   Future<ApiResult<Proposal>> Function(ProposalDraft draft) createHandler = (
     ProposalDraft draft,
@@ -59,8 +75,10 @@ final class FakeProposalsApi implements ProposalsApi {
   }
 
   @override
-  Future<ApiResult<Proposal>> get(String id) =>
-      throw UnimplementedError('Not used by the list state.');
+  Future<ApiResult<Proposal>> get(String id) {
+    getIds.add(id);
+    return getHandler(id);
+  }
 
   @override
   Future<ApiResult<Proposal>> create(ProposalDraft draft) {
@@ -71,6 +89,7 @@ final class FakeProposalsApi implements ProposalsApi {
   @override
   Future<ApiResult<Proposal>> update(String id, ProposalDraft draft) {
     updateIds.add(id);
+    updateDrafts.add(draft);
     return updateHandler(id, draft);
   }
 

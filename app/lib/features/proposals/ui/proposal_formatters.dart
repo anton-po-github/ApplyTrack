@@ -39,3 +39,9 @@ String formatBudget(double value) {
 /// `2026-12-31` -> `31 Dec 2026`. No locale, so it looks the same everywhere.
 String formatCalendarDate(CalendarDate date) =>
     '${date.day} ${_months[date.month - 1]} ${date.year}';
+
+/// The budget as text for an input: `1500` or `1234.50`. No sign, no commas.
+String formatBudgetInput(double value) {
+  final bool whole = value == value.roundToDouble();
+  return value.toStringAsFixed(whole ? 0 : 2);
+}

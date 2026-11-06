@@ -10,6 +10,7 @@ import 'package:apply_track/features/auth/ui/signup_screen.dart';
 import 'package:apply_track/features/auth/ui/startup_screen.dart';
 import 'package:apply_track/features/home/not_found_screen.dart';
 import 'package:apply_track/features/proposals/domain/proposal_id.dart';
+import 'package:apply_track/features/proposals/ui/proposal_form_screen.dart';
 import 'package:apply_track/features/proposals/ui/proposal_list_screen.dart';
 import 'package:apply_track/features/shell/app_shell.dart';
 import 'package:apply_track/features/shell/placeholder_screens.dart';
@@ -99,10 +100,7 @@ GoRouter createAppRouter({
       GoRoute(
         path: AppRoutes.proposalNew,
         builder: (BuildContext context, GoRouterState state) =>
-            const PlaceholderPage(
-              title: 'New proposal',
-              text: 'New proposal form - coming soon',
-            ),
+            const ProposalFormScreen(),
       ),
       GoRoute(
         path: '/proposals/:id',
@@ -118,10 +116,7 @@ GoRouter createAppRouter({
         path: '/proposals/:id/edit',
         builder: (BuildContext context, GoRouterState state) => _proposalPage(
           state,
-          (String id) => const PlaceholderPage(
-            title: 'Edit proposal',
-            text: 'Edit proposal form - coming soon',
-          ),
+          (String id) => ProposalFormScreen(proposalId: id),
         ),
       ),
       GoRoute(
