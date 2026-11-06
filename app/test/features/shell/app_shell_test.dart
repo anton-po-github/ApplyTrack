@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:apply_track/features/auth/ui/login_screen.dart';
 import 'package:apply_track/features/proposals/ui/proposal_list_screen.dart';
+import 'package:apply_track/features/proposals/ui/stats_screen.dart';
 import 'package:apply_track/features/shell/app_shell.dart';
 import 'package:apply_track/router/app_router.dart';
 
@@ -10,8 +11,6 @@ import '../../support/app_test_helpers.dart';
 import '../../support/auth_test_helpers.dart';
 
 void main() {
-  const String statsText = 'Stats - coming soon';
-
   String currentPath(WidgetTester tester) => routerOf(
     tester,
     find.byType(AppShell),
@@ -90,7 +89,7 @@ void main() {
 
       await tester.tap(find.text('Stats'));
       await tester.pumpAndSettle();
-      expect(find.text(statsText), findsOneWidget);
+      expect(find.byType(StatsScreen), findsOneWidget);
       expect(find.byType(ProposalListScreen), findsNothing);
       expect(
         tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
@@ -109,7 +108,7 @@ void main() {
 
       await goTo(tester, AppRoutes.stats);
 
-      expect(find.text(statsText), findsOneWidget);
+      expect(find.byType(StatsScreen), findsOneWidget);
       expect(
         tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
         1,
@@ -131,7 +130,7 @@ void main() {
 
       await tester.tap(find.text('Stats'));
       await tester.pumpAndSettle();
-      expect(find.text(statsText), findsOneWidget);
+      expect(find.byType(StatsScreen), findsOneWidget);
       expect(
         tester
             .widget<NavigationRail>(find.byType(NavigationRail))

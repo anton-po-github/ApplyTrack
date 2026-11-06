@@ -13,8 +13,8 @@ import 'package:apply_track/features/proposals/domain/proposal_id.dart';
 import 'package:apply_track/features/proposals/ui/proposal_detail_screen.dart';
 import 'package:apply_track/features/proposals/ui/proposal_form_screen.dart';
 import 'package:apply_track/features/proposals/ui/proposal_list_screen.dart';
+import 'package:apply_track/features/proposals/ui/stats_screen.dart';
 import 'package:apply_track/features/shell/app_shell.dart';
-import 'package:apply_track/features/shell/placeholder_screens.dart';
 
 abstract final class AppRoutes {
   /// The proposal list (first tab).
@@ -91,7 +91,7 @@ GoRouter createAppRouter({
               GoRoute(
                 path: AppRoutes.stats,
                 builder: (BuildContext context, GoRouterState state) =>
-                    const PlaceholderBody(text: 'Stats - coming soon'),
+                    const StatsScreen(),
               ),
             ],
           ),

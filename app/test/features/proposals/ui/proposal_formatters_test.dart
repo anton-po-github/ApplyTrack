@@ -61,4 +61,17 @@ void main() {
       }
     });
   });
+
+  group('formatWinRate', () {
+    test('rounds to a whole percent', () {
+      expect(formatWinRate(0), '0%');
+      expect(formatWinRate(0.25), '25%');
+      expect(formatWinRate(2 / 3), '67%');
+      expect(formatWinRate(1), '100%');
+    });
+
+    test('null gives a dash', () {
+      expect(formatWinRate(null), '\u2014');
+    });
+  });
 }

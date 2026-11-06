@@ -45,3 +45,7 @@ String formatBudgetInput(double value) {
   final bool whole = value == value.roundToDouble();
   return value.toStringAsFixed(whole ? 0 : 2);
 }
+
+/// `0.75` -> `75%`. Null (nothing decided yet) gives a dash.
+String formatWinRate(double? rate) =>
+    rate == null ? '\u2014' : '${(rate * 100).round()}%';

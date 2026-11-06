@@ -11,6 +11,7 @@ import 'package:apply_track/router/app_router.dart';
 
 import 'auth_test_helpers.dart';
 import 'fake_proposals_api.dart';
+import 'fake_stats_api.dart';
 
 /// A valid proposal id for route tests.
 const String routeTestId = '0190a1b2-0000-7000-8000-000000000001';
@@ -23,6 +24,7 @@ Future<void> pumpApp(
   String location = AppRoutes.home,
   double? width,
   FakeProposalsApi? proposalsApi,
+  FakeStatsApi? statsApi,
 }) async {
   if (width != null) {
     tester.view.physicalSize = Size(width, 900);
@@ -36,6 +38,7 @@ Future<void> pumpApp(
         proposalsApiProvider.overrideWithValue(
           proposalsApi ?? FakeProposalsApi(),
         ),
+        statsApiProvider.overrideWithValue(statsApi ?? FakeStatsApi()),
         initialLocationProvider.overrideWithValue(location),
       ],
       child: const AppRoot(),
