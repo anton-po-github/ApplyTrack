@@ -3,8 +3,8 @@ import 'package:material_ui/material_ui.dart';
 import 'package:apply_track/features/proposals/domain/calendar_date.dart';
 import 'package:apply_track/features/proposals/domain/proposal.dart';
 import 'package:apply_track/features/proposals/domain/proposal_follow_up.dart';
-import 'package:apply_track/features/proposals/domain/proposal_status.dart';
 import 'package:apply_track/features/proposals/ui/proposal_formatters.dart';
+import 'package:apply_track/features/proposals/ui/proposal_status_chip.dart';
 
 /// One row of the list. [today] comes from the caller, so the card is easy
 /// to test and does not read the clock itself.
@@ -50,7 +50,7 @@ class ProposalCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  _StatusChip(status: proposal.status),
+                  ProposalStatusChip(status: proposal.status),
                 ],
               ),
               if (company != null) ...<Widget>[
@@ -123,43 +123,6 @@ class _Meta extends StatelessWidget {
         const SizedBox(width: 4),
         Flexible(child: Text(text, style: style)),
       ],
-    );
-  }
-}
-
-class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.status});
-
-  final ProposalStatus status;
-
-  @override
-  Widget build(BuildContext context) {
-    final ColorScheme scheme = Theme.of(context).colorScheme;
-    final (Color background, Color foreground) = switch (status) {
-      ProposalStatus.won => (
-        scheme.tertiaryContainer,
-        scheme.onTertiaryContainer,
-      ),
-      ProposalStatus.lost => (scheme.errorContainer, scheme.onErrorContainer),
-      ProposalStatus.draft => (
-        scheme.surfaceContainerHighest,
-        scheme.onSurfaceVariant,
-      ),
-      _ => (scheme.secondaryContainer, scheme.onSecondaryContainer),
-    };
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        child: Text(
-          status.label,
-          style: Theme.of(context).textTheme.labelMedium
-              ?.copyWith(color: foreground),
-        ),
-      ),
     );
   }
 }

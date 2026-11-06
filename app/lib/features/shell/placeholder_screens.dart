@@ -1,6 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
-/// Temporary content for a tab. Steps 8 and 11 replace it.
+/// Temporary content for a tab. Step 11 replaces it.
 class PlaceholderBody extends StatelessWidget {
   const PlaceholderBody({super.key, required this.text});
 
@@ -17,23 +17,6 @@ class PlaceholderBody extends StatelessWidget {
           style: Theme.of(context).textTheme.titleMedium,
         ),
       ),
-    );
-  }
-}
-
-/// Temporary full screen page (with a back button). Steps 9 and 10
-/// replace it.
-class PlaceholderPage extends StatelessWidget {
-  const PlaceholderPage({super.key, required this.title, required this.text});
-
-  final String title;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: PlaceholderBody(text: text),
     );
   }
 }

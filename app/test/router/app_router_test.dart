@@ -7,6 +7,7 @@ import 'package:apply_track/features/auth/state/auth_state.dart';
 import 'package:apply_track/features/auth/ui/login_screen.dart';
 import 'package:apply_track/features/auth/ui/signup_screen.dart';
 import 'package:apply_track/features/auth/ui/startup_screen.dart';
+import 'package:apply_track/features/proposals/ui/proposal_detail_screen.dart';
 import 'package:apply_track/features/proposals/ui/proposal_form_screen.dart';
 import 'package:apply_track/features/proposals/ui/proposal_list_screen.dart';
 import 'package:apply_track/features/shell/app_shell.dart';
@@ -88,7 +89,7 @@ void main() {
       );
 
       expect(find.byType(LoginScreen), findsOneWidget);
-      expect(find.text('Proposal details - coming soon'), findsNothing);
+      expect(find.byType(ProposalDetailScreen), findsNothing);
     });
 
     testWidgets('saved session: the app opens on the shell', (tester) async {
@@ -206,7 +207,8 @@ void main() {
 
       await goTo(tester, AppRoutes.proposal(routeTestId));
 
-      expect(find.text('Proposal details - coming soon'), findsOneWidget);
+      expect(find.byType(ProposalDetailScreen), findsOneWidget);
+      expect(find.text('Proposal from server'), findsOneWidget);
     });
 
     testWidgets('a GUID opens the edit page', (tester) async {
@@ -227,7 +229,7 @@ void main() {
 
       expect(find.text('Page not found'), findsOneWidget);
       expect(find.text('No page for /proposals/not-a-guid'), findsOneWidget);
-      expect(find.text('Proposal details - coming soon'), findsNothing);
+      expect(find.byType(ProposalDetailScreen), findsNothing);
     });
 
     testWidgets('an id that is not a GUID gives not found (edit)', (

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:apply_track/core/links/external_link_opener.dart';
 import 'package:apply_track/features/auth/state/auth_controller.dart';
 import 'package:apply_track/features/auth/state/auth_dependencies.dart';
 import 'package:apply_track/features/auth/state/auth_state.dart';
@@ -17,6 +18,10 @@ final Provider<ProposalsApi> proposalsApiProvider = Provider<ProposalsApi>(
 final Provider<StatsApi> statsApiProvider = Provider<StatsApi>(
   (Ref ref) => HttpStatsApi(ref.watch(apiClientProvider)),
 );
+
+/// Opens links in the system browser. Tests replace it with a fake.
+final Provider<ExternalLinkOpener> externalLinkOpenerProvider =
+    Provider<ExternalLinkOpener>((Ref ref) => const UrlLauncherLinkOpener());
 
 /// The id of the signed-in user. Null in every other auth state.
 /// Proposal state watches it, so another user never sees old data.
