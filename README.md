@@ -15,7 +15,7 @@ ApplyTrack shows what is sent, what is waiting, and what is won.
 <p align="center">
   <img src="docs/screenshots/01-list.jpg" width="23%" alt="Proposal list" />
   <img src="docs/screenshots/02-form.jpg" width="23%" alt="Add proposal form" />
-  <img src="docs/screenshots/03-login.jpg" width="23%" alt="Proposal details" />
+  <img src="docs/screenshots/03-login.jpg" width="23%" alt="Login screen" />
   <img src="docs/screenshots/04-stats.jpg" width="23%" alt="Stats screen" />
 </p>
 
