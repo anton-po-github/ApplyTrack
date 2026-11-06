@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'package:apply_track/features/auth/ui/login_screen.dart';
+import 'package:apply_track/features/proposals/ui/proposal_list_screen.dart';
 import 'package:apply_track/features/shell/app_shell.dart';
 import 'package:apply_track/router/app_router.dart';
 
@@ -9,7 +10,6 @@ import '../../support/app_test_helpers.dart';
 import '../../support/auth_test_helpers.dart';
 
 void main() {
-  const String listText = 'Proposal list - coming soon';
   const String statsText = 'Stats - coming soon';
 
   String currentPath(WidgetTester tester) => routerOf(
@@ -39,8 +39,10 @@ void main() {
 
       expect(find.byType(NavigationRail), findsOneWidget);
       expect(find.byType(NavigationBar), findsNothing);
-      expect(tester.widget<NavigationRail>(find.byType(NavigationRail)).extended,
-          isFalse);
+      expect(
+        tester.widget<NavigationRail>(find.byType(NavigationRail)).extended,
+        isFalse,
+      );
     });
 
     testWidgets('900 wide: extended side rail', (tester) async {
@@ -48,8 +50,10 @@ void main() {
 
       expect(find.byType(NavigationRail), findsOneWidget);
       expect(find.byType(NavigationBar), findsNothing);
-      expect(tester.widget<NavigationRail>(find.byType(NavigationRail)).extended,
-          isTrue);
+      expect(
+        tester.widget<NavigationRail>(find.byType(NavigationRail)).extended,
+        isTrue,
+      );
     });
 
     testWidgets('bottom bar shows both tab names', (tester) async {
@@ -71,7 +75,7 @@ void main() {
     testWidgets('opens on the Proposals tab', (tester) async {
       await pumpApp(tester, signedInRepo(), width: 400);
 
-      expect(find.text(listText), findsOneWidget);
+      expect(find.byType(ProposalListScreen), findsOneWidget);
       expect(
         tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
         0,
@@ -87,7 +91,7 @@ void main() {
       await tester.tap(find.text('Stats'));
       await tester.pumpAndSettle();
       expect(find.text(statsText), findsOneWidget);
-      expect(find.text(listText), findsNothing);
+      expect(find.byType(ProposalListScreen), findsNothing);
       expect(
         tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
         1,
@@ -96,7 +100,7 @@ void main() {
 
       await tester.tap(find.text('Proposals'));
       await tester.pumpAndSettle();
-      expect(find.text(listText), findsOneWidget);
+      expect(find.byType(ProposalListScreen), findsOneWidget);
       expect(currentPath(tester), AppRoutes.home);
     });
 
@@ -117,9 +121,11 @@ void main() {
     testWidgets('switches tabs with the rail', (tester) async {
       await pumpApp(tester, signedInRepo(), width: 900);
 
-      expect(find.text(listText), findsOneWidget);
+      expect(find.byType(ProposalListScreen), findsOneWidget);
       expect(
-        tester.widget<NavigationRail>(find.byType(NavigationRail)).selectedIndex,
+        tester
+            .widget<NavigationRail>(find.byType(NavigationRail))
+            .selectedIndex,
         0,
       );
 
@@ -127,29 +133,27 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text(statsText), findsOneWidget);
       expect(
-        tester.widget<NavigationRail>(find.byType(NavigationRail)).selectedIndex,
+        tester
+            .widget<NavigationRail>(find.byType(NavigationRail))
+            .selectedIndex,
         1,
       );
 
       await tester.tap(find.text('Proposals'));
       await tester.pumpAndSettle();
-      expect(find.text(listText), findsOneWidget);
+      expect(find.byType(ProposalListScreen), findsOneWidget);
     });
   });
 
   group('app bar', () {
-    testWidgets('shows the user name and the sign out button', (
-      tester,
-    ) async {
+    testWidgets('shows the user name and the sign out button', (tester) async {
       await pumpApp(tester, signedInRepo(), width: 400);
 
       expect(find.text('Anton'), findsOneWidget);
       expect(find.byTooltip('Sign out'), findsOneWidget);
     });
 
-    testWidgets('sign out clears the session and shows login', (
-      tester,
-    ) async {
+    testWidgets('sign out clears the session and shows login', (tester) async {
       final FakeAuthRepository repo = signedInRepo();
       await pumpApp(tester, repo, width: 900);
 

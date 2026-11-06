@@ -5,10 +5,12 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:apply_track/app.dart';
 import 'package:apply_track/features/auth/state/auth_dependencies.dart';
+import 'package:apply_track/features/proposals/state/proposals_dependencies.dart';
 import 'package:apply_track/features/shell/app_shell.dart';
 import 'package:apply_track/router/app_router.dart';
 
 import 'auth_test_helpers.dart';
+import 'fake_proposals_api.dart';
 
 /// A valid proposal id for route tests.
 const String routeTestId = '0190a1b2-0000-7000-8000-000000000001';
@@ -20,6 +22,7 @@ Future<void> pumpApp(
   FakeAuthRepository repo, {
   String location = AppRoutes.home,
   double? width,
+  FakeProposalsApi? proposalsApi,
 }) async {
   if (width != null) {
     tester.view.physicalSize = Size(width, 900);
@@ -30,6 +33,9 @@ Future<void> pumpApp(
     ProviderScope(
       overrides: [
         authRepositoryProvider.overrideWithValue(repo),
+        proposalsApiProvider.overrideWithValue(
+          proposalsApi ?? FakeProposalsApi(),
+        ),
         initialLocationProvider.overrideWithValue(location),
       ],
       child: const AppRoot(),

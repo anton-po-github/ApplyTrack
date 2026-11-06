@@ -1,4 +1,5 @@
 import 'package:apply_track/core/api/api_result.dart';
+import 'package:apply_track/features/proposals/domain/calendar_date.dart';
 import 'package:apply_track/features/proposals/domain/proposal.dart';
 import 'package:apply_track/features/proposals/domain/proposal_draft.dart';
 import 'package:apply_track/features/proposals/domain/proposal_page.dart';
@@ -13,11 +14,18 @@ Proposal makeProposal(
   int n, {
   String? title,
   ProposalStatus status = ProposalStatus.draft,
+  ProposalPlatform platform = ProposalPlatform.upwork,
+  String? company,
+  double? budget,
+  CalendarDate? followUpDate,
 }) => Proposal(
   id: proposalId(n),
   title: title ?? 'Proposal $n',
-  platform: ProposalPlatform.upwork,
+  company: company,
+  platform: platform,
   status: status,
+  budget: budget,
+  followUpDate: followUpDate,
   createdAtMs: n,
   updatedAtMs: n,
 );

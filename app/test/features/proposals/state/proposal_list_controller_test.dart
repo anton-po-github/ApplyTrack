@@ -937,4 +937,57 @@ void main() {
       expect(container.read(proposalsChangedProvider), 1);
     });
   });
+
+  group('clearFilters', () {
+    test('removes status and search and loads page 1 at once', () async {
+      await start();
+      await controller().setStatus(ProposalStatus.won);
+      controller().setQuery('flutter');
+      timers.last.fire();
+      await pumpEventQueue();
+      expect(read().hasFilter, isTrue);
+      final int calls = api.listCalls.length;
+
+      await controller().clearFilters();
+
+      expect(api.listCalls, hasLength(calls + 1));
+      expect(api.listCalls.last.status, isNull);
+      expect(api.listCalls.last.q, isNull);
+      expect(api.listCalls.last.cursor, isNull);
+      expect(read().hasFilter, isFalse);
+    });
+
+    test('cancels a search that is still waiting', () async {
+      await start();
+      await controller().setStatus(ProposalStatus.won);
+      controller().setQuery('abc');
+      final FakeTimer waiting = timers.last;
+
+      await controller().clearFilters();
+      final int calls = api.listCalls.length;
+      waiting.fire();
+      await pumpEventQueue();
+
+      expect(waiting.cancelled, isTrue);
+      expect(api.listCalls, hasLength(calls));
+      expect(read().query, isNull);
+    });
+
+    test('does nothing when there is no filter', () async {
+      await start();
+
+      await controller().clearFilters();
+
+      expect(api.listCalls, hasLength(1));
+    });
+
+    test('does nothing when nobody is signed in', () async {
+      await start();
+      container.read(testUserIdProvider.notifier).set(null);
+
+      await controller().clearFilters();
+
+      expect(api.listCalls, hasLength(1));
+    });
+  });
 }

@@ -148,6 +148,17 @@ class ProposalListController extends Notifier<ProposalListState> {
     await refresh();
   }
 
+  /// Removes the status filter and the search text, and loads page 1 again.
+  /// Starts at once (no debounce) and cancels a search that is waiting.
+  Future<void> clearFilters() async {
+    _cancelDebounce();
+    if (!_canRun || !state.hasFilter) {
+      return;
+    }
+    state = _reset();
+    await refresh();
+  }
+
   /// Search by title. The request starts after a pause in typing.
   /// Text that the server would refuse (too long, control characters)
   /// is ignored, so it is never sent.

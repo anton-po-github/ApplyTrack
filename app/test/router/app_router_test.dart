@@ -7,6 +7,7 @@ import 'package:apply_track/features/auth/state/auth_state.dart';
 import 'package:apply_track/features/auth/ui/login_screen.dart';
 import 'package:apply_track/features/auth/ui/signup_screen.dart';
 import 'package:apply_track/features/auth/ui/startup_screen.dart';
+import 'package:apply_track/features/proposals/ui/proposal_list_screen.dart';
 import 'package:apply_track/features/shell/app_shell.dart';
 import 'package:apply_track/router/app_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -93,7 +94,7 @@ void main() {
       await pumpApp(tester, signedInRepo());
 
       expect(find.byType(AppShell), findsOneWidget);
-      expect(find.text('Proposal list - coming soon'), findsOneWidget);
+      expect(find.byType(ProposalListScreen), findsOneWidget);
       expect(find.text('Anton'), findsOneWidget);
     });
 
