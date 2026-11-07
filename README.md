@@ -40,7 +40,7 @@ ApplyTrack shows what is sent, what is waiting, and what is won.
 | Budget | Optional, number ≥ 0 |
 | Follow-up date | Optional |
 | Link | Optional, valid URL |
-| Notes | Optional, up to 2000 characters |
+| Notes | Optional, up to 4000 characters |
 
 ## Tech stack
 

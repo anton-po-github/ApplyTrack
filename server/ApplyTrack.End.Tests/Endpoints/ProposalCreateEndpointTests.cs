@@ -135,7 +135,7 @@ public class ProposalCreateEndpointTests(ApiFactory factory)
                 budget = -5,
                 followUpDate = "nope",
                 link = "ftp://x",
-                notes = new string('n', 2001),
+                notes = new string('n', 4001),
             }
         );
 

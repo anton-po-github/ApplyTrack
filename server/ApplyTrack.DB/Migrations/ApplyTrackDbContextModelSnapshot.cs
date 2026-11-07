@@ -50,8 +50,8 @@ namespace ApplyTrack.DB.Migrations
                         .HasColumnType("character varying(2048)");
 
                     b.Property<string>("Notes")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
 
                     b.Property<short>("Platform")
                         .HasColumnType("smallint");

@@ -457,7 +457,7 @@ class _ProposalFormState extends ConsumerState<ProposalForm> {
                       alignLabelWithHint: true,
                       border: OutlineInputBorder(),
                     ),
-                    // The counter ("0/2000") comes from maxLength.
+                    // The counter ("0/4000") comes from maxLength.
                     maxLength: ProposalValidators.notesMax,
                     minLines: 4,
                     maxLines: 8,

@@ -28,7 +28,7 @@ public static class ProposalValidator
     public const int MaxPlatformValue = 3;
     public const int MaxStatusValue = 5;
     public const int MaxLinkLength = 2048;
-    public const int MaxNotesLength = 2000;
+    public const int MaxNotesLength = 4000;
     public const decimal MaxBudget = 9_999_999_999.99m; // numeric(12,2)
 
     private static readonly UTF8Encoding StrictUtf8 = new(false, true);

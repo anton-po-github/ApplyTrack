@@ -191,10 +191,10 @@ public class ProposalValidatorTests
     }
 
     [Fact]
-    public void NotesLength_Limit_Is2000()
+    public void NotesLength_Limit_Is4000()
     {
-        Assert.True(IsValid(Req(notes: new string('n', 2000))));
-        AssertError(Req(notes: new string('n', 2001)), "notes");
+        Assert.True(IsValid(Req(notes: new string('n', 4000))));
+        AssertError(Req(notes: new string('n', 4001)), "notes");
     }
 
     [Fact]
@@ -227,7 +227,7 @@ public class ProposalValidatorTests
                 budget: -5m,
                 followUp: "nope",
                 link: "ftp://x",
-                notes: new string('n', 2001)
+                notes: new string('n', 4001)
             )
         );
 

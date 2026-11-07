@@ -185,9 +185,9 @@ void main() {
       expect(ProposalValidators.notes(''), isNull);
     });
 
-    test('max 2000 characters', () {
-      expect(ProposalValidators.notes(rep(2000)), isNull);
-      expect(ProposalValidators.notes(rep(2001)), isNotNull);
+    test('max 4000 characters', () {
+      expect(ProposalValidators.notes(rep(4000)), isNull);
+      expect(ProposalValidators.notes(rep(4001)), isNotNull);
     });
 
     test('line breaks and tabs are allowed', () {
@@ -257,7 +257,7 @@ void main() {
           status: ProposalStatus.lost,
           budget: -1,
           link: 'nope',
-          notes: rep(2001),
+          notes: rep(4001),
         ),
       );
 

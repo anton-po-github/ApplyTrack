@@ -11,7 +11,7 @@ abstract final class ProposalValidators {
   static const int titleMax = 120;
   static const int companyMax = 120;
   static const int linkMax = 2048;
-  static const int notesMax = 2000;
+  static const int notesMax = 4000;
   static const int searchMax = 100;
   static const double budgetMax = 9999999999.99;
 

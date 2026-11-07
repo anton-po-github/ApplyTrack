@@ -155,7 +155,7 @@ void main() {
       }
       expect(textOf(tester, 'field-title'), isEmpty);
       expect(find.text('No date'), findsOneWidget);
-      expect(find.text('0/2000'), findsOneWidget);
+      expect(find.text('0/4000'), findsOneWidget);
       expect(find.text('Save'), findsOneWidget);
       expect(find.byKey(const Key('follow-up-clear')), findsNothing);
       expect(find.byKey(const Key('form-error-banner')), findsNothing);
@@ -166,7 +166,7 @@ void main() {
 
       await type(tester, 'field-notes', 'abc');
 
-      expect(find.text('3/2000'), findsOneWidget);
+      expect(find.text('3/4000'), findsOneWidget);
     });
 
     testWidgets('an empty title is refused and nothing is sent', (

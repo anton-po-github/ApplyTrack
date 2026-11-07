@@ -14,6 +14,6 @@ public static class ProposalLimits
     public const int TitleMaxLength = 120;
     public const int CompanyMaxLength = 120;
     public const int LinkMaxLength = 2048;
-    public const int NotesMaxLength = 2000;
+    public const int NotesMaxLength = 4000;
     public const int MaxLiveProposalsPerUser = 500; // server checks UserStats.Total
 }
