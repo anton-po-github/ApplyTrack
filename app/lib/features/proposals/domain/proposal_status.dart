@@ -9,7 +9,7 @@ enum ProposalStatus {
   won(4, 'Won'),
   lost(5, 'Lost');
 
-  const ProposalStatus(this.apiValue, this.label);
+  new(this.apiValue, this.label);
 
   final int apiValue;
   final String label;

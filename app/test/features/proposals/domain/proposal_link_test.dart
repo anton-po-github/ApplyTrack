@@ -1,6 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:apply_track/features/proposals/domain/proposal_link.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('ProposalLink.tryParse', () {
@@ -23,7 +22,7 @@ void main() {
     });
 
     test('other schemes give null', () {
-      for (final String text in <String>[
+      for (final text in <String>[
         'javascript:alert(1)',
         'file:///etc/passwd',
         'mailto:a@b.com',

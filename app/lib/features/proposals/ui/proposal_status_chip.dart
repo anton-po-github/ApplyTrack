@@ -1,16 +1,15 @@
-import 'package:material_ui/material_ui.dart';
-
 import 'package:apply_track/features/proposals/domain/proposal_status.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// The coloured status label. Used by the list card and the detail screen.
 class ProposalStatusChip extends StatelessWidget {
-  const ProposalStatusChip({super.key, required this.status});
+  const new({required this.status, super.key});
 
   final ProposalStatus status;
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme scheme = Theme.of(context).colorScheme;
+    final scheme = Theme.of(context).colorScheme;
     final (Color background, Color foreground) = switch (status) {
       ProposalStatus.won => (
         scheme.tertiaryContainer,

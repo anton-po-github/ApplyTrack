@@ -1,5 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:apply_track/features/auth/domain/auth_validators.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('normalizeEmail', () {
@@ -20,7 +20,7 @@ void main() {
     });
 
     test('bad shapes are rejected', () {
-      const List<String> bad = <String>[
+      const bad = <String>[
         'abc',
         'a@b',
         'a b@c.com',
@@ -35,7 +35,7 @@ void main() {
         'a>b@c.com',
         'ä@c.com',
       ];
-      for (final String value in bad) {
+      for (final value in bad) {
         expect(
           AuthValidators.email(value),
           'Enter a valid email',

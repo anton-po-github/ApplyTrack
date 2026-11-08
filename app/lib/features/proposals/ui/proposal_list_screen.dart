@@ -1,27 +1,25 @@
 import 'dart:async';
 
-import 'package:flutter/scheduler.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:material_ui/material_ui.dart';
-
 import 'package:apply_track/core/api/api_error.dart';
 import 'package:apply_track/core/api/api_error_message.dart';
 import 'package:apply_track/core/layout/max_content_width.dart';
 import 'package:apply_track/features/auth/state/auth_dependencies.dart';
 import 'package:apply_track/features/proposals/domain/calendar_date.dart';
-import 'package:apply_track/features/proposals/domain/proposal.dart';
 import 'package:apply_track/features/proposals/domain/proposal_status.dart';
 import 'package:apply_track/features/proposals/domain/proposal_validators.dart';
 import 'package:apply_track/features/proposals/state/proposal_list_controller.dart';
 import 'package:apply_track/features/proposals/state/proposal_list_state.dart';
 import 'package:apply_track/features/proposals/ui/proposal_card.dart';
 import 'package:apply_track/router/app_router.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// The first tab: search, status filter, the list and the Add button.
 /// It only shows the state of [proposalListProvider]. It holds no data.
 class ProposalListScreen extends ConsumerStatefulWidget {
-  const ProposalListScreen({super.key});
+  const new({super.key});
 
   @override
   ConsumerState<ProposalListScreen> createState() => _ProposalListScreenState();
@@ -78,16 +76,14 @@ class _ProposalListScreenState extends ConsumerState<ProposalListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final ProposalListState list = ref.watch(proposalListProvider);
-    final CalendarDate today = CalendarDate.fromDateTime(
-      ref.read(clockProvider)(),
-    );
+    final list = ref.watch(proposalListProvider);
+    final today = CalendarDate.fromDateTime(ref.read(clockProvider)());
 
     // A short list may not scroll at all. Then the scroll listener never
     // runs, so we also check after each frame.
     if (list.phase == ProposalListPhase.loaded && list.hasMore) {
       SchedulerBinding.instance.addPostFrameCallback(
-        (Duration _) => _loadMoreIfNearEnd(),
+        (_) => _loadMoreIfNearEnd(),
       );
     }
 
@@ -124,7 +120,7 @@ class _ProposalListScreenState extends ConsumerState<ProposalListScreen> {
                           onPressed: _clearSearchText,
                         ),
                 ),
-                onChanged: (String text) {
+                onChanged: (text) {
                   setState(() {});
                   _controller.setQuery(text);
                 },
@@ -155,7 +151,7 @@ class _ProposalListScreenState extends ConsumerState<ProposalListScreen> {
 }
 
 class _FilterChips extends StatelessWidget {
-  const _FilterChips({required this.selected, required this.onSelected});
+  const new({required this.selected, required this.onSelected});
 
   final ProposalStatus? selected;
   final Future<void> Function(ProposalStatus? status) onSelected;
@@ -182,14 +178,14 @@ class _FilterChips extends StatelessWidget {
         key: ValueKey<String>('filter-${status?.name ?? 'all'}'),
         label: Text(label),
         selected: selected == status,
-        onSelected: (bool _) => onSelected(status),
+        onSelected: (_) => onSelected(status),
       ),
     );
   }
 }
 
 class _Content extends StatelessWidget {
-  const _Content({
+  const new({
     required this.list,
     required this.today,
     required this.scroll,
@@ -250,7 +246,7 @@ class _Content extends StatelessWidget {
       };
     }
 
-    final bool loadingMore = list.phase == ProposalListPhase.loadingMore;
+    final loadingMore = list.phase == ProposalListPhase.loadingMore;
     return RefreshIndicator(
       onRefresh: onRefresh,
       child: ListView.builder(
@@ -260,7 +256,7 @@ class _Content extends StatelessWidget {
         // Space for the Add button, so it never hides the last card.
         padding: const EdgeInsets.only(top: 4, bottom: 88),
         itemCount: list.length + (loadingMore ? 1 : 0),
-        itemBuilder: (BuildContext context, int index) {
+        itemBuilder: (context, index) {
           if (index >= list.length) {
             return const Padding(
               padding: EdgeInsets.all(16),
@@ -269,7 +265,7 @@ class _Content extends StatelessWidget {
               ),
             );
           }
-          final Proposal proposal = list.proposalAt(index);
+          final proposal = list.proposalAt(index);
           return ProposalCard(
             key: ValueKey<String>('proposal-card-${proposal.id}'),
             proposal: proposal,
@@ -284,7 +280,7 @@ class _Content extends StatelessWidget {
 
 /// Lets the user pull to refresh on a screen that has no list items.
 class _PullToRefresh extends StatelessWidget {
-  const _PullToRefresh({required this.onRefresh, required this.child});
+  const new({required this.onRefresh, required this.child});
 
   final Future<void> Function() onRefresh;
   final Widget child;
@@ -292,7 +288,7 @@ class _PullToRefresh extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) {
+      builder: (context, constraints) {
         return RefreshIndicator(
           onRefresh: onRefresh,
           child: ListView(
@@ -308,12 +304,7 @@ class _PullToRefresh extends StatelessWidget {
 }
 
 class _Message extends StatelessWidget {
-  const _Message({
-    super.key,
-    required this.icon,
-    required this.text,
-    this.action,
-  });
+  const new({required this.icon, required this.text, super.key, this.action});
 
   final IconData icon;
   final String text;
@@ -343,14 +334,14 @@ class _Message extends StatelessWidget {
 
 /// An error while old items are still on screen.
 class _ErrorBanner extends StatelessWidget {
-  const _ErrorBanner({required this.error, required this.onRetry});
+  const new({required this.error, required this.onRetry});
 
   final ApiError? error;
   final Future<void> Function() onRetry;
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme scheme = Theme.of(context).colorScheme;
+    final scheme = Theme.of(context).colorScheme;
     return Card(
       key: const Key('list-error-banner'),
       color: scheme.errorContainer,

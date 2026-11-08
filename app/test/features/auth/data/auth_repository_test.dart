@@ -1,5 +1,3 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:apply_track/core/api/api_error.dart';
 import 'package:apply_track/core/api/api_result.dart';
 import 'package:apply_track/features/auth/data/auth_api.dart';
@@ -9,6 +7,7 @@ import 'package:apply_track/features/auth/data/token_storage.dart';
 import 'package:apply_track/features/auth/domain/auth_outcome.dart';
 import 'package:apply_track/features/auth/domain/auth_response.dart';
 import 'package:apply_track/features/auth/domain/user_profile.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 const UserProfile _user = UserProfile(
   id: 'u1',
@@ -90,14 +89,14 @@ void main() {
     repo = DefaultAuthRepository(api: api, storage: storage);
   });
 
-  const Session expectedSession = Session(
+  const expectedSession = Session(
     token: 'tok',
     expiresAtUnixSeconds: 1767225600,
   );
 
   group('success', () {
     test('signUp cleans email and name, keeps the password, saves', () async {
-      final AuthOutcome o = await repo.signUp(
+      final o = await repo.signUp(
         email: '  Anton@Example.COM ',
         password: '  my pass 123  ',
         displayName: '  Anton  ',
@@ -114,10 +113,7 @@ void main() {
     });
 
     test('signIn cleans the email and saves the session', () async {
-      final AuthOutcome o = await repo.signIn(
-        email: ' A@B.com ',
-        password: 'pw123456',
-      );
+      final o = await repo.signIn(email: ' A@B.com ', password: 'pw123456');
 
       expect(o, isA<AuthSuccess>());
       expect(api.lastCall, 'signin');
@@ -126,7 +122,7 @@ void main() {
     });
 
     test('signInWithGoogle sends the token as it is and saves', () async {
-      final AuthOutcome o = await repo.signInWithGoogle(idToken: 'g-token');
+      final o = await repo.signInWithGoogle(idToken: 'g-token');
 
       expect(o, isA<AuthSuccess>());
       expect(api.lastCall, 'google');
@@ -137,7 +133,7 @@ void main() {
     test('me returns the user and does not touch the session', () async {
       await storage.write(expectedSession);
 
-      final AuthOutcome o = await repo.me();
+      final o = await repo.me();
 
       expect((o as AuthSuccess).user, _user);
       expect(await storage.read(), expectedSession);
@@ -159,9 +155,7 @@ void main() {
         ),
       );
 
-      final AuthFailure f = _failureOf(
-        await repo.signIn(email: 'a@b.com', password: 'x'),
-      );
+      final f = _failureOf(await repo.signIn(email: 'a@b.com', password: 'x'));
 
       expect(f.kind, AuthFailureKind.invalidCredentials);
       expect(f.message, 'Wrong email or password.');
@@ -177,7 +171,7 @@ void main() {
         ),
       );
 
-      final AuthFailure f = _failureOf(
+      final f = _failureOf(
         await repo.signUp(email: 'a@b.com', password: 'x', displayName: 'A'),
       );
 
@@ -190,7 +184,7 @@ void main() {
         ApiError(code: ApiErrorCodes.emailTaken, message: 'x'),
       );
 
-      final AuthFailure f = _failureOf(
+      final f = _failureOf(
         await repo.signUp(
           email: 'a@b.com',
           password: 'pw123456',
@@ -211,9 +205,7 @@ void main() {
         ),
       );
 
-      final AuthFailure f = _failureOf(
-        await repo.signIn(email: 'a@b.com', password: 'x'),
-      );
+      final f = _failureOf(await repo.signIn(email: 'a@b.com', password: 'x'));
 
       expect(f.kind, AuthFailureKind.rateLimited);
       expect(f.retryAfterSeconds, 12);
@@ -225,15 +217,13 @@ void main() {
         ApiError(code: ApiErrorCodes.rateLimited, message: 'x'),
       );
 
-      final AuthFailure f = _failureOf(
-        await repo.signIn(email: 'a@b.com', password: 'x'),
-      );
+      final f = _failureOf(await repo.signIn(email: 'a@b.com', password: 'x'));
 
       expect(f.retryAfterSeconds, isNull);
       expect(f.message, isNotEmpty);
     });
 
-    final Map<String, AuthFailureKind> kinds = <String, AuthFailureKind>{
+    final kinds = <String, AuthFailureKind>{
       ApiErrorCodes.googleEmailUnsupported:
           AuthFailureKind.googleEmailUnsupported,
       ApiErrorCodes.invalidGoogleToken: AuthFailureKind.invalidGoogleToken,
@@ -245,15 +235,13 @@ void main() {
       ApiErrorCodes.unknown: AuthFailureKind.unknown,
       'some_new_code': AuthFailureKind.unknown,
     };
-    for (final MapEntry<String, AuthFailureKind> entry in kinds.entries) {
+    for (final entry in kinds.entries) {
       test('code ${entry.key} maps to ${entry.value}', () async {
         api.authResult = ApiErr<AuthResponse>(
           ApiError(code: entry.key, message: 'text'),
         );
 
-        final AuthFailure f = _failureOf(
-          await repo.signInWithGoogle(idToken: 'g'),
-        );
+        final f = _failureOf(await repo.signInWithGoogle(idToken: 'g'));
 
         expect(f.kind, entry.value);
         expect(f.message, isNotEmpty);
@@ -263,7 +251,7 @@ void main() {
     test('me maps a 401 to unauthorized', () async {
       api.meResult = const ApiErr<UserProfile>(ApiError.unauthorized());
 
-      final AuthFailure f = _failureOf(await repo.me());
+      final f = _failureOf(await repo.me());
 
       expect(f.kind, AuthFailureKind.unauthorized);
     });
@@ -271,7 +259,7 @@ void main() {
     test('me maps no network to network', () async {
       api.meResult = const ApiErr<UserProfile>(ApiError.network());
 
-      final AuthFailure f = _failureOf(await repo.me());
+      final f = _failureOf(await repo.me());
 
       expect(f.kind, AuthFailureKind.network);
     });
@@ -279,13 +267,10 @@ void main() {
 
   group('storage problems', () {
     test('a failed save is a storage failure and clears', () async {
-      final _FailingWriteStorage broken = _FailingWriteStorage();
-      final DefaultAuthRepository r = DefaultAuthRepository(
-        api: api,
-        storage: broken,
-      );
+      final broken = _FailingWriteStorage();
+      final r = DefaultAuthRepository(api: api, storage: broken);
 
-      final AuthFailure f = _failureOf(
+      final f = _failureOf(
         await r.signIn(email: 'a@b.com', password: 'pw123456'),
       );
 

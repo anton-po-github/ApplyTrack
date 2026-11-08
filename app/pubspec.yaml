@@ -1,5 +1,6 @@
 name: apply_track
-description: "A new Flutter project."
+
+description: "ApplyTrack: track your freelance job proposals, follow them from Draft to Won or Lost, and see win-rate stats."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -19,6 +20,8 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
+  # Dart 3.13+ is needed: the code uses the short `const new(...)` constructors.
+  # Every machine and CI job must use a Flutter version with Dart 3.13 or newer.
   sdk: ^3.13.7
 
 # Dependencies specify other packages that your package needs in order to work.
@@ -27,22 +30,37 @@ environment:
 # dependencies can be manually updated by changing the version numbers below to
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
+#
+# Keep this list sorted A to Z (the sort_pub_dependencies lint checks it).
+# Versions without `^` are pinned exactly: they never change by themselves.
+# Update them by hand, then run `flutter pub get` and `flutter test`.
 dependencies:
-  flutter:
-    sdk: flutter
-
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  material_ui: ^1.9.0
-  flutter_riverpod: ^3.4.3
-  go_router: ^18.1.2
+  # HTTP client (all API calls go through DioApiClient).
   dio: 5.9.1
+  flutter:
+    sdk: flutter
+  # State management and dependency injection (providers).
+  flutter_riverpod: ^3.4.3
+  # Stores the login token on the device (Keychain / Keystore / web storage).
   flutter_secure_storage: 10.0.0
+  # Routing and the auth redirect guard.
+  go_router: ^18.1.2
+  # Google sign-in on mobile.
   google_sign_in: 7.2.0
+  # Google sign-in on web (Google draws its own button there).
   google_sign_in_web: 1.1.3
+  # UI widgets.
+  material_ui: ^1.9.0
+  # Gives us the @immutable annotation without importing Flutter in domain code.
+  meta: ^1.18.3
+  # Opens external links (for example a proposal link) in the browser.
   url_launcher: 6.3.2
 
+# Settings for the flutter_launcher_icons tool (dev dependency below).
+# Run `dart run flutter_launcher_icons` after you change the icon files.
 flutter_launcher_icons:
   android: true
   ios: true
@@ -50,7 +68,7 @@ flutter_launcher_icons:
   adaptive_icon_background: "#4F46E5"
   adaptive_icon_foreground: "assets/icon/icon_foreground.png"
   adaptive_icon_foreground_inset: 0
-  
+
   remove_alpha_ios: true
   web:
     generate: true
@@ -58,19 +76,18 @@ flutter_launcher_icons:
     background_color: "#4F46E5"
     theme_color: "#4F46E5"
 
+# Tools for development only. They are not in the release build.
 dev_dependencies:
 
+  # Generates the app icons for Android, iOS and web.
   flutter_launcher_icons: ^0.14.0
 
   flutter_test:
     sdk: flutter
 
-  # The "flutter_lints" package below contains a set of recommended lints to
-  # encourage good coding practices. The lint set provided by the package is
-  # activated in the `analysis_options.yaml` file located at the root of your
-  # package. See that file for information about deactivating specific lint
-  # rules and activating additional ones.
-  flutter_lints: ^6.0.0
+  # Lint rules. Keep this version in sync with the include line in
+  # analysis_options.yaml (it uses the pinned file for the same version).
+  very_good_analysis: ^11.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -82,6 +99,8 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+# Settings for the xcross build tool.
 xcross:
   bundle_id: prefixed
 

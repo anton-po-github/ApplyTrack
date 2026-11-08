@@ -3,9 +3,9 @@ import 'package:apply_track/features/proposals/domain/proposal.dart';
 
 /// One page of the list (`ProposalListResponse` in 07).
 final class ProposalPage {
-  const ProposalPage({required this.items, this.nextCursor});
+  const new({required this.items, this.nextCursor});
 
-  factory ProposalPage.fromJson(Map<String, Object?> json) => ProposalPage(
+  factory fromJson(Map<String, Object?> json) => ProposalPage(
     items: List<Proposal>.unmodifiable(
       json.requireObjectList('items').map(Proposal.fromJson),
     ),

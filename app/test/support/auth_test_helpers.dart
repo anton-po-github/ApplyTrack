@@ -1,9 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:material_ui/material_ui.dart';
-
 import 'package:apply_track/core/config/app_config.dart';
 import 'package:apply_track/features/auth/data/auth_repository.dart';
 import 'package:apply_track/features/auth/data/google_id_token_provider.dart';
@@ -12,6 +8,9 @@ import 'package:apply_track/features/auth/domain/auth_outcome.dart';
 import 'package:apply_track/features/auth/domain/user_profile.dart';
 import 'package:apply_track/features/auth/state/auth_controller.dart';
 import 'package:apply_track/features/auth/state/auth_dependencies.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 const UserProfile testUser = UserProfile(
   id: 'u1',
@@ -26,7 +25,7 @@ Session validSession() => Session(
 );
 
 final class FakeAuthRepository implements AuthRepository {
-  FakeAuthRepository({this.session});
+  new({this.session});
 
   Session? session;
   AuthOutcome meOutcome = const AuthSuccess(testUser);
@@ -41,8 +40,8 @@ final class FakeAuthRepository implements AuthRepository {
   Map<String, String> lastArgs = <String, String>{};
 
   Future<AuthOutcome> _auth() async {
-    final Completer<AuthOutcome>? gate = authGate;
-    if (gate != null) return gate.future;
+    final gate = authGate;
+    if (gate != null) return await gate.future;
     return authOutcome;
   }
 
@@ -127,8 +126,8 @@ final class FakeGoogleIdTokenProvider implements GoogleIdTokenProvider {
   @override
   Future<GoogleTokenResult> getIdToken() async {
     getCalls++;
-    final Completer<GoogleTokenResult>? pending = gate;
-    if (pending != null) return pending.future;
+    final pending = gate;
+    if (pending != null) return await pending.future;
     return result;
   }
 

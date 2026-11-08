@@ -1,10 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
-import 'package:material_ui/material_ui.dart';
-
 import 'package:apply_track/core/api/api_error.dart';
 import 'package:apply_track/core/api/api_result.dart';
 import 'package:apply_track/features/auth/state/auth_dependencies.dart';
@@ -17,6 +12,10 @@ import 'package:apply_track/features/proposals/state/proposal_list_controller.da
 import 'package:apply_track/features/proposals/state/proposals_dependencies.dart';
 import 'package:apply_track/features/proposals/ui/proposal_list_screen.dart';
 import 'package:apply_track/router/app_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../support/fake_debounce_timers.dart';
 import '../../../support/fake_proposals_api.dart';
@@ -29,7 +28,7 @@ void main() {
   late FakeDebounceTimers timers;
 
   // "Today" in all tests: 6 Nov 2026.
-  final DateTime now = DateTime(2026, 11, 6, 10);
+  final now = DateTime(2026, 11, 6, 10);
 
   Future<void> pumpList(
     WidgetTester tester, {
@@ -40,21 +39,19 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
 
-    final GoRouter router = GoRouter(
+    final router = GoRouter(
       routes: <RouteBase>[
         GoRoute(
           path: '/',
-          builder: (BuildContext context, GoRouterState state) =>
-              const ProposalListScreen(),
+          builder: (context, state) => const ProposalListScreen(),
         ),
         GoRoute(
           path: AppRoutes.proposalNew,
-          builder: (BuildContext context, GoRouterState state) =>
-              const Scaffold(body: Text('NEW FORM')),
+          builder: (context, state) => const Scaffold(body: Text('NEW FORM')),
         ),
         GoRoute(
           path: '/proposals/:id',
-          builder: (BuildContext context, GoRouterState state) =>
+          builder: (context, state) =>
               Scaffold(body: Text('DETAIL ${state.pathParameters['id']}')),
         ),
       ],
@@ -98,9 +95,9 @@ void main() {
     testWidgets('shows a spinner, the search field and all chips', (
       tester,
     ) async {
-      final List<Gate> gates = <Gate>[];
-      api.listHandler = (ListCall call) {
-        final Gate gate = Gate();
+      final gates = <Gate>[];
+      api.listHandler = (call) {
+        final gate = Gate();
         gates.add(gate);
         return gate.future;
       };
@@ -121,7 +118,7 @@ void main() {
 
   group('cards', () {
     testWidgets('show all fields of a proposal', (tester) async {
-      api.listHandler = (ListCall call) async => pageOf(<Proposal>[
+      api.listHandler = (call) async => pageOf(<Proposal>[
         makeProposal(
           1,
           title: 'Build a Flutter app',
@@ -144,8 +141,7 @@ void main() {
     });
 
     testWidgets('hide the fields that are empty', (tester) async {
-      api.listHandler = (ListCall call) async =>
-          pageOf(<Proposal>[makeProposal(1)]);
+      api.listHandler = (call) async => pageOf(<Proposal>[makeProposal(1)]);
 
       await pumpList(tester);
 
@@ -159,14 +155,14 @@ void main() {
     testWidgets('follow-up warning only for Sent or Viewed and a due date', (
       tester,
     ) async {
-      final CalendarDate yesterday = CalendarDate(2026, 11, 5);
-      final CalendarDate today = CalendarDate(2026, 11, 6);
-      final CalendarDate tomorrow = CalendarDate(2026, 11, 7);
-      api.listHandler = (ListCall call) async => pageOf(<Proposal>[
+      final yesterday = CalendarDate(2026, 11, 5);
+      final today = CalendarDate(2026, 11, 6);
+      final tomorrow = CalendarDate(2026, 11, 7);
+      api.listHandler = (call) async => pageOf(<Proposal>[
         makeProposal(1, status: ProposalStatus.sent, followUpDate: today),
         makeProposal(2, status: ProposalStatus.viewed, followUpDate: yesterday),
         makeProposal(3, status: ProposalStatus.sent, followUpDate: tomorrow),
-        makeProposal(4, status: ProposalStatus.draft, followUpDate: yesterday),
+        makeProposal(4, followUpDate: yesterday),
         makeProposal(5, status: ProposalStatus.won, followUpDate: yesterday),
         makeProposal(6, status: ProposalStatus.sent),
       ]);
@@ -185,8 +181,7 @@ void main() {
     });
 
     testWidgets('tap opens the detail page', (tester) async {
-      api.listHandler = (ListCall call) async =>
-          pageOf(<Proposal>[makeProposal(1)]);
+      api.listHandler = (call) async => pageOf(<Proposal>[makeProposal(1)]);
       await pumpList(tester);
 
       await tester.tap(card(1));
@@ -206,7 +201,7 @@ void main() {
     });
 
     testWidgets('no result for a filter, and Clear filters', (tester) async {
-      api.listHandler = (ListCall call) async => call.status == null
+      api.listHandler = (call) async => call.status == null
           ? pageOf(<Proposal>[makeProposal(1)])
           : pageOf(<Proposal>[]);
       await pumpList(tester);
@@ -235,7 +230,7 @@ void main() {
     testWidgets('no result for a search, and Clear filters empties the text', (
       tester,
     ) async {
-      api.listHandler = (ListCall call) async => call.q == null
+      api.listHandler = (call) async => call.q == null
           ? pageOf(<Proposal>[makeProposal(1)])
           : pageOf(<Proposal>[]);
       await pumpList(tester);
@@ -306,7 +301,7 @@ void main() {
     testWidgets('every status has a chip', (tester) async {
       await pumpList(tester);
 
-      for (final ProposalStatus status in ProposalStatus.values) {
+      for (final status in ProposalStatus.values) {
         expect(
           find.byKey(ValueKey<String>('filter-${status.name}')),
           findsOneWidget,
@@ -320,7 +315,7 @@ void main() {
       tester,
     ) async {
       await pumpList(tester);
-      final int before = api.listCalls.length;
+      final before = api.listCalls.length;
 
       await tester.enterText(find.byKey(const Key('search-field')), 'flu');
       await tester.pump();
@@ -361,7 +356,7 @@ void main() {
     testWidgets('first load error shows the message and Retry works', (
       tester,
     ) async {
-      api.listHandler = (ListCall call) async =>
+      api.listHandler = (call) async =>
           const ApiErr<ProposalPage>(ApiError.network());
       await pumpList(tester);
 
@@ -371,8 +366,7 @@ void main() {
         findsOneWidget,
       );
 
-      api.listHandler = (ListCall call) async =>
-          pageOf(<Proposal>[makeProposal(1)]);
+      api.listHandler = (call) async => pageOf(<Proposal>[makeProposal(1)]);
       await tester.tap(find.text('Retry'));
       await tester.pumpAndSettle();
 
@@ -383,7 +377,7 @@ void main() {
     testWidgets('rate limit shows the wait time and does not retry', (
       tester,
     ) async {
-      api.listHandler = (ListCall call) async => const ApiErr<ProposalPage>(
+      api.listHandler = (call) async => const ApiErr<ProposalPage>(
         ApiError(
           code: ApiErrorCodes.rateLimited,
           message: 'raw',
@@ -404,10 +398,9 @@ void main() {
     testWidgets('an error with items on screen shows a banner, items stay', (
       tester,
     ) async {
-      api.listHandler = (ListCall call) async =>
-          pageOf(<Proposal>[makeProposal(1)]);
+      api.listHandler = (call) async => pageOf(<Proposal>[makeProposal(1)]);
       await pumpList(tester);
-      api.listHandler = (ListCall call) async =>
+      api.listHandler = (call) async =>
           const ApiErr<ProposalPage>(ApiError.network());
 
       await controllerOf(tester).refresh();
@@ -417,8 +410,7 @@ void main() {
       expect(find.byKey(const Key('list-error')), findsNothing);
       expect(card(1), findsOneWidget);
 
-      api.listHandler = (ListCall call) async =>
-          pageOf(<Proposal>[makeProposal(2)]);
+      api.listHandler = (call) async => pageOf(<Proposal>[makeProposal(2)]);
       await tester.tap(
         find.descendant(
           of: find.byKey(const Key('list-error-banner')),
@@ -436,7 +428,7 @@ void main() {
     testWidgets('loads the next page when the user scrolls near the end', (
       tester,
     ) async {
-      api.listHandler = (ListCall call) async => call.cursor == null
+      api.listHandler = (call) async => call.cursor == null
           ? pageOf(<Proposal>[
               for (int n = 30; n > 10; n--) makeProposal(n),
             ], next: 'c1')
@@ -464,8 +456,8 @@ void main() {
     });
 
     testWidgets('a spinner shows while the next page loads', (tester) async {
-      final List<Gate> gates = <Gate>[];
-      api.listHandler = (ListCall call) {
+      final gates = <Gate>[];
+      api.listHandler = (call) {
         if (call.cursor == null) {
           return Future<ApiResult<ProposalPage>>.value(
             pageOf(<Proposal>[
@@ -473,7 +465,7 @@ void main() {
             ], next: 'c1'),
           );
         }
-        final Gate gate = Gate();
+        final gate = Gate();
         gates.add(gate);
         return gate.future;
       };
@@ -496,7 +488,7 @@ void main() {
     testWidgets('a short list that does not scroll still loads the next page', (
       tester,
     ) async {
-      api.listHandler = (ListCall call) async => call.cursor == null
+      api.listHandler = (call) async => call.cursor == null
           ? pageOf(<Proposal>[makeProposal(2)], next: 'c1')
           : pageOf(<Proposal>[makeProposal(1)]);
 
@@ -511,8 +503,7 @@ void main() {
     testWidgets('does not ask for a page when there is no next page', (
       tester,
     ) async {
-      api.listHandler = (ListCall call) async =>
-          pageOf(<Proposal>[makeProposal(1)]);
+      api.listHandler = (call) async => pageOf(<Proposal>[makeProposal(1)]);
 
       await pumpList(tester);
       await tester.pump(const Duration(seconds: 1));
@@ -521,11 +512,9 @@ void main() {
     });
 
     testWidgets('pull to refresh loads page 1 again', (tester) async {
-      api.listHandler = (ListCall call) async =>
-          pageOf(<Proposal>[makeProposal(1)]);
+      api.listHandler = (call) async => pageOf(<Proposal>[makeProposal(1)]);
       await pumpList(tester);
-      api.listHandler = (ListCall call) async =>
-          pageOf(<Proposal>[makeProposal(2)]);
+      api.listHandler = (call) async => pageOf(<Proposal>[makeProposal(2)]);
 
       await tester.fling(
         find.byKey(const Key('proposal-list')),
@@ -544,8 +533,7 @@ void main() {
       tester,
     ) async {
       await pumpList(tester);
-      api.listHandler = (ListCall call) async =>
-          pageOf(<Proposal>[makeProposal(1)]);
+      api.listHandler = (call) async => pageOf(<Proposal>[makeProposal(1)]);
 
       await tester.fling(find.byType(ListView), const Offset(0, 400), 1000);
       await tester.pumpAndSettle();
@@ -568,7 +556,7 @@ void main() {
     testWidgets('the button is there with data, with an error and when empty', (
       tester,
     ) async {
-      api.listHandler = (ListCall call) async =>
+      api.listHandler = (call) async =>
           const ApiErr<ProposalPage>(ApiError.network());
       await pumpList(tester);
 

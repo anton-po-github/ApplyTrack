@@ -1,13 +1,12 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:apply_track/features/auth/data/google_id_token_provider.dart';
 import 'package:apply_track/features/auth/data/session.dart';
 import 'package:apply_track/features/auth/domain/auth_outcome.dart';
 import 'package:apply_track/features/auth/domain/user_profile.dart';
 import 'package:apply_track/features/auth/state/auth_dependencies.dart';
 import 'package:apply_track/features/auth/state/auth_state.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// `true` while an auth action (or the start check) runs.
 /// The UI watches it to disable buttons. The controller uses it as a lock.
@@ -45,7 +44,7 @@ class AuthController extends Notifier<AuthState> {
     // A 401 from any protected call signs the user out.
     ref.listen<int>(
       unauthorizedSignalProvider,
-      (int? previous, int next) => unawaited(_handleUnauthorized()),
+      (previous, next) => unawaited(_handleUnauthorized()),
     );
     // Start the session check right after the first build.
     unawaited(Future<void>.microtask(restore));
@@ -59,7 +58,7 @@ class AuthController extends Notifier<AuthState> {
     if (!_begin()) return;
     try {
       state = const AuthUnknown();
-      final AuthState next = await _resolveStartState();
+      final next = await _resolveStartState();
       if (ref.mounted) state = next;
     } finally {
       _end();
@@ -122,11 +121,9 @@ class AuthController extends Notifier<AuthState> {
   /// Mobile: opens the Google dialog, then sends the ID token to our server.
   /// A closed dialog returns a `cancelled` failure (the UI shows nothing).
   Future<AuthOutcome> signInWithGoogle() => _runAction(() async {
-    final GoogleTokenResult token = await ref
-        .read(googleSignInProvider)
-        .getIdToken();
+    final token = await ref.read(googleSignInProvider).getIdToken();
     if (!ref.mounted) return _unexpectedFailure;
-    return _exchangeGoogleToken(token);
+    return await _exchangeGoogleToken(token);
   });
 
   /// Web: Google draws its own button and gives the token through a stream.
@@ -137,7 +134,7 @@ class AuthController extends Notifier<AuthState> {
   Future<AuthOutcome> _exchangeGoogleToken(GoogleTokenResult token) async {
     switch (token) {
       case GoogleTokenOk(:final String idToken):
-        return ref
+        return await ref
             .read(authRepositoryProvider)
             .signInWithGoogle(idToken: idToken);
       case GoogleTokenCancelled():
@@ -166,7 +163,7 @@ class AuthController extends Notifier<AuthState> {
   Future<AuthOutcome> _runAction(Future<AuthOutcome> Function() action) async {
     if (!_begin()) return _busyFailure;
     try {
-      final AuthOutcome outcome = await action();
+      final outcome = await action();
       if (ref.mounted && outcome is AuthSuccess) {
         state = AuthSignedIn(outcome.user);
       }

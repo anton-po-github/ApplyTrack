@@ -6,11 +6,11 @@ abstract final class ProposalLink {
   /// The link as a [Uri], or null when it must not be opened.
   /// Same rules as the form validator, and the result has a host.
   static Uri? tryParse(String? value) {
-    final String text = (value ?? '').trim();
+    final text = (value ?? '').trim();
     if (text.isEmpty || ProposalValidators.link(text) != null) {
       return null;
     }
-    final Uri? uri = Uri.tryParse(text);
+    final uri = Uri.tryParse(text);
     if (uri == null || uri.host.isEmpty) {
       return null;
     }

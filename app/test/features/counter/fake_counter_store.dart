@@ -2,7 +2,7 @@ import 'package:apply_track/features/counter/counter.dart';
 import 'package:apply_track/features/counter/counter_store.dart';
 
 final class FakeCounterStore implements CounterStore {
-  FakeCounterStore([this.initial = const Counter()]);
+  new([this.initial = const Counter()]);
 
   final Counter initial;
   final List<Counter> saved = <Counter>[];

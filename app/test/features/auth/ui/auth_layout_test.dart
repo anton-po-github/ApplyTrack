@@ -1,7 +1,6 @@
+import 'package:apply_track/features/auth/ui/auth_layout.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
-
-import 'package:apply_track/features/auth/ui/auth_layout.dart';
 
 Future<void> _pump(WidgetTester tester, Size size) async {
   tester.view.physicalSize = size;
@@ -26,7 +25,7 @@ void main() {
     expect(find.text('FORM'), findsOneWidget);
   });
 
-  for (final Size size in const <Size>[
+  for (final size in const <Size>[
     Size(360, 740), // phone
     Size(800, 1000), // tablet
     Size(1920, 1080), // desktop
@@ -34,7 +33,7 @@ void main() {
     testWidgets('is centered on both axes at $size', (tester) async {
       await _pump(tester, size);
 
-      final Offset center = tester.getCenter(find.byKey(AuthLayout.contentKey));
+      final center = tester.getCenter(find.byKey(AuthLayout.contentKey));
       expect(center.dx, closeTo(size.width / 2, 1));
       expect(center.dy, closeTo(size.height / 2, 1));
     });

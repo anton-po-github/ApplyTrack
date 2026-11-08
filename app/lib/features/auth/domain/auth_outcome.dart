@@ -27,17 +27,17 @@ enum AuthFailureKind {
 
 /// What the UI gets back. Like a TypeScript union.
 sealed class AuthOutcome {
-  const AuthOutcome();
+  const new();
 }
 
 final class AuthSuccess extends AuthOutcome {
-  const AuthSuccess(this.user);
+  const new(this.user);
 
   final UserProfile user;
 }
 
 final class AuthFailure extends AuthOutcome {
-  const AuthFailure({
+  const new({
     required this.kind,
     required this.message,
     this.fields,

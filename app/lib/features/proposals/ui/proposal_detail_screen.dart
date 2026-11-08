@@ -1,9 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:material_ui/material_ui.dart';
-
 import 'package:apply_track/core/api/api_error.dart';
 import 'package:apply_track/core/api/api_error_message.dart';
 import 'package:apply_track/core/api/api_result.dart';
@@ -21,6 +17,9 @@ import 'package:apply_track/features/proposals/state/proposals_dependencies.dart
 import 'package:apply_track/features/proposals/ui/proposal_formatters.dart';
 import 'package:apply_track/features/proposals/ui/proposal_status_chip.dart';
 import 'package:apply_track/router/app_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// One proposal: all fields, the quick "next stage" action, edit and delete.
 ///
@@ -30,7 +29,7 @@ import 'package:apply_track/router/app_router.dart';
 ///   and the stats stay in sync.
 /// - [proposalId] must be a valid GUID. The router checks it.
 class ProposalDetailScreen extends ConsumerStatefulWidget {
-  const ProposalDetailScreen({super.key, required this.proposalId});
+  const new({required this.proposalId, super.key});
 
   final String proposalId;
 
@@ -65,10 +64,8 @@ class _ProposalDetailScreenState extends ConsumerState<ProposalDetailScreen> {
   // ----------------------------------------------------------------- load
 
   Future<void> _fetch() async {
-    final int request = ++_request;
-    final ApiResult<Proposal> result = await ref
-        .read(proposalsApiProvider)
-        .get(widget.proposalId);
+    final request = ++_request;
+    final result = await ref.read(proposalsApiProvider).get(widget.proposalId);
     if (!mounted || request != _request) {
       return;
     }
@@ -124,7 +121,7 @@ class _ProposalDetailScreenState extends ConsumerState<ProposalDetailScreen> {
   // ----------------------------------------------------------- status flow
 
   Future<void> _advance(ProposalStatus next) async {
-    final Proposal? current = _proposal;
+    final current = _proposal;
     if (current == null || _busy) {
       return;
     }
@@ -133,7 +130,7 @@ class _ProposalDetailScreenState extends ConsumerState<ProposalDetailScreen> {
       _banner = null;
     });
     // PUT is a full replace: send all fields, change only the status.
-    final ApiResult<Proposal> result = await ref
+    final result = await ref
         .read(proposalListProvider.notifier)
         .update(
           widget.proposalId,
@@ -157,9 +154,9 @@ class _ProposalDetailScreenState extends ConsumerState<ProposalDetailScreen> {
   // --------------------------------------------------------------- delete
 
   Future<bool> _confirmDelete() async {
-    final bool? confirmed = await showDialog<bool>(
+    final confirmed = await showDialog<bool>(
       context: context,
-      builder: (BuildContext dialogContext) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Delete proposal?'),
         content: const Text('This proposal will be removed from your list.'),
         actions: <Widget>[
@@ -183,16 +180,16 @@ class _ProposalDetailScreenState extends ConsumerState<ProposalDetailScreen> {
     if (_busy) {
       return;
     }
-    final bool confirmed = await _confirmDelete();
+    final confirmed = await _confirmDelete();
     if (!confirmed || !mounted) {
       return;
     }
-    final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
+    final messenger = ScaffoldMessenger.of(context);
     setState(() {
       _busy = true;
       _banner = null;
     });
-    final ApiResult<void> result = await ref
+    final result = await ref
         .read(proposalListProvider.notifier)
         .delete(widget.proposalId);
     if (!mounted) {
@@ -218,8 +215,8 @@ class _ProposalDetailScreenState extends ConsumerState<ProposalDetailScreen> {
   // ----------------------------------------------------------------- link
 
   Future<void> _openLink(Uri uri) async {
-    final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
-    final bool opened = await ref.read(externalLinkOpenerProvider).open(uri);
+    final messenger = ScaffoldMessenger.of(context);
+    final opened = await ref.read(externalLinkOpenerProvider).open(uri);
     if (!opened && mounted) {
       messenger.showSnackBar(
         const SnackBar(content: Text('Could not open the link.')),
@@ -243,7 +240,7 @@ class _ProposalDetailScreenState extends ConsumerState<ProposalDetailScreen> {
   /// A full PUT can fail the checks if the saved data is not valid. The
   /// detail screen has no inputs, so we send the user to the form.
   String _messageFor(ApiError error) {
-    final Map<String, String>? fields = error.fields;
+    final fields = error.fields;
     if (error.code == ApiErrorCodes.validation &&
         fields != null &&
         fields.isNotEmpty) {
@@ -257,7 +254,7 @@ class _ProposalDetailScreenState extends ConsumerState<ProposalDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bool canAct = _proposal != null && !_gone;
+    final canAct = _proposal != null && !_gone;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Proposal'),
@@ -291,7 +288,7 @@ class _ProposalDetailScreenState extends ConsumerState<ProposalDetailScreen> {
         onPressed: _leave,
       );
     }
-    final Proposal? proposal = _proposal;
+    final proposal = _proposal;
     if (proposal != null) {
       return _Details(
         proposal: proposal,
@@ -302,7 +299,7 @@ class _ProposalDetailScreenState extends ConsumerState<ProposalDetailScreen> {
         onOpenLink: _openLink,
       );
     }
-    final ApiError? error = _loadError;
+    final error = _loadError;
     if (_loading || error == null) {
       return const Center(
         child: CircularProgressIndicator(key: Key('detail-loading')),
@@ -321,7 +318,7 @@ class _ProposalDetailScreenState extends ConsumerState<ProposalDetailScreen> {
 const String _empty = '\u2014';
 
 class _Details extends StatelessWidget {
-  const _Details({
+  const new({
     required this.proposal,
     required this.today,
     required this.busy,
@@ -339,10 +336,10 @@ class _Details extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    final String? message = banner;
-    final double? budget = proposal.budget;
-    final List<ProposalStatus> next = ProposalStatusFlow.next(proposal.status);
+    final theme = Theme.of(context);
+    final message = banner;
+    final budget = proposal.budget;
+    final next = ProposalStatusFlow.next(proposal.status);
 
     return MaxContentWidth(
       child: SingleChildScrollView(
@@ -436,12 +433,12 @@ class _Details extends StatelessWidget {
       Text(value ?? _empty, key: Key(key));
 
   Widget _followUp(BuildContext context) {
-    final CalendarDate? date = proposal.followUpDate;
+    final date = proposal.followUpDate;
     if (date == null) {
       return _valueText('detail-follow-up', null);
     }
-    final bool due = proposal.isFollowUpDue(today);
-    final ColorScheme scheme = Theme.of(context).colorScheme;
+    final due = proposal.isFollowUpDue(today);
+    final scheme = Theme.of(context).colorScheme;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
@@ -471,15 +468,15 @@ class _Details extends StatelessWidget {
   /// Only a safe `http` or `https` link can be tapped. Any other text is
   /// shown as plain text and is never opened.
   Widget _link(BuildContext context) {
-    final String? link = proposal.link;
+    final link = proposal.link;
     if (link == null) {
       return _valueText('detail-link-text', null);
     }
-    final Uri? uri = ProposalLink.tryParse(link);
+    final uri = ProposalLink.tryParse(link);
     if (uri == null) {
       return _valueText('detail-link-text', link);
     }
-    final ColorScheme scheme = Theme.of(context).colorScheme;
+    final scheme = Theme.of(context).colorScheme;
     return InkWell(
       key: const Key('detail-link'),
       onTap: () => onOpenLink(uri),
@@ -495,7 +492,7 @@ class _Details extends StatelessWidget {
 }
 
 class _Field extends StatelessWidget {
-  const _Field({required this.label, required this.child});
+  const new({required this.label, required this.child});
 
   final String label;
   final Widget child;
@@ -514,7 +511,7 @@ class _Field extends StatelessWidget {
 }
 
 class _NextStage extends StatelessWidget {
-  const _NextStage({
+  const new({
     required this.options,
     required this.enabled,
     required this.onSelected,
@@ -549,11 +546,11 @@ class _NextStage extends StatelessWidget {
 }
 
 class _Message extends StatelessWidget {
-  const _Message({
-    super.key,
+  const new({
     required this.text,
     required this.buttonLabel,
     required this.onPressed,
+    super.key,
   });
 
   final String text;
@@ -581,13 +578,13 @@ class _Message extends StatelessWidget {
 }
 
 class _ErrorBanner extends StatelessWidget {
-  const _ErrorBanner({required this.message});
+  const new({required this.message});
 
   final String message;
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme scheme = Theme.of(context).colorScheme;
+    final scheme = Theme.of(context).colorScheme;
     return DecoratedBox(
       key: const Key('detail-error-banner'),
       decoration: BoxDecoration(

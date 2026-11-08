@@ -1,9 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:material_ui/material_ui.dart';
-
 import 'package:apply_track/core/api/api_error.dart';
 import 'package:apply_track/core/api/api_error_message.dart';
 import 'package:apply_track/core/layout/max_content_width.dart';
@@ -14,6 +10,9 @@ import 'package:apply_track/features/proposals/state/proposal_list_controller.da
 import 'package:apply_track/features/proposals/state/stats_provider.dart';
 import 'package:apply_track/features/proposals/ui/proposal_formatters.dart';
 import 'package:apply_track/router/app_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// The second tab: total, win rate and one card for each status.
 /// It only shows the state of [statsProvider]. It holds no data.
@@ -22,7 +21,7 @@ import 'package:apply_track/router/app_router.dart';
 /// - A tap on a status card opens the list with that filter.
 /// - Pull to refresh. The old numbers stay while it loads or after an error.
 class StatsScreen extends ConsumerWidget {
-  const StatsScreen({super.key});
+  const new({super.key});
 
   static const double _maxWidth = 900;
 
@@ -35,9 +34,9 @@ class StatsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final StatsState state = ref.watch(statsProvider);
-    final StatsController controller = ref.read(statsProvider.notifier);
-    final int columns = columnsFor(
+    final state = ref.watch(statsProvider);
+    final controller = ref.read(statsProvider.notifier);
+    final columns = columnsFor(
       WindowSize.fromWidth(MediaQuery.sizeOf(context).width),
     );
 
@@ -49,12 +48,12 @@ class StatsScreen extends ConsumerWidget {
     return RefreshIndicator(
       onRefresh: controller.refresh,
       child: LayoutBuilder(
-        builder: (BuildContext context, BoxConstraints constraints) {
-          final ProposalStats? stats = state.stats;
+        builder: (context, constraints) {
+          final stats = state.stats;
           final Widget child;
           if (stats == null) {
             // No numbers yet: a message that fills the screen.
-            final ApiError? error = state.error;
+            final error = state.error;
             child = SizedBox(
               height: constraints.maxHeight,
               child: error == null
@@ -70,7 +69,7 @@ class StatsScreen extends ConsumerWidget {
                     ),
             );
           } else {
-            final ApiError? error = state.error;
+            final error = state.error;
             child = MaxContentWidth(
               maxWidth: _maxWidth,
               child: Padding(
@@ -106,7 +105,7 @@ class StatsScreen extends ConsumerWidget {
 }
 
 class _StatsGrid extends StatelessWidget {
-  const _StatsGrid({
+  const new({
     required this.stats,
     required this.columns,
     required this.onStatusTap,
@@ -121,9 +120,8 @@ class _StatsGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) {
-        final double width =
-            (constraints.maxWidth - _gap * (columns - 1)) / columns;
+      builder: (context, constraints) {
+        final width = (constraints.maxWidth - _gap * (columns - 1)) / columns;
         return Wrap(
           spacing: _gap,
           runSpacing: _gap,
@@ -165,11 +163,11 @@ class _StatsGrid extends StatelessWidget {
 }
 
 class _StatCard extends StatelessWidget {
-  const _StatCard({
-    super.key,
+  const new({
     required this.valueKey,
     required this.label,
     required this.value,
+    super.key,
     this.onTap,
   });
 
@@ -182,7 +180,7 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final TextTheme text = Theme.of(context).textTheme;
+    final text = Theme.of(context).textTheme;
     return Card(
       margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
@@ -212,7 +210,7 @@ class _StatCard extends StatelessWidget {
 }
 
 class _Message extends StatelessWidget {
-  const _Message({super.key, required this.text, required this.onRetry});
+  const new({required this.text, required this.onRetry, super.key});
 
   final String text;
   final Future<void> Function() onRetry;
@@ -239,14 +237,14 @@ class _Message extends StatelessWidget {
 
 /// An error while old numbers are still on screen.
 class _ErrorBanner extends StatelessWidget {
-  const _ErrorBanner({required this.error, required this.onRetry});
+  const new({required this.error, required this.onRetry});
 
   final ApiError error;
   final Future<void> Function() onRetry;
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme scheme = Theme.of(context).colorScheme;
+    final scheme = Theme.of(context).colorScheme;
     return Card(
       key: const Key('stats-error-banner'),
       color: scheme.errorContainer,

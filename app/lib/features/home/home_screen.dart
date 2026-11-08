@@ -1,14 +1,14 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:material_ui/material_ui.dart';
 import 'package:apply_track/core/layout/max_content_width.dart';
 import 'package:apply_track/core/layout/window_size.dart';
 import 'package:apply_track/features/auth/state/auth_controller.dart';
 import 'package:apply_track/features/auth/state/auth_state.dart';
 import 'package:apply_track/router/app_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:material_ui/material_ui.dart';
 
 final class HomeDestination {
-  const HomeDestination({
+  const new({
     required this.title,
     required this.subtitle,
     required this.icon,
@@ -37,7 +37,7 @@ const List<HomeDestination> homeDestinations = <HomeDestination>[
 ];
 
 class HomeScreen extends ConsumerWidget {
-  const HomeScreen({super.key, this.destinations = homeDestinations});
+  const new({super.key, this.destinations = homeDestinations});
 
   static const double _tileHeight = 88;
 
@@ -45,8 +45,8 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final AuthState auth = ref.watch(authControllerProvider);
-    final bool busy = ref.watch(authBusyProvider);
+    final auth = ref.watch(authControllerProvider);
+    final busy = ref.watch(authBusyProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -67,8 +67,8 @@ class HomeScreen extends ConsumerWidget {
       body: MaxContentWidth(
         maxWidth: 1000,
         child: LayoutBuilder(
-          builder: (BuildContext context, BoxConstraints constraints) {
-            final int columns = switch (WindowSize.fromWidth(
+          builder: (context, constraints) {
+            final columns = switch (WindowSize.fromWidth(
               constraints.maxWidth,
             )) {
               WindowSize.compact => 1,
@@ -85,7 +85,7 @@ class HomeScreen extends ConsumerWidget {
                 mainAxisExtent: _tileHeight,
               ),
               itemCount: destinations.length,
-              itemBuilder: (BuildContext context, int index) =>
+              itemBuilder: (context, index) =>
                   _DestinationCard(destination: destinations[index]),
             );
           },
@@ -96,7 +96,7 @@ class HomeScreen extends ConsumerWidget {
 }
 
 class _UserName extends StatelessWidget {
-  const _UserName(this.name);
+  const new(this.name);
 
   final String name;
 
@@ -115,7 +115,7 @@ class _UserName extends StatelessWidget {
 }
 
 class _DestinationCard extends StatelessWidget {
-  const _DestinationCard({required this.destination});
+  const new({required this.destination});
 
   final HomeDestination destination;
 

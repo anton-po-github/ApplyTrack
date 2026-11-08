@@ -1,8 +1,7 @@
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:apply_track/features/auth/data/session.dart';
 import 'package:apply_track/features/auth/data/token_storage.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 /// A simple in-memory fake of the plugin. It can fail on demand.
 final class _FakeSecureStorage implements FlutterSecureStorage {
@@ -61,10 +60,7 @@ final class _FakeSecureStorage implements FlutterSecureStorage {
 }
 
 void main() {
-  const Session session = Session(
-    token: 'abc',
-    expiresAtUnixSeconds: 1767225600,
-  );
+  const session = Session(token: 'abc', expiresAtUnixSeconds: 1767225600);
 
   group('InMemoryTokenStorage', () {
     test('starts empty', () async {
@@ -72,7 +68,7 @@ void main() {
     });
 
     test('write, read, clear', () async {
-      final InMemoryTokenStorage storage = InMemoryTokenStorage();
+      final storage = InMemoryTokenStorage();
       await storage.write(session);
       expect(await storage.read(), session);
       await storage.clear();
@@ -114,7 +110,7 @@ void main() {
       expect(await storage.read(), isNull);
     });
 
-    for (final MapEntry<String, String> bad in <String, String>{
+    for (final bad in <String, String>{
       'not json': 'not json',
       'json array': '[1,2]',
       'missing exp': '{"token":"abc"}',

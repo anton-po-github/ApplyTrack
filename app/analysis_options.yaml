@@ -4,32 +4,44 @@
 # The issues identified by the analyzer are surfaced in the UI of Dart-enabled
 # IDEs (https://dart.dev/tools#ides-and-editors). The analyzer can also be
 # invoked from the command line by running `flutter analyze`.
+#
+# Goal: `flutter analyze` shows 0 issues. Run it in CI and fail the build on
+# any issue, so the project does not slowly get dirty again.
 
-# The following line activates a set of recommended lints for Flutter apps,
-# packages, and plugins designed to encourage good coding practices.
-include: package:flutter_lints/flutter.yaml
+# Lint rules: very_good_analysis, PINNED to version 11.0.0.
+# The pinned file name means new lints never appear by surprise after a
+# package update. To upgrade on purpose:
+#   1. Change the version here AND in pubspec.yaml (dev_dependencies).
+#   2. Run `flutter analyze` and fix the new issues in a separate commit.
+include: package:very_good_analysis/analysis_options.11.0.0.yaml
+
+# Disabled rules. Every disabled rule must have a one-line reason.
+linter:
+  rules:
+    # App, not a library. No one imports our API, so doc comments add noise.
+    public_member_api_docs: false
+    # Tests read better with plain calls; cascades add no value there.
+    cascade_invocations: false
+    # A named method like set(value: x) is clearer than a setter here.
+    use_setters_to_change_properties: false
 
 analyzer:
+  # Generated and platform folders are not our code.
   exclude:
     - build/**
     - android/**
     - web/**
     - ios/**
 
-linter:
-  # The lint rules applied to this project can be customized in the
-  # section below to disable rules from the `package:flutter_lints/flutter.yaml`
-  # included above or to enable additional rules. A list of all available lints
-  # and their documentation is published at https://dart.dev/lints.
-  #
-  # Instead of disabling a lint rule for the entire project in the
-  # section below, it can also be suppressed for a single line of code
-  # or a specific dart file by using the `// ignore: name_of_lint` and
-  # `// ignore_for_file: name_of_lint` syntax on the line or in the file
-  # producing the lint.
-  rules:
-    # avoid_print: false  # Uncomment to disable the `avoid_print` rule
-    # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
+  # CHANGED: this block was a top-level `language:` key. The analyzer only
+  # reads it inside `analyzer:`, so it was ignored. It is now in the right place.
+  # Strict type checks: no hidden `dynamic`, no unsafe casts.
+  # (very_good_analysis also turns these on. We keep them here on purpose.)
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
 
-# Additional information about this file can be found at
-# https://dart.dev/guides/language/analysis-options
+# Inline `// ignore:` comments in the code (rare, always with a reason):
+#   - lib/core/api/dio_api_client.dart: avoid_catching_errors
+#     (parse() throws TypeError when the server JSON has a wrong shape)

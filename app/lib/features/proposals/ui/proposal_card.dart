@@ -1,19 +1,18 @@
-import 'package:material_ui/material_ui.dart';
-
 import 'package:apply_track/features/proposals/domain/calendar_date.dart';
 import 'package:apply_track/features/proposals/domain/proposal.dart';
 import 'package:apply_track/features/proposals/domain/proposal_follow_up.dart';
 import 'package:apply_track/features/proposals/ui/proposal_formatters.dart';
 import 'package:apply_track/features/proposals/ui/proposal_status_chip.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// One row of the list. [today] comes from the caller, so the card is easy
 /// to test and does not read the clock itself.
 class ProposalCard extends StatelessWidget {
-  const ProposalCard({
-    super.key,
+  const new({
     required this.proposal,
     required this.today,
     required this.onTap,
+    super.key,
   });
 
   final Proposal proposal;
@@ -22,11 +21,11 @@ class ProposalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    final String? company = proposal.company;
-    final double? budget = proposal.budget;
-    final CalendarDate? followUp = proposal.followUpDate;
-    final bool due = proposal.isFollowUpDue(today);
+    final theme = Theme.of(context);
+    final company = proposal.company;
+    final budget = proposal.budget;
+    final followUp = proposal.followUpDate;
+    final due = proposal.isFollowUpDue(today);
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -94,7 +93,7 @@ class ProposalCard extends StatelessWidget {
 }
 
 class _Meta extends StatelessWidget {
-  const _Meta({
+  const new({
     required this.icon,
     required this.text,
     this.iconKey,
@@ -110,11 +109,10 @@ class _Meta extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final TextStyle? style = Theme.of(context).textTheme.bodySmall
-        ?.copyWith(color: color);
+    final style = Theme.of(context).textTheme.bodySmall?.copyWith(color: color);
     Widget iconWidget = Icon(icon, key: iconKey, size: 16, color: color);
     if (tooltip != null) {
-      iconWidget = Tooltip(message: tooltip!, child: iconWidget);
+      iconWidget = Tooltip(message: tooltip, child: iconWidget);
     }
     return Row(
       mainAxisSize: MainAxisSize.min,

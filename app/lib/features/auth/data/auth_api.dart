@@ -22,7 +22,7 @@ abstract interface class AuthApi {
 }
 
 final class HttpAuthApi implements AuthApi {
-  const HttpAuthApi(this._client);
+  const new(this._client);
 
   final ApiClient _client;
 

@@ -2,12 +2,14 @@ import 'package:apply_track/features/proposals/domain/calendar_date.dart';
 import 'package:apply_track/features/proposals/domain/proposal.dart';
 import 'package:apply_track/features/proposals/domain/proposal_platform.dart';
 import 'package:apply_track/features/proposals/domain/proposal_status.dart';
+import 'package:meta/meta.dart';
 
 /// The body for create and update (`ProposalRequest` in 07).
 /// It has no `id` and no `userId`: the owner comes from the token.
 /// PUT is a full replace, so [toJson] always has all 8 keys.
+@immutable
 final class ProposalDraft {
-  const ProposalDraft({
+  const new({
     required this.title,
     required this.platform,
     required this.status,
@@ -19,7 +21,7 @@ final class ProposalDraft {
   });
 
   /// Starts an edit form from the server data.
-  factory ProposalDraft.fromProposal(Proposal proposal) => ProposalDraft(
+  factory fromProposal(Proposal proposal) => ProposalDraft(
     title: proposal.title,
     company: proposal.company,
     platform: proposal.platform,
@@ -31,7 +33,7 @@ final class ProposalDraft {
   );
 
   /// A new, empty proposal for the create form.
-  const ProposalDraft.empty()
+  const new empty()
     : this(
         title: '',
         platform: ProposalPlatform.upwork,

@@ -1,11 +1,10 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:apply_track/features/proposals/domain/calendar_date.dart';
 import 'package:apply_track/features/proposals/domain/proposal_draft.dart';
 import 'package:apply_track/features/proposals/domain/proposal_field.dart';
 import 'package:apply_track/features/proposals/domain/proposal_platform.dart';
 import 'package:apply_track/features/proposals/domain/proposal_status.dart';
 import 'package:apply_track/features/proposals/domain/proposal_validators.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 String rep(int count) => 'a' * count;
 
@@ -61,7 +60,7 @@ void main() {
     });
 
     test('accepts whole numbers and up to 2 decimals', () {
-      for (final String ok in <String>[
+      for (final ok in <String>[
         '0',
         '1500',
         '1500.5',
@@ -89,7 +88,7 @@ void main() {
     });
 
     test('rejects too big numbers and bad text', () {
-      for (final String bad in <String>[
+      for (final bad in <String>[
         '10000000000',
         '99999999999.99',
         'abc',
@@ -99,7 +98,7 @@ void main() {
         '1.2.3',
         '12 34',
         '1,500.50',
-        '\$100',
+        r'$100',
       ]) {
         expect(ProposalValidators.budget(bad), isNotNull, reason: bad);
       }
@@ -143,7 +142,7 @@ void main() {
     });
 
     test('must start with a lowercase scheme', () {
-      for (final String bad in <String>[
+      for (final bad in <String>[
         'HTTP://example.com',
         'Https://example.com',
         'example.com',
@@ -167,7 +166,7 @@ void main() {
     });
 
     test('max 2048 characters', () {
-      final String prefix = 'https://a.b/';
+      const prefix = 'https://a.b/';
       expect(
         ProposalValidators.link(prefix + rep(2048 - prefix.length)),
         isNull,
@@ -241,15 +240,13 @@ void main() {
     });
 
     test('the empty draft only fails on the title', () {
-      final Map<ProposalField, String> errors = ProposalValidators.draft(
-        const ProposalDraft.empty(),
-      );
+      final errors = ProposalValidators.draft(const ProposalDraft.empty());
 
       expect(errors.keys, <ProposalField>[ProposalField.title]);
     });
 
     test('collects errors for several fields', () {
-      final Map<ProposalField, String> errors = ProposalValidators.draft(
+      final errors = ProposalValidators.draft(
         ProposalDraft(
           title: 'ab',
           company: rep(121),
@@ -271,9 +268,7 @@ void main() {
     });
 
     test('the result cannot be changed', () {
-      final Map<ProposalField, String> errors = ProposalValidators.draft(
-        good(),
-      );
+      final errors = ProposalValidators.draft(good());
       expect(() => errors[ProposalField.title] = 'x', throwsUnsupportedError);
     });
   });

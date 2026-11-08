@@ -8,7 +8,7 @@ abstract interface class StatsApi {
 }
 
 final class HttpStatsApi implements StatsApi {
-  const HttpStatsApi(this._client);
+  const new(this._client);
 
   final ApiClient _client;
 

@@ -1,15 +1,14 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:apply_track/core/api/api_client.dart';
 import 'package:apply_track/core/api/dio_api_client.dart';
 import 'package:apply_track/core/api/token_reader.dart';
 import 'package:apply_track/core/config/app_config.dart';
 import 'package:apply_track/features/auth/data/auth_api.dart';
 import 'package:apply_track/features/auth/data/auth_repository.dart';
-import 'package:apply_track/features/auth/data/storage_token_reader.dart';
-import 'package:apply_track/features/auth/data/token_storage.dart';
 import 'package:apply_track/features/auth/data/google_id_token_provider.dart';
 import 'package:apply_track/features/auth/data/plugin_google_id_token_provider.dart';
+import 'package:apply_track/features/auth/data/storage_token_reader.dart';
+import 'package:apply_track/features/auth/data/token_storage.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Wiring of the real objects. Tests override these providers.
 //
@@ -19,20 +18,18 @@ import 'package:apply_track/features/auth/data/plugin_google_id_token_provider.d
 
 typedef Clock = DateTime Function();
 
-final Provider<Clock> clockProvider = Provider<Clock>(
-  (Ref ref) => DateTime.now,
-);
+final Provider<Clock> clockProvider = Provider<Clock>((ref) => DateTime.now);
 
 final Provider<AppConfig> appConfigProvider = Provider<AppConfig>(
-  (Ref ref) => AppConfig.fromEnvironment(),
+  (ref) => AppConfig.fromEnvironment(),
 );
 
 final Provider<TokenStorage> tokenStorageProvider = Provider<TokenStorage>(
-  (Ref ref) => SecureTokenStorage(),
+  (ref) => SecureTokenStorage(),
 );
 
 final Provider<TokenReader> tokenReaderProvider = Provider<TokenReader>(
-  (Ref ref) => StorageTokenReader(
+  (ref) => StorageTokenReader(
     storage: ref.watch(tokenStorageProvider),
     now: ref.watch(clockProvider),
   ),
@@ -50,7 +47,7 @@ class UnauthorizedSignal extends Notifier<int> {
 }
 
 final Provider<ApiClient> apiClientProvider = Provider<ApiClient>(
-  (Ref ref) => DioApiClient(
+  (ref) => DioApiClient(
     baseUrl: ref.watch(appConfigProvider).apiBaseUrl,
     tokenReader: ref.watch(tokenReaderProvider),
     onUnauthorized: () {
@@ -60,20 +57,20 @@ final Provider<ApiClient> apiClientProvider = Provider<ApiClient>(
 );
 
 final Provider<AuthApi> authApiProvider = Provider<AuthApi>(
-  (Ref ref) => HttpAuthApi(ref.watch(apiClientProvider)),
+  (ref) => HttpAuthApi(ref.watch(apiClientProvider)),
 );
 
 final Provider<AuthRepository> authRepositoryProvider =
     Provider<AuthRepository>(
-      (Ref ref) => DefaultAuthRepository(
+      (ref) => DefaultAuthRepository(
         api: ref.watch(authApiProvider),
         storage: ref.watch(tokenStorageProvider),
       ),
     );
 
 final Provider<GoogleIdTokenProvider> googleSignInProvider =
-    Provider<GoogleIdTokenProvider>((Ref ref) {
-      final PluginGoogleIdTokenProvider provider = PluginGoogleIdTokenProvider(
+    Provider<GoogleIdTokenProvider>((ref) {
+      final provider = PluginGoogleIdTokenProvider(
         serverClientId: ref.watch(appConfigProvider).googleServerClientId,
       );
       ref.onDispose(provider.dispose);

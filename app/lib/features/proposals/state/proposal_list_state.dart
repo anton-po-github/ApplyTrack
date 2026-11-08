@@ -17,7 +17,7 @@ enum ProposalListPhase {
 /// [byId] gives O(1) reads by id. [ids] keeps the server order (newest
 /// first), so [proposalAt] is O(1) too. Both collections are unmodifiable.
 final class ProposalListState {
-  const ProposalListState({
+  const new({
     this.byId = const <String, Proposal>{},
     this.ids = const <String>[],
     this.nextCursor,

@@ -1,7 +1,6 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:apply_track/core/api/api_error.dart';
 import 'package:apply_track/core/api/api_error_message.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   ApiError limited(int? seconds) => ApiError(
@@ -25,8 +24,7 @@ void main() {
   });
 
   test('rate limit without a usable time has a general text', () {
-    const String general =
-        'Too many requests. Please wait a moment and try again.';
+    const general = 'Too many requests. Please wait a moment and try again.';
     expect(apiErrorMessage(limited(null)), general);
     expect(apiErrorMessage(limited(0)), general);
   });

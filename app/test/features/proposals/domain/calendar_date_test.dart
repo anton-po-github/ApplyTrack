@@ -1,11 +1,10 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:apply_track/features/proposals/domain/calendar_date.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('parse', () {
     test('reads yyyy-MM-dd', () {
-      final CalendarDate date = CalendarDate.parse('2026-12-31');
+      final date = CalendarDate.parse('2026-12-31');
       expect(date.year, 2026);
       expect(date.month, 12);
       expect(date.day, 31);
@@ -17,7 +16,7 @@ void main() {
     });
 
     test('rejects other formats', () {
-      for (final String bad in <String>[
+      for (final bad in <String>[
         '',
         '2026-2-3',
         '2026/12/31',
@@ -69,8 +68,8 @@ void main() {
 
   group('compare and equality', () {
     test('isBefore and compareTo', () {
-      final CalendarDate a = CalendarDate(2026, 1, 31);
-      final CalendarDate b = CalendarDate(2026, 2, 1);
+      final a = CalendarDate(2026, 1, 31);
+      final b = CalendarDate(2026, 2, 1);
       expect(a.isBefore(b), isTrue);
       expect(b.isBefore(a), isFalse);
       expect(a.isBefore(a), isFalse);

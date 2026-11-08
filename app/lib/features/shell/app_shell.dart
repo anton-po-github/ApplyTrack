@@ -1,13 +1,12 @@
+import 'package:apply_track/core/layout/window_size.dart';
+import 'package:apply_track/features/auth/state/auth_controller.dart';
+import 'package:apply_track/features/auth/state/auth_state.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
-import 'package:apply_track/core/layout/window_size.dart';
-import 'package:apply_track/features/auth/state/auth_controller.dart';
-import 'package:apply_track/features/auth/state/auth_state.dart';
-
 final class _ShellTab {
-  const _ShellTab({
+  const new({
     required this.label,
     required this.icon,
     required this.selectedIcon,
@@ -35,16 +34,14 @@ const List<_ShellTab> _tabs = <_ShellTab>[
 /// The frame of the signed-in app: an AppBar (user name, sign out) and two
 /// tabs. A bottom bar on a phone, a side rail on a wider window.
 class AppShell extends ConsumerWidget {
-  const AppShell({super.key, required this.navigationShell});
+  const new({required this.navigationShell, super.key});
 
   final StatefulNavigationShell navigationShell;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final WindowSize size = WindowSize.fromWidth(
-      MediaQuery.sizeOf(context).width,
-    );
-    final int index = navigationShell.currentIndex;
+    final size = WindowSize.fromWidth(MediaQuery.sizeOf(context).width);
+    final index = navigationShell.currentIndex;
 
     // Tapping the open tab goes back to the first page of that tab.
     void select(int next) =>
@@ -99,12 +96,12 @@ class AppShell extends ConsumerWidget {
 }
 
 class _UserActions extends ConsumerWidget {
-  const _UserActions();
+  const new();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final AuthState auth = ref.watch(authControllerProvider);
-    final bool busy = ref.watch(authBusyProvider);
+    final auth = ref.watch(authControllerProvider);
+    final busy = ref.watch(authBusyProvider);
 
     if (auth is! AuthSignedIn) {
       return const SizedBox.shrink();

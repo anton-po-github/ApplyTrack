@@ -1,8 +1,8 @@
 import 'dart:convert';
 
-import 'package:flutter_test/flutter_test.dart';
 import 'package:apply_track/features/auth/domain/auth_response.dart';
 import 'package:apply_track/features/auth/domain/user_profile.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 Map<String, Object?> parse(String json) =>
     jsonDecode(json) as Map<String, Object?>;
@@ -12,7 +12,7 @@ const String _user = '{"id":"u1","email":"a@b.com","displayName":"Anton"}';
 void main() {
   group('UserProfile.fromJson', () {
     test('reads all fields', () {
-      final UserProfile user = UserProfile.fromJson(parse(_user));
+      final user = UserProfile.fromJson(parse(_user));
       expect(user.id, 'u1');
       expect(user.email, 'a@b.com');
       expect(user.displayName, 'Anton');
@@ -37,9 +37,10 @@ void main() {
 
   group('AuthResponse.fromJson', () {
     test('reads token, expiry and user', () {
-      final AuthResponse response = AuthResponse.fromJson(
+      final response = AuthResponse.fromJson(
         parse(
-          '{"token":"secret-token","expiresAtUnixSeconds":1767225600,"user":$_user}',
+          '{"token":"secret-token","expiresAtUnixSeconds":1767225600,'
+          ' "user":$_user}',
         ),
       );
       expect(response.token, 'secret-token');
@@ -75,7 +76,7 @@ void main() {
     });
 
     test('toString never shows the token', () {
-      final AuthResponse response = AuthResponse.fromJson(
+      final response = AuthResponse.fromJson(
         parse(
           '{"token":"secret-token","expiresAtUnixSeconds":1,"user":$_user}',
         ),

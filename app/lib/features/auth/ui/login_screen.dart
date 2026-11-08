@@ -1,18 +1,17 @@
+import 'package:apply_track/features/auth/domain/auth_outcome.dart';
+import 'package:apply_track/features/auth/domain/auth_validators.dart';
+import 'package:apply_track/features/auth/state/auth_controller.dart';
+import 'package:apply_track/features/auth/ui/auth_form_errors.dart';
+import 'package:apply_track/features/auth/ui/auth_layout.dart';
+import 'package:apply_track/features/auth/ui/auth_widgets.dart';
+import 'package:apply_track/features/auth/ui/google_button.dart';
+import 'package:apply_track/router/app_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
-import 'package:apply_track/features/auth/domain/auth_outcome.dart';
-import 'package:apply_track/features/auth/domain/auth_validators.dart';
-import 'package:apply_track/features/auth/state/auth_controller.dart';
-import 'package:apply_track/features/auth/ui/google_button.dart';
-import 'package:apply_track/features/auth/ui/auth_form_errors.dart';
-import 'package:apply_track/features/auth/ui/auth_layout.dart';
-import 'package:apply_track/features/auth/ui/auth_widgets.dart';
-import 'package:apply_track/router/app_router.dart';
-
 class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+  const new({super.key});
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
@@ -57,14 +56,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _submit() async {
-    final FormState? form = _formKey.currentState;
+    final form = _formKey.currentState;
     if (form == null) return;
 
     // Old server errors must not block the new check.
     setState(() => _errors = AuthFormErrors.none);
     if (!form.validate()) return;
 
-    final AuthOutcome outcome = await ref
+    final outcome = await ref
         .read(authControllerProvider.notifier)
         .signIn(email: _email.text, password: _password.text);
     if (!mounted) return;
@@ -75,7 +74,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bool busy = ref.watch(authBusyProvider);
+    final busy = ref.watch(authBusyProvider);
 
     return AuthLayout(
       description: _description,
@@ -88,16 +87,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           children: <Widget>[
             EmailField(
               controller: _email,
-              onChanged: (String _) => _clearError('email'),
-              validator: (String? value) =>
+              onChanged: (_) => _clearError('email'),
+              validator: (value) =>
                   _errors.fields['email'] ?? AuthValidators.email(value),
             ),
             PasswordField(
               controller: _password,
               isNewPassword: false,
-              onChanged: (String _) => _clearError('password'),
-              onSubmitted: (String _) => _submit(),
-              validator: (String? value) =>
+              onChanged: (_) => _clearError('password'),
+              onSubmitted: (_) => _submit(),
+              validator: (value) =>
                   _errors.fields['password'] ??
                   AuthValidators.signinPassword(value),
             ),

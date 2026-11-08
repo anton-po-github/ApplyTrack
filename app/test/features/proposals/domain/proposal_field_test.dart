@@ -1,27 +1,23 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:apply_track/features/proposals/domain/proposal_field.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('ProposalField', () {
     test('apiKey values are the field names from 07', () {
-      expect(
-        ProposalField.values.map((ProposalField f) => f.apiKey).toList(),
-        <String>[
-          'title',
-          'company',
-          'platform',
-          'status',
-          'budget',
-          'followUpDate',
-          'link',
-          'notes',
-        ],
-      );
+      expect(ProposalField.values.map((f) => f.apiKey).toList(), <String>[
+        'title',
+        'company',
+        'platform',
+        'status',
+        'budget',
+        'followUpDate',
+        'link',
+        'notes',
+      ]);
     });
 
     test('fromApiKey finds every field', () {
-      for (final ProposalField f in ProposalField.values) {
+      for (final f in ProposalField.values) {
         expect(ProposalField.fromApiKey(f.apiKey), f);
       }
     });
@@ -40,7 +36,7 @@ void main() {
     });
 
     test('maps known keys to fields', () {
-      final ServerFieldErrors errors = ServerFieldErrors.from(<String, String>{
+      final errors = ServerFieldErrors.from(<String, String>{
         'title': 'Title is required.',
         'followUpDate': 'Bad date.',
       });
@@ -54,7 +50,7 @@ void main() {
     });
 
     test('keeps the messages of unknown keys', () {
-      final ServerFieldErrors errors = ServerFieldErrors.from(<String, String>{
+      final errors = ServerFieldErrors.from(<String, String>{
         'title': 'Bad.',
         'other': 'Something else.',
       });
@@ -64,7 +60,7 @@ void main() {
     });
 
     test('the result cannot be changed', () {
-      final ServerFieldErrors errors = ServerFieldErrors.from(<String, String>{
+      final errors = ServerFieldErrors.from(<String, String>{
         'title': 'Bad.',
         'x': 'y',
       });

@@ -1,14 +1,12 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:material_ui/material_ui.dart';
-
 import 'package:apply_track/features/auth/ui/login_screen.dart';
 import 'package:apply_track/features/proposals/ui/proposal_list_screen.dart';
 import 'package:apply_track/features/proposals/ui/stats_screen.dart';
 import 'package:apply_track/features/shell/app_shell.dart';
 import 'package:apply_track/router/app_router.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../support/app_test_helpers.dart';
-import '../../support/auth_test_helpers.dart';
 
 void main() {
   String currentPath(WidgetTester tester) => routerOf(
@@ -153,7 +151,7 @@ void main() {
     });
 
     testWidgets('sign out clears the session and shows login', (tester) async {
-      final FakeAuthRepository repo = signedInRepo();
+      final repo = signedInRepo();
       await pumpApp(tester, repo, width: 900);
 
       await tester.tap(find.byTooltip('Sign out'));

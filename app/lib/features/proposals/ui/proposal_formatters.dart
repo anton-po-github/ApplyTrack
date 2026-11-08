@@ -18,11 +18,11 @@ const List<String> _months = <String>[
 /// `1234.5` -> `$1,234.50`, `1200.0` -> `$1,200`.
 /// The server stores a number only, so the currency sign is a display choice.
 String formatBudget(double value) {
-  final bool whole = value == value.roundToDouble();
-  final List<String> parts = value.toStringAsFixed(whole ? 0 : 2).split('.');
-  final String digits = parts.first;
-  final StringBuffer out = StringBuffer(r'$');
-  for (int i = 0; i < digits.length; i++) {
+  final whole = value == value.roundToDouble();
+  final parts = value.toStringAsFixed(whole ? 0 : 2).split('.');
+  final digits = parts.first;
+  final out = StringBuffer(r'$');
+  for (var i = 0; i < digits.length; i++) {
     if (i > 0 && (digits.length - i) % 3 == 0) {
       out.write(',');
     }
@@ -42,7 +42,7 @@ String formatCalendarDate(CalendarDate date) =>
 
 /// The budget as text for an input: `1500` or `1234.50`. No sign, no commas.
 String formatBudgetInput(double value) {
-  final bool whole = value == value.roundToDouble();
+  final whole = value == value.roundToDouble();
   return value.toStringAsFixed(whole ? 0 : 2);
 }
 

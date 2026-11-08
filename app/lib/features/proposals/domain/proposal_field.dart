@@ -10,7 +10,7 @@ enum ProposalField {
   link('link'),
   notes('notes');
 
-  const ProposalField(this.apiKey);
+  new(this.apiKey);
 
   final String apiKey;
 
@@ -25,14 +25,14 @@ enum ProposalField {
 /// The server `fields` map, sorted into "we know this input" and
 /// "we do not know it" (the UI shows these in a banner).
 final class ServerFieldErrors {
-  const ServerFieldErrors({required this.byField, required this.unmapped});
+  const new({required this.byField, required this.unmapped});
 
-  factory ServerFieldErrors.from(Map<String, String>? fields) {
+  factory from(Map<String, String>? fields) {
     if (fields == null || fields.isEmpty) return empty;
-    final Map<ProposalField, String> byField = <ProposalField, String>{};
-    final List<String> unmapped = <String>[];
-    for (final MapEntry<String, String> entry in fields.entries) {
-      final ProposalField? field = ProposalField.fromApiKey(entry.key);
+    final byField = <ProposalField, String>{};
+    final unmapped = <String>[];
+    for (final entry in fields.entries) {
+      final field = ProposalField.fromApiKey(entry.key);
       if (field == null) {
         unmapped.add(entry.value);
       } else {

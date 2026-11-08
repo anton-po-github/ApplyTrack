@@ -1,7 +1,3 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:material_ui/material_ui.dart';
-
 import 'package:apply_track/features/auth/domain/auth_outcome.dart';
 import 'package:apply_track/features/auth/domain/auth_validators.dart';
 import 'package:apply_track/features/auth/state/auth_controller.dart';
@@ -9,9 +5,12 @@ import 'package:apply_track/features/auth/ui/auth_form_errors.dart';
 import 'package:apply_track/features/auth/ui/auth_layout.dart';
 import 'package:apply_track/features/auth/ui/auth_widgets.dart';
 import 'package:apply_track/router/app_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:material_ui/material_ui.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
-  const SignupScreen({super.key});
+  const new({super.key});
 
   @override
   ConsumerState<SignupScreen> createState() => _SignupScreenState();
@@ -48,13 +47,13 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   }
 
   Future<void> _submit() async {
-    final FormState? form = _formKey.currentState;
+    final form = _formKey.currentState;
     if (form == null) return;
 
     setState(() => _errors = AuthFormErrors.none);
     if (!form.validate()) return;
 
-    final AuthOutcome outcome = await ref
+    final outcome = await ref
         .read(authControllerProvider.notifier)
         .signUp(
           email: _email.text,
@@ -73,7 +72,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bool busy = ref.watch(authBusyProvider);
+    final busy = ref.watch(authBusyProvider);
 
     return AuthLayout(
       description: _description,
@@ -92,24 +91,24 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               ),
               textCapitalization: TextCapitalization.words,
               textInputAction: TextInputAction.next,
-              onChanged: (String _) => _clearError('displayName'),
-              validator: (String? value) =>
+              onChanged: (_) => _clearError('displayName'),
+              validator: (value) =>
                   _errors.fields['displayName'] ??
                   AuthValidators.displayName(value),
             ),
             EmailField(
               controller: _email,
-              onChanged: (String _) => _clearError('email'),
-              validator: (String? value) =>
+              onChanged: (_) => _clearError('email'),
+              validator: (value) =>
                   _errors.fields['email'] ?? AuthValidators.email(value),
             ),
             PasswordField(
               controller: _password,
               isNewPassword: true,
               helperText: '8 to 128 characters',
-              onChanged: (String _) => _clearError('password'),
-              onSubmitted: (String _) => _submit(),
-              validator: (String? value) =>
+              onChanged: (_) => _clearError('password'),
+              onSubmitted: (_) => _submit(),
+              validator: (value) =>
                   _errors.fields['password'] ??
                   AuthValidators.signupPassword(value),
             ),

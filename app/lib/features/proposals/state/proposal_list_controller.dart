@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:apply_track/core/api/api_error.dart';
 import 'package:apply_track/core/api/api_result.dart';
 import 'package:apply_track/features/proposals/data/proposals_api.dart';
@@ -13,6 +11,7 @@ import 'package:apply_track/features/proposals/domain/proposal_status.dart';
 import 'package:apply_track/features/proposals/domain/proposal_validators.dart';
 import 'package:apply_track/features/proposals/state/proposal_list_state.dart';
 import 'package:apply_track/features/proposals/state/proposals_dependencies.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final NotifierProvider<ProposalListController, ProposalListState>
 proposalListProvider =
@@ -51,7 +50,7 @@ class ProposalListController extends Notifier<ProposalListState> {
 
   @override
   ProposalListState build() {
-    final String? userId = ref.watch(currentUserIdProvider);
+    final userId = ref.watch(currentUserIdProvider);
     _buildUserId = userId;
     _epoch++;
     _request++;
@@ -71,13 +70,13 @@ class ProposalListController extends Notifier<ProposalListState> {
     if (!_canRun) {
       return;
     }
-    final int request = ++_request;
+    final request = ++_request;
     _retryLoadMore = false;
-    final ProposalStatus? status = state.status;
-    final String? query = state.query;
+    final status = state.status;
+    final query = state.query;
     state = state.copyWith(phase: ProposalListPhase.loading, error: null);
 
-    final ApiResult<ProposalPage> result = await ref
+    final result = await ref
         .read(proposalsApiProvider)
         .list(status: status, q: query);
     if (!_isCurrent(request)) {
@@ -102,16 +101,16 @@ class ProposalListController extends Notifier<ProposalListState> {
   }
 
   Future<void> _loadMore() async {
-    final String? cursor = state.nextCursor;
+    final cursor = state.nextCursor;
     if (!_canRun || cursor == null) {
       return;
     }
-    final int request = ++_request;
-    final ProposalStatus? status = state.status;
-    final String? query = state.query;
+    final request = ++_request;
+    final status = state.status;
+    final query = state.query;
     state = state.copyWith(phase: ProposalListPhase.loadingMore, error: null);
 
-    final ApiResult<ProposalPage> result = await ref
+    final result = await ref
         .read(proposalsApiProvider)
         .list(status: status, q: query, cursor: cursor);
     if (!_isCurrent(request)) {
@@ -163,7 +162,7 @@ class ProposalListController extends Notifier<ProposalListState> {
   /// Text that the server would refuse (too long, control characters)
   /// is ignored, so it is never sent.
   void setQuery(String? text) {
-    final String? next = ProposalValidators.normalizeSearchQuery(text);
+    final next = ProposalValidators.normalizeSearchQuery(text);
     if (ProposalValidators.searchQuery(next) != null) {
       return;
     }
@@ -193,25 +192,25 @@ class ProposalListController extends Notifier<ProposalListState> {
   /// The new item is not patched in. We load page 1 again, because the
   /// server decides the order and the filter match.
   Future<ApiResult<Proposal>> create(ProposalDraft draft) {
-    final ApiResult<Proposal>? invalid = _validate(draft);
+    final invalid = _validate<Proposal>(draft);
     if (invalid != null) {
       return Future<ApiResult<Proposal>>.value(invalid);
     }
     return _write<Proposal>(
-      call: (ProposalsApi api) => api.create(draft),
-      onOk: (Proposal _) => unawaited(refresh()),
+      call: (api) => api.create(draft),
+      onOk: (_) => unawaited(refresh()),
     );
   }
 
   /// Full replace. The server answer replaces the item in the list.
   /// The item leaves the list when it no longer matches the status filter.
   Future<ApiResult<Proposal>> update(String id, ProposalDraft draft) {
-    final ApiResult<Proposal>? invalid = _validate(draft);
+    final invalid = _validate<Proposal>(draft);
     if (invalid != null) {
       return Future<ApiResult<Proposal>>.value(invalid);
     }
     return _write<Proposal>(
-      call: (ProposalsApi api) => api.update(id, draft),
+      call: (api) => api.update(id, draft),
       onOk: _applyUpdated,
       onNotFound: () => _removeLocal(id),
     );
@@ -220,8 +219,8 @@ class ProposalListController extends Notifier<ProposalListState> {
   /// A `not_found` answer means the item is gone on the server. We remove it
   /// from the list too, and still return the error.
   Future<ApiResult<void>> delete(String id) => _write<void>(
-    call: (ProposalsApi api) => api.delete(id),
-    onOk: (void _) => _removeLocal(id),
+    call: (api) => api.delete(id),
+    onOk: (_) => _removeLocal(id),
     onNotFound: () => _removeLocal(id),
   );
 
@@ -241,10 +240,10 @@ class ProposalListController extends Notifier<ProposalListState> {
     if (state.isWriting) {
       return ApiErr<T>(_busyError);
     }
-    final int epoch = _epoch;
+    final epoch = _epoch;
     state = state.copyWith(isWriting: true);
     try {
-      final ApiResult<T> result = await call(ref.read(proposalsApiProvider));
+      final result = await call(ref.read(proposalsApiProvider));
       if (_isSameSession(epoch)) {
         switch (result) {
           case ApiOk<T>(:final T value):
@@ -267,7 +266,7 @@ class ProposalListController extends Notifier<ProposalListState> {
 
   /// Same checks as the form. The server checks them again.
   ApiResult<T>? _validate<T>(ProposalDraft draft) {
-    final Map<ProposalField, String> errors = ProposalValidators.draft(draft);
+    final errors = ProposalValidators.draft(draft);
     if (errors.isEmpty) {
       return null;
     }
@@ -293,12 +292,12 @@ class ProposalListController extends Notifier<ProposalListState> {
     if (!state.byId.containsKey(updated.id)) {
       return;
     }
-    final ProposalStatus? filter = state.status;
+    final filter = state.status;
     if (filter != null && updated.status != filter) {
       _removeLocal(updated.id);
       return;
     }
-    final Map<String, Proposal> map = Map<String, Proposal>.of(state.byId);
+    final map = Map<String, Proposal>.of(state.byId);
     map[updated.id] = updated;
     state = state.copyWith(byId: Map<String, Proposal>.unmodifiable(map));
   }
@@ -307,9 +306,8 @@ class ProposalListController extends Notifier<ProposalListState> {
     if (!state.byId.containsKey(id)) {
       return;
     }
-    final Map<String, Proposal> map = Map<String, Proposal>.of(state.byId)
-      ..remove(id);
-    final List<String> ids = List<String>.of(state.ids)..remove(id);
+    final map = Map<String, Proposal>.of(state.byId)..remove(id);
+    final ids = List<String>.of(state.ids)..remove(id);
     state = state.copyWith(
       byId: Map<String, Proposal>.unmodifiable(map),
       ids: List<String>.unmodifiable(ids),
@@ -342,18 +340,18 @@ class ProposalListController extends Notifier<ProposalListState> {
       );
 
   ProposalListState _withPage(ProposalPage page, {required bool append}) {
-    final Map<String, Proposal> map = append
+    final map = append
         ? Map<String, Proposal>.of(state.byId)
         : <String, Proposal>{};
-    final List<String> ids = append ? List<String>.of(state.ids) : <String>[];
-    for (final Proposal item in page.items) {
+    final ids = append ? List<String>.of(state.ids) : <String>[];
+    for (final item in page.items) {
       if (!map.containsKey(item.id)) {
         ids.add(item.id);
       }
       map[item.id] = item;
     }
     // A cursor that did not move would repeat the same page for ever.
-    final String? next = append && page.nextCursor == state.nextCursor
+    final next = append && page.nextCursor == state.nextCursor
         ? null
         : page.nextCursor;
     return state.copyWith(

@@ -1,5 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:apply_track/core/layout/window_size.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('under 600 is compact', () {

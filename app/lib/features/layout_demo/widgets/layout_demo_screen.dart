@@ -1,9 +1,9 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:apply_track/features/layout_demo/widgets/demo_box.dart';
 import 'package:apply_track/features/layout_demo/widgets/section_title.dart';
+import 'package:material_ui/material_ui.dart';
 
 class LayoutDemoScreen extends StatelessWidget {
-  const LayoutDemoScreen({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +38,7 @@ class LayoutDemoScreen extends StatelessWidget {
 }
 
 class _BadgeDemo extends StatelessWidget {
-  const _BadgeDemo();
+  const new();
 
   @override
   Widget build(BuildContext context) {

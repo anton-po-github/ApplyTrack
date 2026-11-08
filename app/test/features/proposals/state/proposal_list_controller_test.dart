@@ -1,8 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:apply_track/core/api/api_error.dart';
 import 'package:apply_track/core/api/api_result.dart';
 import 'package:apply_track/features/auth/state/auth_controller.dart';
@@ -14,6 +11,8 @@ import 'package:apply_track/features/proposals/domain/proposal_status.dart';
 import 'package:apply_track/features/proposals/state/proposal_list_controller.dart';
 import 'package:apply_track/features/proposals/state/proposal_list_state.dart';
 import 'package:apply_track/features/proposals/state/proposals_dependencies.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 import '../../../support/auth_test_helpers.dart';
 import '../../../support/fake_debounce_timers.dart';
@@ -22,7 +21,7 @@ import '../../../support/proposal_fixtures.dart';
 
 /// A user id that the test can change, like a sign-in or a sign-out.
 class TestUserId extends Notifier<String?> {
-  TestUserId(this._initial);
+  new(this._initial);
 
   final String? _initial;
 
@@ -54,16 +53,16 @@ void main() {
   Future<void> start() async {
     container.listen<ProposalListState>(
       proposalListProvider,
-      (ProposalListState? previous, ProposalListState next) {},
+      (previous, next) {},
     );
     await pumpEventQueue();
   }
 
   /// Every list call waits for the test to complete its gate.
   List<Gate> gateEveryList() {
-    final List<Gate> gates = <Gate>[];
-    api.listHandler = (ListCall call) {
-      final Gate gate = Gate();
+    final gates = <Gate>[];
+    api.listHandler = (call) {
+      final gate = Gate();
       gates.add(gate);
       return gate.future;
     };
@@ -77,7 +76,7 @@ void main() {
       overrides: [
         proposalsApiProvider.overrideWithValue(api),
         currentUserIdProvider.overrideWith(
-          (Ref ref) => ref.watch(testUserIdProvider),
+          (ref) => ref.watch(testUserIdProvider),
         ),
         debounceTimerFactoryProvider.overrideWithValue(timers.create),
       ],
@@ -87,7 +86,7 @@ void main() {
 
   group('first load', () {
     test('loads page 1 for a signed-in user', () async {
-      api.listHandler = (ListCall call) async =>
+      api.listHandler = (call) async =>
           pageOf([makeProposal(2), makeProposal(1)], next: 'c1');
 
       await start();
@@ -103,7 +102,7 @@ void main() {
     });
 
     test('shows the loading phase while the request runs', () async {
-      final List<Gate> gates = gateEveryList();
+      final gates = gateEveryList();
 
       await start();
       expect(read().phase, ProposalListPhase.loading);
@@ -128,7 +127,7 @@ void main() {
     test('starts when the user signs in later', () async {
       container.read(testUserIdProvider.notifier).set(null);
       await start();
-      api.listHandler = (ListCall call) async => pageOf([makeProposal(1)]);
+      api.listHandler = (call) async => pageOf([makeProposal(1)]);
 
       container.read(testUserIdProvider.notifier).set('u2');
       await pumpEventQueue();
@@ -138,7 +137,7 @@ void main() {
     });
 
     test('a failed first load gives the error phase and no items', () async {
-      api.listHandler = (ListCall call) async =>
+      api.listHandler = (call) async =>
           const ApiErr<ProposalPage>(ApiError.network());
 
       await start();
@@ -149,11 +148,11 @@ void main() {
     });
 
     test('retry after a failed first load loads page 1 again', () async {
-      api.listHandler = (ListCall call) async =>
+      api.listHandler = (call) async =>
           const ApiErr<ProposalPage>(ApiError.network());
       await start();
 
-      api.listHandler = (ListCall call) async => pageOf([makeProposal(1)]);
+      api.listHandler = (call) async => pageOf([makeProposal(1)]);
       await controller().retry();
 
       expect(api.listCalls, hasLength(2));
@@ -174,7 +173,7 @@ void main() {
     test(
       'rate limit: keeps the seconds and does not retry by itself',
       () async {
-        api.listHandler = (ListCall call) async => const ApiErr<ProposalPage>(
+        api.listHandler = (call) async => const ApiErr<ProposalPage>(
           ApiError(
             code: ApiErrorCodes.rateLimited,
             message: 'Too many requests.',
@@ -195,11 +194,11 @@ void main() {
 
   group('refresh', () {
     test('keeps the items on screen while it runs', () async {
-      api.listHandler = (ListCall call) async => pageOf([makeProposal(1)]);
+      api.listHandler = (call) async => pageOf([makeProposal(1)]);
       await start();
-      final List<Gate> gates = gateEveryList();
+      final gates = gateEveryList();
 
-      final Future<void> running = controller().refresh();
+      final running = controller().refresh();
 
       expect(read().phase, ProposalListPhase.loading);
       expect(read().ids, [proposalId(1)]);
@@ -210,9 +209,9 @@ void main() {
     });
 
     test('a failed refresh keeps the old items', () async {
-      api.listHandler = (ListCall call) async => pageOf([makeProposal(1)]);
+      api.listHandler = (call) async => pageOf([makeProposal(1)]);
       await start();
-      api.listHandler = (ListCall call) async =>
+      api.listHandler = (call) async =>
           const ApiErr<ProposalPage>(ApiError.network());
 
       await controller().refresh();
@@ -224,7 +223,7 @@ void main() {
 
   group('loadMore', () {
     setUp(() {
-      api.listHandler = (ListCall call) async => call.cursor == null
+      api.listHandler = (call) async => call.cursor == null
           ? pageOf([makeProposal(3), makeProposal(2)], next: 'c1')
           : pageOf([makeProposal(1)]);
     });
@@ -256,9 +255,9 @@ void main() {
 
     test('shows loadingMore while it runs', () async {
       await start();
-      final List<Gate> gates = gateEveryList();
+      final gates = gateEveryList();
 
-      final Future<void> running = controller().loadMore();
+      final running = controller().loadMore();
       expect(read().phase, ProposalListPhase.loadingMore);
       expect(read().length, 2);
 
@@ -268,7 +267,7 @@ void main() {
     });
 
     test('does nothing on the last page', () async {
-      api.listHandler = (ListCall call) async => pageOf([makeProposal(1)]);
+      api.listHandler = (call) async => pageOf([makeProposal(1)]);
       await start();
 
       await controller().loadMore();
@@ -280,9 +279,9 @@ void main() {
       'a second call while one runs does not send a second request',
       () async {
         await start();
-        final List<Gate> gates = gateEveryList();
+        final gates = gateEveryList();
 
-        final Future<void> first = controller().loadMore();
+        final first = controller().loadMore();
         await controller().loadMore();
 
         expect(gates, hasLength(1));
@@ -292,7 +291,7 @@ void main() {
     );
 
     test('does not add an item twice', () async {
-      api.listHandler = (ListCall call) async => call.cursor == null
+      api.listHandler = (call) async => call.cursor == null
           ? pageOf([makeProposal(2), makeProposal(1)], next: 'c1')
           : pageOf([makeProposal(1)]);
       await start();
@@ -303,7 +302,7 @@ void main() {
     });
 
     test('a cursor that does not move ends the list', () async {
-      api.listHandler = (ListCall call) async =>
+      api.listHandler = (call) async =>
           pageOf([makeProposal(call.cursor == null ? 1 : 2)], next: 'c1');
       await start();
 
@@ -316,7 +315,7 @@ void main() {
 
     test('an error keeps the items. Scrolling does not repeat it', () async {
       await start();
-      api.listHandler = (ListCall call) async =>
+      api.listHandler = (call) async =>
           const ApiErr<ProposalPage>(ApiError.network());
 
       await controller().loadMore();
@@ -330,11 +329,11 @@ void main() {
 
     test('retry after a loadMore error asks for the same cursor', () async {
       await start();
-      api.listHandler = (ListCall call) async =>
+      api.listHandler = (call) async =>
           const ApiErr<ProposalPage>(ApiError.network());
       await controller().loadMore();
 
-      api.listHandler = (ListCall call) async => pageOf([makeProposal(1)]);
+      api.listHandler = (call) async => pageOf([makeProposal(1)]);
       await controller().retry();
 
       expect(api.listCalls.last.cursor, 'c1');
@@ -345,11 +344,10 @@ void main() {
 
   group('status filter', () {
     test('resets items and cursor and sends the status', () async {
-      api.listHandler = (ListCall call) async =>
-          pageOf([makeProposal(1)], next: 'c1');
+      api.listHandler = (call) async => pageOf([makeProposal(1)], next: 'c1');
       await start();
 
-      api.listHandler = (ListCall call) async =>
+      api.listHandler = (call) async =>
           pageOf([makeProposal(2, status: ProposalStatus.won)]);
       await controller().setStatus(ProposalStatus.won);
 
@@ -362,11 +360,11 @@ void main() {
 
     test('the old items are gone while the new filter loads', () async {
       await start();
-      api.listHandler = (ListCall call) async => pageOf([makeProposal(1)]);
+      api.listHandler = (call) async => pageOf([makeProposal(1)]);
       await controller().refresh();
-      final List<Gate> gates = gateEveryList();
+      final gates = gateEveryList();
 
-      final Future<void> running = controller().setStatus(ProposalStatus.lost);
+      final running = controller().setStatus(ProposalStatus.lost);
 
       expect(read().isEmpty, isTrue);
       expect(read().phase, ProposalListPhase.loading);
@@ -441,11 +439,10 @@ void main() {
     });
 
     test('a new search resets the cursor and the items', () async {
-      api.listHandler = (ListCall call) async =>
-          pageOf([makeProposal(1)], next: 'c1');
+      api.listHandler = (call) async => pageOf([makeProposal(1)], next: 'c1');
       await start();
 
-      api.listHandler = (ListCall call) async => pageOf([makeProposal(5)]);
+      api.listHandler = (call) async => pageOf([makeProposal(5)]);
       controller().setQuery('x');
       timers.last.fire();
       await pumpEventQueue();
@@ -469,10 +466,10 @@ void main() {
       controller().setQuery('abc');
       timers.last.fire();
       await pumpEventQueue();
-      final int calls = api.listCalls.length;
+      final calls = api.listCalls.length;
 
       controller().setQuery('abcd');
-      final FakeTimer waiting = timers.last;
+      final waiting = timers.last;
       controller().setQuery('abc');
 
       expect(waiting.cancelled, isTrue);
@@ -494,7 +491,7 @@ void main() {
     test('a timer that fires after sign-out sends nothing', () async {
       await start();
       controller().setQuery('abc');
-      final FakeTimer waiting = timers.last;
+      final waiting = timers.last;
 
       container.read(testUserIdProvider.notifier).set(null);
       await pumpEventQueue();
@@ -507,10 +504,10 @@ void main() {
 
   group('old answers', () {
     test('a slow answer never replaces a newer one', () async {
-      final List<Gate> gates = gateEveryList();
+      final gates = gateEveryList();
       await start(); // gates[0] is the first request.
 
-      final Future<void> filtering = controller().setStatus(ProposalStatus.won);
+      final filtering = controller().setStatus(ProposalStatus.won);
       await pumpEventQueue(); // gates[1] is the filtered request.
 
       gates[1].complete(pageOf([makeProposal(2, status: ProposalStatus.won)]));
@@ -523,15 +520,12 @@ void main() {
     });
 
     test('a loadMore answer after a filter change is dropped', () async {
-      api.listHandler = (ListCall call) async =>
-          pageOf([makeProposal(1)], next: 'c1');
+      api.listHandler = (call) async => pageOf([makeProposal(1)], next: 'c1');
       await start();
-      final List<Gate> gates = gateEveryList();
+      final gates = gateEveryList();
 
-      final Future<void> more = controller().loadMore(); // gates[0]
-      final Future<void> filtering = controller().setStatus(
-        ProposalStatus.lost,
-      ); // gates[1]
+      final more = controller().loadMore(); // gates[0]
+      final filtering = controller().setStatus(ProposalStatus.lost); // gates[1]
       await pumpEventQueue();
 
       gates[1].complete(pageOf([makeProposal(9, status: ProposalStatus.lost)]));
@@ -543,10 +537,10 @@ void main() {
     });
 
     test('an old error does not replace newer data', () async {
-      final List<Gate> gates = gateEveryList();
+      final gates = gateEveryList();
       await start();
 
-      final Future<void> second = controller().refresh();
+      final second = controller().refresh();
       await pumpEventQueue();
 
       gates[1].complete(pageOf([makeProposal(2)]));
@@ -561,8 +555,7 @@ void main() {
 
   group('user change', () {
     test('sign-out drops the list at once', () async {
-      api.listHandler = (ListCall call) async =>
-          pageOf([makeProposal(1)], next: 'c1');
+      api.listHandler = (call) async => pageOf([makeProposal(1)], next: 'c1');
       await start();
       expect(read().length, 1);
 
@@ -574,7 +567,7 @@ void main() {
     });
 
     test('an answer that arrives after sign-out is ignored', () async {
-      final List<Gate> gates = gateEveryList();
+      final gates = gateEveryList();
       await start();
 
       container.read(testUserIdProvider.notifier).set(null);
@@ -585,11 +578,11 @@ void main() {
     });
 
     test('another user starts with a clean list and no old filter', () async {
-      api.listHandler = (ListCall call) async => pageOf([makeProposal(1)]);
+      api.listHandler = (call) async => pageOf([makeProposal(1)]);
       await start();
       await controller().setStatus(ProposalStatus.won);
 
-      api.listHandler = (ListCall call) async => pageOf([makeProposal(7)]);
+      api.listHandler = (call) async => pageOf([makeProposal(7)]);
       container.read(testUserIdProvider.notifier).set('u2');
       await pumpEventQueue();
 
@@ -600,11 +593,9 @@ void main() {
     });
 
     test('the real sign-out of the auth controller drops the list', () async {
-      final FakeAuthRepository repo = FakeAuthRepository(
-        session: validSession(),
-      );
-      api.listHandler = (ListCall call) async => pageOf([makeProposal(1)]);
-      final ProviderContainer real = ProviderContainer(
+      final repo = FakeAuthRepository(session: validSession());
+      api.listHandler = (call) async => pageOf([makeProposal(1)]);
+      final real = ProviderContainer(
         overrides: [
           authRepositoryProvider.overrideWithValue(repo),
           googleSignInProvider.overrideWithValue(FakeGoogleIdTokenProvider()),
@@ -631,15 +622,13 @@ void main() {
 
   group('create', () {
     test('sends the draft and loads page 1 again', () async {
-      api.listHandler = (ListCall call) async => pageOf([makeProposal(1)]);
+      api.listHandler = (call) async => pageOf([makeProposal(1)]);
       await start();
       api.createHandler = (draft) async => ApiOk<Proposal>(makeProposal(2));
-      api.listHandler = (ListCall call) async =>
+      api.listHandler = (call) async =>
           pageOf([makeProposal(2), makeProposal(1)]);
 
-      final ApiResult<Proposal> result = await controller().create(
-        validDraft(),
-      );
+      final result = await controller().create(validDraft());
       await pumpEventQueue();
 
       expect(result, isA<ApiOk<Proposal>>());
@@ -652,11 +641,9 @@ void main() {
     test('a bad draft never reaches the server', () async {
       await start();
 
-      final ApiResult<Proposal> result = await controller().create(
-        validDraft(title: 'ab'),
-      );
+      final result = await controller().create(validDraft(title: 'ab'));
 
-      final ApiError error = (result as ApiErr<Proposal>).error;
+      final error = (result as ApiErr<Proposal>).error;
       expect(error.code, ApiErrorCodes.validation);
       expect(error.fields, contains('title'));
       expect(api.createCalls, isEmpty);
@@ -664,15 +651,13 @@ void main() {
     });
 
     test('a server error passes through and the list stays as it is', () async {
-      api.listHandler = (ListCall call) async => pageOf([makeProposal(1)]);
+      api.listHandler = (call) async => pageOf([makeProposal(1)]);
       await start();
       api.createHandler = (draft) async => const ApiErr<Proposal>(
         ApiError(code: ApiErrorCodes.proposalLimit, message: 'Limit reached.'),
       );
 
-      final ApiResult<Proposal> result = await controller().create(
-        validDraft(),
-      );
+      final result = await controller().create(validDraft());
       await pumpEventQueue();
 
       expect((result as ApiErr<Proposal>).error.code, 'proposal_limit');
@@ -684,17 +669,12 @@ void main() {
 
     test('a second tap while the first runs is refused', () async {
       await start();
-      final Completer<ApiResult<Proposal>> gate =
-          Completer<ApiResult<Proposal>>();
+      final gate = Completer<ApiResult<Proposal>>();
       api.createHandler = (draft) => gate.future;
 
-      final Future<ApiResult<Proposal>> first = controller().create(
-        validDraft(),
-      );
+      final first = controller().create(validDraft());
       expect(read().isWriting, isTrue);
-      final ApiResult<Proposal> second = await controller().create(
-        validDraft(),
-      );
+      final second = await controller().create(validDraft());
 
       expect(second, isA<ApiErr<Proposal>>());
       expect(api.createCalls, hasLength(1));
@@ -708,9 +688,7 @@ void main() {
       container.read(testUserIdProvider.notifier).set(null);
       await start();
 
-      final ApiResult<Proposal> result = await controller().create(
-        validDraft(),
-      );
+      final result = await controller().create(validDraft());
 
       expect(
         (result as ApiErr<Proposal>).error.code,
@@ -722,7 +700,7 @@ void main() {
 
   group('update', () {
     setUp(() {
-      api.listHandler = (ListCall call) async =>
+      api.listHandler = (call) async =>
           pageOf([makeProposal(3), makeProposal(2), makeProposal(1)]);
     });
 
@@ -732,7 +710,7 @@ void main() {
         makeProposal(2, title: 'Server title', status: ProposalStatus.sent),
       );
 
-      final ApiResult<Proposal> result = await controller().update(
+      final result = await controller().update(
         proposalId(2),
         validDraft(title: 'My title', status: ProposalStatus.sent),
       );
@@ -776,10 +754,7 @@ void main() {
       api.updateHandler = (id, draft) async =>
           const ApiErr<Proposal>(ApiError.network());
 
-      final ApiResult<Proposal> result = await controller().update(
-        proposalId(2),
-        validDraft(),
-      );
+      final result = await controller().update(proposalId(2), validDraft());
 
       expect((result as ApiErr<Proposal>).error.code, ApiErrorCodes.network);
       expect(read().proposalById(proposalId(2))?.title, 'Proposal 2');
@@ -792,10 +767,7 @@ void main() {
         ApiError(code: ApiErrorCodes.notFound, message: 'Not found.'),
       );
 
-      final ApiResult<Proposal> result = await controller().update(
-        proposalId(2),
-        validDraft(),
-      );
+      final result = await controller().update(proposalId(2), validDraft());
 
       expect((result as ApiErr<Proposal>).error.code, ApiErrorCodes.notFound);
       expect(read().ids, [proposalId(3), proposalId(1)]);
@@ -804,7 +776,7 @@ void main() {
     test('a bad draft never reaches the server', () async {
       await start();
 
-      final ApiResult<Proposal> result = await controller().update(
+      final result = await controller().update(
         proposalId(2),
         validDraft(title: ''),
       );
@@ -827,14 +799,14 @@ void main() {
 
   group('delete', () {
     setUp(() {
-      api.listHandler = (ListCall call) async =>
+      api.listHandler = (call) async =>
           pageOf([makeProposal(2), makeProposal(1)]);
     });
 
     test('removes the item from the list', () async {
       await start();
 
-      final ApiResult<void> result = await controller().delete(proposalId(2));
+      final result = await controller().delete(proposalId(2));
 
       expect(result, isA<ApiOk<void>>());
       expect(api.deleteIds, [proposalId(2)]);
@@ -848,7 +820,7 @@ void main() {
         ApiError(code: ApiErrorCodes.notFound, message: 'Not found.'),
       );
 
-      final ApiResult<void> result = await controller().delete(proposalId(2));
+      final result = await controller().delete(proposalId(2));
 
       expect((result as ApiErr<void>).error.code, ApiErrorCodes.notFound);
       expect(read().ids, [proposalId(1)]);
@@ -866,11 +838,11 @@ void main() {
 
     test('a second tap while the first runs is refused', () async {
       await start();
-      final Completer<ApiResult<void>> gate = Completer<ApiResult<void>>();
+      final gate = Completer<ApiResult<void>>();
       api.deleteHandler = (id) => gate.future;
 
-      final Future<ApiResult<void>> first = controller().delete(proposalId(2));
-      final ApiResult<void> second = await controller().delete(proposalId(1));
+      final first = controller().delete(proposalId(2));
+      final second = await controller().delete(proposalId(1));
 
       expect(second, isA<ApiErr<void>>());
       expect(api.deleteIds, [proposalId(2)]);
@@ -882,12 +854,10 @@ void main() {
 
     test('a write answer after sign-out changes nothing', () async {
       await start();
-      final Completer<ApiResult<void>> gate = Completer<ApiResult<void>>();
+      final gate = Completer<ApiResult<void>>();
       api.deleteHandler = (id) => gate.future;
 
-      final Future<ApiResult<void>> running = controller().delete(
-        proposalId(2),
-      );
+      final running = controller().delete(proposalId(2));
       container.read(testUserIdProvider.notifier).set(null);
       gate.complete(const ApiOk<void>(null));
       await running;
@@ -899,7 +869,7 @@ void main() {
 
   group('stats signal', () {
     test('goes up after every successful write', () async {
-      api.listHandler = (ListCall call) async => pageOf([makeProposal(1)]);
+      api.listHandler = (call) async => pageOf([makeProposal(1)]);
       await start();
       api.createHandler = (draft) async => ApiOk<Proposal>(makeProposal(2));
       api.updateHandler = (id, draft) async =>
@@ -926,7 +896,7 @@ void main() {
     });
 
     test('goes up when a delete finds the item already gone', () async {
-      api.listHandler = (ListCall call) async => pageOf([makeProposal(1)]);
+      api.listHandler = (call) async => pageOf([makeProposal(1)]);
       await start();
       api.deleteHandler = (id) async => const ApiErr<void>(
         ApiError(code: ApiErrorCodes.notFound, message: 'Not found.'),
@@ -946,7 +916,7 @@ void main() {
       timers.last.fire();
       await pumpEventQueue();
       expect(read().hasFilter, isTrue);
-      final int calls = api.listCalls.length;
+      final calls = api.listCalls.length;
 
       await controller().clearFilters();
 
@@ -961,10 +931,10 @@ void main() {
       await start();
       await controller().setStatus(ProposalStatus.won);
       controller().setQuery('abc');
-      final FakeTimer waiting = timers.last;
+      final waiting = timers.last;
 
       await controller().clearFilters();
-      final int calls = api.listCalls.length;
+      final calls = api.listCalls.length;
       waiting.fire();
       await pumpEventQueue();
 

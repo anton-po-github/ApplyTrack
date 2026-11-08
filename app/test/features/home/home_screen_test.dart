@@ -1,9 +1,8 @@
+import 'package:apply_track/features/auth/state/auth_dependencies.dart';
+import 'package:apply_track/features/home/home_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
-
-import 'package:apply_track/features/auth/state/auth_dependencies.dart';
-import 'package:apply_track/features/home/home_screen.dart';
 
 import '../../support/auth_test_helpers.dart';
 
@@ -22,7 +21,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
 
-    final FakeAuthRepository repo = FakeAuthRepository(session: validSession());
+    final repo = FakeAuthRepository(session: validSession());
     await tester.pumpWidget(
       ProviderScope(
         overrides: [authRepositoryProvider.overrideWithValue(repo)],
@@ -40,47 +39,43 @@ void main() {
     ];
   }
 
-  testWidgets('400 wide: one column', (WidgetTester tester) async {
-    final List<Offset> p = await cardPositions(tester, 400);
+  testWidgets('400 wide: one column', (tester) async {
+    final p = await cardPositions(tester, 400);
 
     expect(p[1].dx, closeTo(p[0].dx, 0.01));
     expect(p[1].dy, greaterThan(p[0].dy));
   });
 
-  testWidgets('700 wide: two columns', (WidgetTester tester) async {
-    final List<Offset> p = await cardPositions(tester, 700);
+  testWidgets('700 wide: two columns', (tester) async {
+    final p = await cardPositions(tester, 700);
 
     expect(p[1].dy, closeTo(p[0].dy, 0.01));
     expect(p[1].dx, greaterThan(p[0].dx));
     expect(p[2].dy, greaterThan(p[0].dy));
   });
 
-  testWidgets('900 wide: three columns in one row', (
-    WidgetTester tester,
-  ) async {
-    final List<Offset> p = await cardPositions(tester, 900);
+  testWidgets('900 wide: three columns in one row', (tester) async {
+    final p = await cardPositions(tester, 900);
 
     expect(p[1].dy, closeTo(p[0].dy, 0.01));
     expect(p[2].dy, closeTo(p[0].dy, 0.01));
   });
 
-  testWidgets('1400 wide: content is centered, max 1000', (
-    WidgetTester tester,
-  ) async {
-    final List<Offset> p = await cardPositions(tester, 1400);
+  testWidgets('1400 wide: content is centered, max 1000', (tester) async {
+    final p = await cardPositions(tester, 1400);
 
     // (1400 - 1000) / 2 = 200, plus 16 padding
     expect(p[0].dx, closeTo(216, 0.5));
   });
 
-  testWidgets('shows the display name', (WidgetTester tester) async {
+  testWidgets('shows the display name', (tester) async {
     await pumpHome(tester);
 
     expect(find.text('Anton'), findsOneWidget);
   });
 
-  testWidgets('Sign out clears the session', (WidgetTester tester) async {
-    final FakeAuthRepository repo = await pumpHome(tester);
+  testWidgets('Sign out clears the session', (tester) async {
+    final repo = await pumpHome(tester);
 
     await tester.tap(find.byTooltip('Sign out'));
     await tester.pumpAndSettle();

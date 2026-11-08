@@ -19,35 +19,32 @@ abstract final class ApiErrorCodes {
 }
 
 final class ApiError {
-  const ApiError({
+  const new({
     required this.code,
     required this.message,
     this.fields,
     this.retryAfterSeconds,
   });
 
-  const ApiError.network()
+  const new network()
     : this(
         code: ApiErrorCodes.network,
         message: 'No connection. Check your internet and try again.',
       );
 
-  const ApiError.unauthorized()
+  const new unauthorized()
     : this(code: ApiErrorCodes.unauthorized, message: 'Please sign in again.');
 
-  const ApiError.badResponse()
+  const new badResponse()
     : this(
         code: ApiErrorCodes.badResponse,
         message: 'The server sent an unexpected answer.',
       );
 
   /// Never throws. A broken body becomes code `unknown_error`.
-  factory ApiError.fromJson(
-    Map<String, Object?> json, {
-    int? retryAfterSeconds,
-  }) {
-    final Object? code = json['code'];
-    final Object? message = json['message'];
+  factory fromJson(Map<String, Object?> json, {int? retryAfterSeconds}) {
+    final code = json['code'];
+    final message = json['message'];
     return ApiError(
       code: code is String && code.isNotEmpty ? code : ApiErrorCodes.unknown,
       message: message is String && message.isNotEmpty
@@ -69,9 +66,9 @@ final class ApiError {
 
   static Map<String, String>? _readFields(Object? raw) {
     if (raw is! Map<String, Object?>) return null;
-    final Map<String, String> result = <String, String>{};
-    for (final MapEntry<String, Object?> entry in raw.entries) {
-      final Object? value = entry.value;
+    final result = <String, String>{};
+    for (final entry in raw.entries) {
+      final value = entry.value;
       if (value is String) result[entry.key] = value;
     }
     return result.isEmpty ? null : Map<String, String>.unmodifiable(result);

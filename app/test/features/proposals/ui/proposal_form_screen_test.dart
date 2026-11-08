@@ -1,10 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
-import 'package:material_ui/material_ui.dart';
-
 import 'package:apply_track/core/api/api_error.dart';
 import 'package:apply_track/core/api/api_result.dart';
 import 'package:apply_track/features/auth/state/auth_dependencies.dart';
@@ -16,6 +11,10 @@ import 'package:apply_track/features/proposals/domain/proposal_status.dart';
 import 'package:apply_track/features/proposals/state/proposals_dependencies.dart';
 import 'package:apply_track/features/proposals/ui/proposal_form_screen.dart';
 import 'package:apply_track/router/app_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../support/app_test_helpers.dart';
 import '../../../support/fake_proposals_api.dart';
@@ -25,7 +24,7 @@ void main() {
   late FakeProposalsApi api;
 
   // A proposal with every field filled. Its id is [routeTestId].
-  final Proposal fullProposal = Proposal(
+  final fullProposal = Proposal(
     id: routeTestId,
     title: 'Server title',
     company: 'Acme',
@@ -44,11 +43,11 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
 
-    final GoRouter router = GoRouter(
+    final router = GoRouter(
       routes: <RouteBase>[
         GoRoute(
           path: '/',
-          builder: (BuildContext context, GoRouterState state) => Scaffold(
+          builder: (context, state) => Scaffold(
             body: Column(
               children: <Widget>[
                 const Text('HOME'),
@@ -69,12 +68,11 @@ void main() {
         ),
         GoRoute(
           path: AppRoutes.proposalNew,
-          builder: (BuildContext context, GoRouterState state) =>
-              const ProposalFormScreen(),
+          builder: (context, state) => const ProposalFormScreen(),
         ),
         GoRoute(
           path: '/proposals/:id/edit',
-          builder: (BuildContext context, GoRouterState state) =>
+          builder: (context, state) =>
               ProposalFormScreen(proposalId: state.pathParameters['id']),
         ),
       ],
@@ -127,10 +125,8 @@ void main() {
 
   setUp(() {
     api = FakeProposalsApi();
-    api.createHandler = (ProposalDraft draft) async =>
-        ApiOk<Proposal>(makeProposal(1));
-    api.updateHandler = (String id, ProposalDraft draft) async =>
-        ApiOk<Proposal>(fullProposal);
+    api.createHandler = (draft) async => ApiOk<Proposal>(makeProposal(1));
+    api.updateHandler = (id, draft) async => ApiOk<Proposal>(fullProposal);
   });
 
   group('new proposal', () {
@@ -140,7 +136,7 @@ void main() {
       await openNew(tester);
 
       expect(find.text('New proposal'), findsOneWidget);
-      for (final String key in <String>[
+      for (final key in <String>[
         'field-title',
         'field-company',
         'field-platform',
@@ -225,7 +221,7 @@ void main() {
       await save(tester);
 
       expect(api.createCalls, hasLength(1));
-      final ProposalDraft sent = api.createCalls.single;
+      final sent = api.createCalls.single;
       expect(sent.title.trim(), 'Flutter app');
       expect(sent.company, 'Acme');
       expect(sent.platform, ProposalPlatform.upwork);
@@ -244,7 +240,7 @@ void main() {
 
       await save(tester);
 
-      final Map<String, Object?> json = api.createCalls.single.toJson();
+      final json = api.createCalls.single.toJson();
       expect(json['title'], 'Just a title');
       expect(json['company'], isNull);
       expect(json['budget'], isNull);
@@ -313,7 +309,7 @@ void main() {
 
   group('server errors', () {
     testWidgets('field errors show under the matching inputs', (tester) async {
-      api.createHandler = (ProposalDraft draft) async => const ApiErr<Proposal>(
+      api.createHandler = (draft) async => const ApiErr<Proposal>(
         ApiError(
           code: ApiErrorCodes.validation,
           message: 'Validation failed.',
@@ -338,7 +334,7 @@ void main() {
     });
 
     testWidgets('an unknown field goes to the banner', (tester) async {
-      api.createHandler = (ProposalDraft draft) async => const ApiErr<Proposal>(
+      api.createHandler = (draft) async => const ApiErr<Proposal>(
         ApiError(
           code: ApiErrorCodes.validation,
           message: 'Validation failed.',
@@ -359,7 +355,7 @@ void main() {
     });
 
     testWidgets('typing in a field removes its server error', (tester) async {
-      api.createHandler = (ProposalDraft draft) async => const ApiErr<Proposal>(
+      api.createHandler = (draft) async => const ApiErr<Proposal>(
         ApiError(
           code: ApiErrorCodes.validation,
           message: 'Validation failed.',
@@ -377,8 +373,8 @@ void main() {
     });
 
     testWidgets('a new Save clears the old server error', (tester) async {
-      int calls = 0;
-      api.createHandler = (ProposalDraft draft) async {
+      var calls = 0;
+      api.createHandler = (draft) async {
         calls++;
         if (calls == 1) {
           return const ApiErr<Proposal>(
@@ -403,7 +399,7 @@ void main() {
     });
 
     testWidgets('proposal_limit tells the user to delete one', (tester) async {
-      api.createHandler = (ProposalDraft draft) async => const ApiErr<Proposal>(
+      api.createHandler = (draft) async => const ApiErr<Proposal>(
         ApiError(code: ApiErrorCodes.proposalLimit, message: 'Limit.'),
       );
       await openNew(tester);
@@ -422,7 +418,7 @@ void main() {
     testWidgets('a network error and a rate limit show a banner', (
       tester,
     ) async {
-      api.createHandler = (ProposalDraft draft) async =>
+      api.createHandler = (draft) async =>
           const ApiErr<Proposal>(ApiError.network());
       await openNew(tester);
       await type(tester, 'field-title', 'Flutter app');
@@ -433,7 +429,7 @@ void main() {
         findsOneWidget,
       );
 
-      api.createHandler = (ProposalDraft draft) async => const ApiErr<Proposal>(
+      api.createHandler = (draft) async => const ApiErr<Proposal>(
         ApiError(
           code: ApiErrorCodes.rateLimited,
           message: 'raw',
@@ -453,9 +449,8 @@ void main() {
     testWidgets('Save is disabled while saving and sends one request', (
       tester,
     ) async {
-      final Completer<ApiResult<Proposal>> gate =
-          Completer<ApiResult<Proposal>>();
-      api.createHandler = (ProposalDraft draft) => gate.future;
+      final gate = Completer<ApiResult<Proposal>>();
+      api.createHandler = (draft) => gate.future;
       await openNew(tester);
       await type(tester, 'field-title', 'Flutter app');
 
@@ -477,7 +472,7 @@ void main() {
     });
 
     testWidgets('Save is enabled again after an error', (tester) async {
-      api.createHandler = (ProposalDraft draft) async =>
+      api.createHandler = (draft) async =>
           const ApiErr<Proposal>(ApiError.network());
       await openNew(tester);
       await type(tester, 'field-title', 'Flutter app');
@@ -558,7 +553,7 @@ void main() {
 
   group('edit proposal', () {
     testWidgets('loads the proposal and fills every input', (tester) async {
-      api.getHandler = (String id) async => ApiOk<Proposal>(fullProposal);
+      api.getHandler = (id) async => ApiOk<Proposal>(fullProposal);
 
       await openEdit(tester);
 
@@ -576,9 +571,8 @@ void main() {
     });
 
     testWidgets('shows a spinner while it loads', (tester) async {
-      final Completer<ApiResult<Proposal>> gate =
-          Completer<ApiResult<Proposal>>();
-      api.getHandler = (String id) => gate.future;
+      final gate = Completer<ApiResult<Proposal>>();
+      api.getHandler = (id) => gate.future;
 
       await pumpHome(tester);
       await tester.tap(find.byKey(const Key('open-edit')));
@@ -596,7 +590,7 @@ void main() {
     testWidgets('Save sends the WHOLE object, not only the change', (
       tester,
     ) async {
-      api.getHandler = (String id) async => ApiOk<Proposal>(fullProposal);
+      api.getHandler = (id) async => ApiOk<Proposal>(fullProposal);
       await openEdit(tester);
       await type(tester, 'field-title', 'New title');
 
@@ -621,7 +615,7 @@ void main() {
     });
 
     testWidgets('an empty company is sent as null (cleared)', (tester) async {
-      api.getHandler = (String id) async => ApiOk<Proposal>(fullProposal);
+      api.getHandler = (id) async => ApiOk<Proposal>(fullProposal);
       await openEdit(tester);
       await type(tester, 'field-company', '');
 
@@ -631,7 +625,7 @@ void main() {
     });
 
     testWidgets('the date can be cleared in an edit', (tester) async {
-      api.getHandler = (String id) async => ApiOk<Proposal>(fullProposal);
+      api.getHandler = (id) async => ApiOk<Proposal>(fullProposal);
       await openEdit(tester);
 
       await tester.tap(find.byKey(const Key('follow-up-clear')));
@@ -643,7 +637,7 @@ void main() {
     });
 
     testWidgets('saving without a change asks no question', (tester) async {
-      api.getHandler = (String id) async => ApiOk<Proposal>(fullProposal);
+      api.getHandler = (id) async => ApiOk<Proposal>(fullProposal);
       await openEdit(tester);
 
       await tester.tap(find.byTooltip('Back'));
@@ -656,7 +650,7 @@ void main() {
     testWidgets('404 on load shows "not found" and a Back button', (
       tester,
     ) async {
-      api.getHandler = (String id) async => const ApiErr<Proposal>(
+      api.getHandler = (id) async => const ApiErr<Proposal>(
         ApiError(code: ApiErrorCodes.notFound, message: 'Not found.'),
       );
 
@@ -675,8 +669,7 @@ void main() {
     testWidgets('another load error shows Retry, and Retry loads again', (
       tester,
     ) async {
-      api.getHandler = (String id) async =>
-          const ApiErr<Proposal>(ApiError.network());
+      api.getHandler = (id) async => const ApiErr<Proposal>(ApiError.network());
       await openEdit(tester);
 
       expect(find.byKey(const Key('form-load-error')), findsOneWidget);
@@ -685,7 +678,7 @@ void main() {
         findsOneWidget,
       );
 
-      api.getHandler = (String id) async => ApiOk<Proposal>(fullProposal);
+      api.getHandler = (id) async => ApiOk<Proposal>(fullProposal);
       await tester.tap(find.text('Retry'));
       await tester.pumpAndSettle();
 
@@ -697,11 +690,10 @@ void main() {
     testWidgets('404 on save shows a banner and keeps the form', (
       tester,
     ) async {
-      api.getHandler = (String id) async => ApiOk<Proposal>(fullProposal);
-      api.updateHandler = (String id, ProposalDraft draft) async =>
-          const ApiErr<Proposal>(
-            ApiError(code: ApiErrorCodes.notFound, message: 'Not found.'),
-          );
+      api.getHandler = (id) async => ApiOk<Proposal>(fullProposal);
+      api.updateHandler = (id, draft) async => const ApiErr<Proposal>(
+        ApiError(code: ApiErrorCodes.notFound, message: 'Not found.'),
+      );
       await openEdit(tester);
       await type(tester, 'field-title', 'New title');
 
@@ -713,15 +705,14 @@ void main() {
     });
 
     testWidgets('server field errors show in edit mode too', (tester) async {
-      api.getHandler = (String id) async => ApiOk<Proposal>(fullProposal);
-      api.updateHandler = (String id, ProposalDraft draft) async =>
-          const ApiErr<Proposal>(
-            ApiError(
-              code: ApiErrorCodes.validation,
-              message: 'Validation failed.',
-              fields: <String, String>{'budget': 'Budget is too high'},
-            ),
-          );
+      api.getHandler = (id) async => ApiOk<Proposal>(fullProposal);
+      api.updateHandler = (id, draft) async => const ApiErr<Proposal>(
+        ApiError(
+          code: ApiErrorCodes.validation,
+          message: 'Validation failed.',
+          fields: <String, String>{'budget': 'Budget is too high'},
+        ),
+      );
       await openEdit(tester);
       await type(tester, 'field-title', 'New title');
 

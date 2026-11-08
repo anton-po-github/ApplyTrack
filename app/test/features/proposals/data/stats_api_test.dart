@@ -1,9 +1,8 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:apply_track/core/api/api_error.dart';
 import 'package:apply_track/core/api/api_result.dart';
 import 'package:apply_track/features/proposals/data/stats_api.dart';
 import 'package:apply_track/features/proposals/domain/proposal_stats.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 import '../../../support/fake_api_client.dart';
 
@@ -27,12 +26,12 @@ void main() {
       'lost': 1,
     };
 
-    final ApiResult<ProposalStats> r = await api.getStats();
+    final r = await api.getStats();
 
     expect(client.last.method, 'GET');
     expect(client.last.path, '/api/stats');
     expect(client.last.requiresAuth, isTrue);
-    final ProposalStats stats = (r as ApiOk<ProposalStats>).value;
+    final stats = (r as ApiOk<ProposalStats>).value;
     expect(stats.total, 6);
     expect(stats.winRate, 0.5);
   });
@@ -43,7 +42,7 @@ void main() {
       message: 'Please sign in again.',
     );
 
-    final ApiResult<ProposalStats> r = await api.getStats();
+    final r = await api.getStats();
 
     expect((r as ApiErr<ProposalStats>).error.code, 'unauthorized');
   });

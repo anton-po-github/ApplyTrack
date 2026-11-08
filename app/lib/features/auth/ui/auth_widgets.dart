@@ -4,11 +4,11 @@ import 'package:material_ui/material_ui.dart';
 // 'newPassword'). They let password managers fill the fields.
 
 class EmailField extends StatelessWidget {
-  const EmailField({
-    super.key,
+  const new({
     required this.controller,
     required this.validator,
     required this.onChanged,
+    super.key,
   });
 
   final TextEditingController controller;
@@ -34,12 +34,12 @@ class EmailField extends StatelessWidget {
 }
 
 class PasswordField extends StatefulWidget {
-  const PasswordField({
-    super.key,
+  const new({
     required this.controller,
     required this.validator,
     required this.onChanged,
     required this.isNewPassword,
+    super.key,
     this.helperText,
     this.textInputAction = TextInputAction.done,
     this.onSubmitted,
@@ -72,7 +72,7 @@ class _PasswordFieldState extends State<PasswordField> {
       keyboardType: TextInputType.visiblePassword,
       textInputAction: widget.textInputAction,
       autofillHints: <String>[
-        widget.isNewPassword ? 'newPassword' : 'password',
+        if (widget.isNewPassword) 'newPassword' else 'password',
       ],
       onFieldSubmitted: widget.onSubmitted,
       onChanged: widget.onChanged,
@@ -95,11 +95,11 @@ class _PasswordFieldState extends State<PasswordField> {
 
 /// The button is disabled while busy, so a double tap does nothing.
 class AuthSubmitButton extends StatelessWidget {
-  const AuthSubmitButton({
-    super.key,
+  const new({
     required this.label,
     required this.busy,
     required this.onPressed,
+    super.key,
   });
 
   final String label;
@@ -121,13 +121,13 @@ class AuthSubmitButton extends StatelessWidget {
 }
 
 class AuthErrorBanner extends StatelessWidget {
-  const AuthErrorBanner({super.key, required this.message});
+  const new({required this.message, super.key});
 
   final String message;
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
+    final theme = Theme.of(context);
     return Semantics(
       liveRegion: true,
       child: Text(

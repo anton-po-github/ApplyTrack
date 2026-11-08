@@ -1,12 +1,11 @@
 import 'dart:convert';
 import 'dart:math' as math;
 
-import 'package:dio/dio.dart';
-
 import 'package:apply_track/core/api/api_client.dart';
 import 'package:apply_track/core/api/api_error.dart';
 import 'package:apply_track/core/api/api_result.dart';
 import 'package:apply_track/core/api/token_reader.dart';
+import 'package:dio/dio.dart';
 
 typedef UnauthorizedCallback = void Function();
 
@@ -15,7 +14,7 @@ const int _maxRetryAfterSeconds = 3600;
 
 /// The ONLY file in the app that knows `dio`.
 final class DioApiClient implements ApiClient {
-  DioApiClient({
+  new({
     required String baseUrl,
     required TokenReader tokenReader,
     required this._onUnauthorized,
@@ -33,7 +32,7 @@ final class DioApiClient implements ApiClient {
            // can never crash the app.
            responseType: ResponseType.plain,
            // Every status comes back as a normal response. We map it below.
-           validateStatus: (int? _) => true,
+           validateStatus: (_) => true,
            // Never follow redirects: the Bearer token must not leave our host.
            followRedirects: false,
            contentType: Headers.jsonContentType,
@@ -94,11 +93,7 @@ final class DioApiClient implements ApiClient {
     String path, {
     bool requiresAuth = true,
   }) async {
-    final ApiResult<Object?> raw = await _execute(
-      'DELETE',
-      path,
-      requiresAuth: requiresAuth,
-    );
+    final raw = await _execute('DELETE', path, requiresAuth: requiresAuth);
     return switch (raw) {
       ApiOk<Object?>() => const ApiOk<void>(null),
       ApiErr<Object?>(:final ApiError error) => ApiErr<void>(error),
@@ -113,7 +108,7 @@ final class DioApiClient implements ApiClient {
     Map<String, Object?>? query,
     Map<String, Object?>? body,
   }) async {
-    final ApiResult<Object?> raw = await _execute(
+    final raw = await _execute(
       method,
       path,
       requiresAuth: requiresAuth,
@@ -131,6 +126,8 @@ final class DioApiClient implements ApiClient {
           return ApiOk<T>(parse(value));
         } on FormatException {
           return ApiErr<T>(const ApiError.badResponse());
+          // A wrong JSON shape makes parse() throw a TypeError. Not a crash.
+          // ignore: avoid_catching_errors
         } on TypeError {
           return ApiErr<T>(const ApiError.badResponse());
         }
@@ -163,12 +160,12 @@ final class DioApiClient implements ApiClient {
       return ApiErr<Object?>(_mapTransportError(e));
     }
 
-    final int status = response.statusCode ?? 0;
-    final Object? json = _decode(response.data);
+    final status = response.statusCode ?? 0;
+    final json = _decode(response.data);
 
     if (status >= 200 && status < 300) return ApiOk<Object?>(json);
 
-    final ApiError error = _mapErrorResponse(status, response.headers, json);
+    final error = _mapErrorResponse(status, response.headers, json);
     if (status == 401 && requiresAuth) _notifyUnauthorized();
     return ApiErr<Object?>(error);
   }
@@ -176,14 +173,14 @@ final class DioApiClient implements ApiClient {
   void _notifyUnauthorized() {
     try {
       _onUnauthorized();
-    } catch (_) {
+    } on Object {
       // A broken callback must not break the "never throws" promise.
     }
   }
 
   /// A path with a host would replace our base URL and the token could leak.
   static void _checkPath(String path) {
-    final bool bad =
+    final bad =
         !path.startsWith('/') ||
         path.startsWith('//') ||
         path.contains('://') ||
@@ -199,9 +196,9 @@ final class DioApiClient implements ApiClient {
 
   static Map<String, String>? _cleanQuery(Map<String, Object?>? query) {
     if (query == null) return null;
-    final Map<String, String> result = <String, String>{};
-    for (final MapEntry<String, Object?> entry in query.entries) {
-      final Object? value = entry.value;
+    final result = <String, String>{};
+    for (final entry in query.entries) {
+      final value = entry.value;
       if (value != null) result[entry.key] = value.toString();
     }
     return result.isEmpty ? null : result;
@@ -235,7 +232,7 @@ final class DioApiClient implements ApiClient {
       );
     }
     if (json is Map<String, Object?>) {
-      final ApiError parsed = ApiError.fromJson(json);
+      final parsed = ApiError.fromJson(json);
       if (parsed.code != ApiErrorCodes.unknown) return parsed;
     }
     return _fallbackError(status);
@@ -260,14 +257,14 @@ final class DioApiClient implements ApiClient {
 
   static String? _bodyMessage(Object? json) {
     if (json is! Map<String, Object?>) return null;
-    final Object? message = json['message'];
+    final message = json['message'];
     return message is String && message.isNotEmpty ? message : null;
   }
 
   /// Only whole seconds are accepted. Other formats become null.
   static int? _parseRetryAfter(List<String>? values) {
     if (values == null || values.isEmpty) return null;
-    final int? seconds = int.tryParse(values.first.trim());
+    final seconds = int.tryParse(values.first.trim());
     if (seconds == null || seconds < 0) return null;
     return math.min(seconds, _maxRetryAfterSeconds);
   }
@@ -275,7 +272,7 @@ final class DioApiClient implements ApiClient {
 
 /// Adds `Authorization: Bearer <token>` only when the call needs auth.
 final class _BearerInterceptor extends Interceptor {
-  _BearerInterceptor(this._tokenReader);
+  new(this._tokenReader);
 
   final TokenReader _tokenReader;
 

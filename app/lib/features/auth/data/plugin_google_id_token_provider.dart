@@ -1,13 +1,11 @@
 import 'dart:async';
 
+import 'package:apply_track/features/auth/data/google_id_token_provider.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_sign_in/google_sign_in.dart';
 
-import 'package:apply_track/features/auth/data/google_id_token_provider.dart';
-
 final class PluginGoogleIdTokenProvider implements GoogleIdTokenProvider {
-  PluginGoogleIdTokenProvider({required String serverClientId})
-    : _clientId = serverClientId;
+  new({required String serverClientId}) : _clientId = serverClientId;
 
   static const String _genericError =
       'Google sign-in failed. Please try again.';
@@ -39,10 +37,13 @@ final class PluginGoogleIdTokenProvider implements GoogleIdTokenProvider {
 
   /// The plugin must be initialized exactly once. We do it on first use.
   Future<void> _ensureInitialized() async {
-    final Future<void>? running = _initialization;
-    if (running != null) return running;
+    final running = _initialization;
+    if (running != null) {
+      await running;
+      return;
+    }
 
-    final Future<void> start = _initialize();
+    final start = _initialize();
     _initialization = start;
     try {
       await start;
@@ -53,7 +54,7 @@ final class PluginGoogleIdTokenProvider implements GoogleIdTokenProvider {
   }
 
   Future<void> _initialize() async {
-    final GoogleSignIn signIn = GoogleSignIn.instance;
+    final signIn = GoogleSignIn.instance;
     if (kIsWeb) {
       // `serverClientId` is not supported on web.
       await signIn.initialize(clientId: _clientId);
@@ -91,8 +92,7 @@ final class PluginGoogleIdTokenProvider implements GoogleIdTokenProvider {
           'Google sign-in is not available on this device.',
         );
       }
-      final GoogleSignInAccount account = await GoogleSignIn.instance
-          .authenticate();
+      final account = await GoogleSignIn.instance.authenticate();
       return _resultFor(account);
     } on GoogleSignInException catch (error) {
       return _resultForException(error);
@@ -136,7 +136,7 @@ final class PluginGoogleIdTokenProvider implements GoogleIdTokenProvider {
   // --------------------------------------------------------------- helpers
 
   GoogleTokenResult _resultFor(GoogleSignInAccount account) {
-    final String? idToken = account.authentication.idToken; // no await
+    final idToken = account.authentication.idToken; // no await
     if (idToken == null || idToken.isEmpty) {
       return const GoogleTokenFailed(_noTokenError);
     }

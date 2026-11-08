@@ -1,9 +1,9 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:apply_track/features/counter/counter.dart';
 import 'package:apply_track/features/counter/counter_store.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final Provider<CounterStore> counterStoreProvider = Provider<CounterStore>(
-  (Ref ref) => InMemoryCounterStore(),
+  (ref) => InMemoryCounterStore(),
 );
 
 final NotifierProvider<CounterNotifier, Counter> counterProvider =
@@ -16,7 +16,7 @@ class CounterNotifier extends Notifier<Counter> {
   Counter build() => ref.watch(counterStoreProvider).load();
 
   void increment() {
-    final Counter next = state.increment();
+    final next = state.increment();
     if (identical(next, state)) {
       return;
     }

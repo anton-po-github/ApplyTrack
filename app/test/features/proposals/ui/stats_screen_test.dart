@@ -1,10 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
-import 'package:material_ui/material_ui.dart';
-
 import 'package:apply_track/core/api/api_error.dart';
 import 'package:apply_track/core/api/api_result.dart';
 import 'package:apply_track/core/layout/window_size.dart';
@@ -14,17 +9,21 @@ import 'package:apply_track/features/proposals/state/proposal_list_controller.da
 import 'package:apply_track/features/proposals/state/proposals_dependencies.dart';
 import 'package:apply_track/features/proposals/state/stats_provider.dart';
 import 'package:apply_track/features/proposals/ui/stats_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../support/fake_proposals_api.dart';
 import '../../../support/fake_stats_api.dart';
 
 void main() {
-  const String dash = '\u2014';
+  const dash = '\u2014';
 
   late FakeStatsApi statsApi;
   late FakeProposalsApi proposalsApi;
 
-  const ProposalStats sample = ProposalStats(
+  const sample = ProposalStats(
     total: 21,
     draft: 1,
     sent: 2,
@@ -43,24 +42,22 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
 
-    final GoRouter router = GoRouter(
+    final router = GoRouter(
       initialLocation: '/stats',
       routes: <RouteBase>[
         GoRoute(
           path: '/',
-          builder: (BuildContext context, GoRouterState state) => Consumer(
-            builder: (BuildContext context, WidgetRef ref, Widget? child) =>
-                Scaffold(
-                  body: Text(
-                    'LIST ${ref.watch(proposalListProvider).status?.name ?? 'all'}',
-                  ),
-                ),
+          builder: (context, state) => Consumer(
+            builder: (context, ref, child) => Scaffold(
+              body: Text(
+                'LIST ${ref.watch(proposalListProvider).status?.name ?? 'all'}',
+              ),
+            ),
           ),
         ),
         GoRoute(
           path: '/stats',
-          builder: (BuildContext context, GoRouterState state) =>
-              const Scaffold(body: StatsScreen()),
+          builder: (context, state) => const Scaffold(body: StatsScreen()),
         ),
       ],
     );
@@ -117,7 +114,7 @@ void main() {
       expect(textOf(tester, 'stats-value-interview'), '4');
       expect(textOf(tester, 'stats-value-won'), '3');
       expect(textOf(tester, 'stats-value-lost'), '1');
-      for (final ProposalStatus status in ProposalStatus.values) {
+      for (final status in ProposalStatus.values) {
         expect(find.text(status.label), findsOneWidget, reason: status.name);
       }
     });
@@ -135,11 +132,11 @@ void main() {
   group('layout', () {
     Future<int> columnsShown(WidgetTester tester, double width) async {
       await pumpStats(tester, width: width);
-      final Set<int> lefts = <int>{
+      final lefts = <int>{
         for (final String name in <String>[
           'total',
           'win-rate',
-          ...ProposalStatus.values.map((ProposalStatus s) => s.name),
+          ...ProposalStatus.values.map((s) => s.name),
         ])
           tester.getTopLeft(key('stats-card-$name')).dx.round(),
       };
@@ -184,8 +181,7 @@ void main() {
 
   group('loading and errors', () {
     testWidgets('shows a spinner first', (tester) async {
-      final Completer<ApiResult<ProposalStats>> gate =
-          Completer<ApiResult<ProposalStats>>();
+      final gate = Completer<ApiResult<ProposalStats>>();
       statsApi.handler = () => gate.future;
       await pumpStats(tester, settle: false);
       await tester.pump();

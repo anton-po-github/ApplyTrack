@@ -1,8 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:apply_track/core/api/api_error.dart';
 import 'package:apply_track/core/api/api_result.dart';
 import 'package:apply_track/features/proposals/domain/proposal_stats.dart';
@@ -10,6 +7,8 @@ import 'package:apply_track/features/proposals/state/proposal_list_controller.da
 import 'package:apply_track/features/proposals/state/proposal_list_state.dart';
 import 'package:apply_track/features/proposals/state/proposals_dependencies.dart';
 import 'package:apply_track/features/proposals/state/stats_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 import '../../../support/fake_proposals_api.dart';
 import '../../../support/fake_stats_api.dart';
@@ -40,17 +39,14 @@ void main() {
   /// widget does. Call it after you set the fake handlers: creating the
   /// provider starts the first request.
   Future<void> start() async {
-    container.listen<StatsState>(
-      statsProvider,
-      (StatsState? previous, StatsState next) {},
-    );
+    container.listen<StatsState>(statsProvider, (previous, next) {});
     await pumpEventQueue();
   }
 
   List<Gate> gateEveryCall() {
-    final List<Gate> gates = <Gate>[];
+    final gates = <Gate>[];
     api.handler = () {
-      final Gate gate = Gate();
+      final gate = Gate();
       gates.add(gate);
       return gate.future;
     };
@@ -68,7 +64,7 @@ void main() {
         statsApiProvider.overrideWithValue(api),
         proposalsApiProvider.overrideWithValue(proposalsApi),
         currentUserIdProvider.overrideWith(
-          (Ref ref) => ref.watch(testUserIdProvider),
+          (ref) => ref.watch(testUserIdProvider),
         ),
       ],
     );
@@ -77,8 +73,8 @@ void main() {
 
   group('StatsState', () {
     test('copyWith keeps, changes and clears values', () {
-      const ApiError failure = ApiError.network();
-      final StatsState full = StatsState(
+      const failure = ApiError.network();
+      final full = StatsState(
         stats: statsOf(total: 3),
         isLoading: true,
         error: failure,
@@ -106,7 +102,7 @@ void main() {
     });
 
     test('is loading and has no numbers before the first answer', () async {
-      final List<Gate> gates = gateEveryCall();
+      final gates = gateEveryCall();
 
       await start();
       expect(read().isLoading, isTrue);
@@ -196,9 +192,9 @@ void main() {
     test('keeps the old numbers while it runs', () async {
       api.handler = () async => ok(statsOf(total: 5));
       await start();
-      final List<Gate> gates = gateEveryCall();
+      final gates = gateEveryCall();
 
-      final Future<void> running = controller().refresh();
+      final running = controller().refresh();
 
       expect(read().isLoading, isTrue);
       expect(read().stats?.total, 5);
@@ -210,10 +206,10 @@ void main() {
     });
 
     test('a slow old answer never replaces a newer one', () async {
-      final List<Gate> gates = gateEveryCall();
+      final gates = gateEveryCall();
       await start(); // gates[0]
 
-      final Future<void> second = controller().refresh(); // gates[1]
+      final second = controller().refresh(); // gates[1]
       await pumpEventQueue();
       gates[1].complete(ok(statsOf(total: 2)));
       await second;
@@ -224,10 +220,10 @@ void main() {
     });
 
     test('an old error does not replace newer numbers', () async {
-      final List<Gate> gates = gateEveryCall();
+      final gates = gateEveryCall();
       await start();
 
-      final Future<void> second = controller().refresh();
+      final second = controller().refresh();
       await pumpEventQueue();
       gates[1].complete(ok(statsOf(total: 2)));
       await second;
@@ -255,7 +251,7 @@ void main() {
     test('keeps the old numbers while the new ones load', () async {
       api.handler = () async => ok(statsOf(total: 1));
       await start();
-      final List<Gate> gates = gateEveryCall();
+      final gates = gateEveryCall();
 
       container.read(proposalsChangedProvider.notifier).notify();
       await pumpEventQueue();
@@ -268,12 +264,11 @@ void main() {
     });
 
     test('a real delete in the list refreshes the stats', () async {
-      proposalsApi.listHandler = (ListCall call) async =>
-          pageOf([makeProposal(1)]);
+      proposalsApi.listHandler = (call) async => pageOf([makeProposal(1)]);
       api.handler = () async => ok(statsOf(total: 1));
       container.listen<ProposalListState>(
         proposalListProvider,
-        (ProposalListState? previous, ProposalListState next) {},
+        (previous, next) {},
       );
       await start();
       expect(api.calls, 1);
@@ -290,10 +285,10 @@ void main() {
       api.handler = () async => ok(statsOf(total: 1));
       container.listen<ProposalListState>(
         proposalListProvider,
-        (ProposalListState? previous, ProposalListState next) {},
+        (previous, next) {},
       );
       await start();
-      proposalsApi.deleteHandler = (String id) async =>
+      proposalsApi.deleteHandler = (id) async =>
           const ApiErr<void>(ApiError.network());
 
       await container.read(proposalListProvider.notifier).delete(proposalId(1));
@@ -317,7 +312,7 @@ void main() {
     });
 
     test('an answer that arrives after sign-out is ignored', () async {
-      final List<Gate> gates = gateEveryCall();
+      final gates = gateEveryCall();
       await start();
 
       container.read(testUserIdProvider.notifier).set(null);
@@ -341,7 +336,7 @@ void main() {
     test('another user starts clean and never sees old numbers', () async {
       api.handler = () async => ok(statsOf(total: 5));
       await start();
-      final List<Gate> gates = gateEveryCall();
+      final gates = gateEveryCall();
 
       container.read(testUserIdProvider.notifier).set('u2');
       await pumpEventQueue();

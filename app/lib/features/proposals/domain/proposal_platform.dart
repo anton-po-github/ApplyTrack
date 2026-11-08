@@ -6,7 +6,7 @@ enum ProposalPlatform {
   email(2, 'Email'),
   other(3, 'Other');
 
-  const ProposalPlatform(this.apiValue, this.label);
+  new(this.apiValue, this.label);
 
   final int apiValue;
   final String label;

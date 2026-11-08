@@ -1,8 +1,7 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:apply_track/features/proposals/domain/proposal_page.dart';
 import 'package:apply_track/features/proposals/domain/proposal_stats.dart';
 import 'package:apply_track/features/proposals/domain/proposal_status.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 Map<String, Object?> proposalJson(String id) => <String, Object?>{
   'id': id,
@@ -32,7 +31,7 @@ Map<String, Object?> statsJson({int won = 0, int lost = 0}) =>
 void main() {
   group('ProposalPage.fromJson', () {
     test('reads items and nextCursor', () {
-      final ProposalPage page = ProposalPage.fromJson(<String, Object?>{
+      final page = ProposalPage.fromJson(<String, Object?>{
         'items': <Object?>[proposalJson('b'), proposalJson('a')],
         'nextCursor': 'a',
       });
@@ -43,7 +42,7 @@ void main() {
     });
 
     test('a null nextCursor means the last page', () {
-      final ProposalPage page = ProposalPage.fromJson(<String, Object?>{
+      final page = ProposalPage.fromJson(<String, Object?>{
         'items': <Object?>[proposalJson('a')],
         'nextCursor': null,
       });
@@ -53,7 +52,7 @@ void main() {
     });
 
     test('a missing nextCursor and an empty list are fine', () {
-      final ProposalPage page = ProposalPage.fromJson(<String, Object?>{
+      final page = ProposalPage.fromJson(<String, Object?>{
         'items': <Object?>[],
       });
 
@@ -62,11 +61,11 @@ void main() {
     });
 
     test('the item list cannot be changed', () {
-      final ProposalPage page = ProposalPage.fromJson(<String, Object?>{
+      final page = ProposalPage.fromJson(<String, Object?>{
         'items': <Object?>[proposalJson('a')],
       });
 
-      expect(() => page.items.clear(), throwsUnsupportedError);
+      expect(page.items.clear, throwsUnsupportedError);
     });
 
     test('throws FormatException on a bad shape', () {
@@ -94,9 +93,7 @@ void main() {
 
   group('ProposalStats', () {
     test('fromJson reads all counters', () {
-      final ProposalStats stats = ProposalStats.fromJson(
-        statsJson(won: 2, lost: 3),
-      );
+      final stats = ProposalStats.fromJson(statsJson(won: 2, lost: 3));
 
       expect(stats.total, 15);
       expect(stats.draft, 1);
@@ -130,9 +127,7 @@ void main() {
     });
 
     test('countFor gives the counter of each status', () {
-      final ProposalStats stats = ProposalStats.fromJson(
-        statsJson(won: 5, lost: 6),
-      );
+      final stats = ProposalStats.fromJson(statsJson(won: 5, lost: 6));
 
       expect(stats.countFor(ProposalStatus.draft), 1);
       expect(stats.countFor(ProposalStatus.sent), 2);

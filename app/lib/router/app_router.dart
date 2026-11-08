@@ -1,8 +1,3 @@
-import 'package:flutter/widgets.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:material_ui/material_ui.dart';
-
 import 'package:apply_track/features/auth/state/auth_controller.dart';
 import 'package:apply_track/features/auth/state/auth_state.dart';
 import 'package:apply_track/features/auth/ui/login_screen.dart';
@@ -15,6 +10,10 @@ import 'package:apply_track/features/proposals/ui/proposal_form_screen.dart';
 import 'package:apply_track/features/proposals/ui/proposal_list_screen.dart';
 import 'package:apply_track/features/proposals/ui/stats_screen.dart';
 import 'package:apply_track/features/shell/app_shell.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:material_ui/material_ui.dart';
 
 abstract final class AppRoutes {
   /// The proposal list (first tab).
@@ -38,9 +37,8 @@ abstract final class AppRoutes {
 /// The guard (like a CanActivate in Angular). A pure function, so it is
 /// easy to test. Returns null when the user may stay where they are.
 String? authRedirect(AuthState auth, String location) {
-  final bool onPublic =
-      location == AppRoutes.login || location == AppRoutes.signup;
-  final bool onStartup = location == AppRoutes.startup;
+  final onPublic = location == AppRoutes.login || location == AppRoutes.signup;
+  final onStartup = location == AppRoutes.startup;
 
   return switch (auth) {
     AuthUnknown() || AuthUnavailable() => onStartup ? null : AppRoutes.startup,
@@ -51,7 +49,7 @@ String? authRedirect(AuthState auth, String location) {
 
 /// A page for one proposal. A bad id never reaches the screen.
 Widget _proposalPage(GoRouterState state, Widget Function(String id) build) {
-  final String? id = state.pathParameters['id'];
+  final id = state.pathParameters['id'];
   if (id == null || !ProposalId.isValid(id)) {
     return NotFoundScreen(location: state.uri.toString());
   }
@@ -66,23 +64,18 @@ GoRouter createAppRouter({
   return GoRouter(
     initialLocation: initialLocation,
     refreshListenable: refreshListenable,
-    redirect: (BuildContext context, GoRouterState state) =>
-        authRedirect(authState(), state.uri.path),
+    redirect: (context, state) => authRedirect(authState(), state.uri.path),
     routes: <RouteBase>[
       StatefulShellRoute.indexedStack(
-        builder: (
-          BuildContext context,
-          GoRouterState state,
-          StatefulNavigationShell navigationShell,
-        ) => AppShell(navigationShell: navigationShell),
+        builder: (context, state, navigationShell) =>
+            AppShell(navigationShell: navigationShell),
         // The order of the branches MUST match the tabs in `AppShell`.
         branches: <StatefulShellBranch>[
           StatefulShellBranch(
             routes: <RouteBase>[
               GoRoute(
                 path: AppRoutes.home,
-                builder: (BuildContext context, GoRouterState state) =>
-                    const ProposalListScreen(),
+                builder: (context, state) => const ProposalListScreen(),
               ),
             ],
           ),
@@ -90,8 +83,7 @@ GoRouter createAppRouter({
             routes: <RouteBase>[
               GoRoute(
                 path: AppRoutes.stats,
-                builder: (BuildContext context, GoRouterState state) =>
-                    const StatsScreen(),
+                builder: (context, state) => const StatsScreen(),
               ),
             ],
           ),
@@ -100,59 +92,53 @@ GoRouter createAppRouter({
       // `new` MUST come before `:id`, or "new" would be read as an id.
       GoRoute(
         path: AppRoutes.proposalNew,
-        builder: (BuildContext context, GoRouterState state) =>
-            const ProposalFormScreen(),
+        builder: (context, state) => const ProposalFormScreen(),
       ),
       GoRoute(
         path: '/proposals/:id',
-        builder: (BuildContext context, GoRouterState state) => _proposalPage(
+        builder: (context, state) => _proposalPage(
           state,
-          (String id) =>
+          (id) =>
               ProposalDetailScreen(key: ValueKey<String>(id), proposalId: id),
         ),
       ),
       GoRoute(
         path: '/proposals/:id/edit',
-        builder: (BuildContext context, GoRouterState state) => _proposalPage(
-          state,
-          (String id) => ProposalFormScreen(proposalId: id),
-        ),
+        builder: (context, state) =>
+            _proposalPage(state, (id) => ProposalFormScreen(proposalId: id)),
       ),
       GoRoute(
         path: AppRoutes.login,
-        builder: (BuildContext context, GoRouterState state) =>
-            const LoginScreen(),
+        builder: (context, state) => const LoginScreen(),
       ),
       GoRoute(
         path: AppRoutes.signup,
-        builder: (BuildContext context, GoRouterState state) =>
-            const SignupScreen(),
+        builder: (context, state) => const SignupScreen(),
       ),
       GoRoute(
         path: AppRoutes.startup,
-        builder: (BuildContext context, GoRouterState state) =>
-            const StartupScreen(),
+        builder: (context, state) => const StartupScreen(),
       ),
     ],
-    errorBuilder: (BuildContext context, GoRouterState state) =>
+    errorBuilder: (context, state) =>
         NotFoundScreen(location: state.uri.toString()),
   );
 }
 
 /// Tests override this to start on another page.
 final Provider<String> initialLocationProvider = Provider<String>(
-  (Ref ref) => AppRoutes.home,
+  (ref) => AppRoutes.home,
 );
 
 /// Reading the auth controller here also starts the session check.
-final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((Ref ref) {
-  final ValueNotifier<int> refresh = ValueNotifier<int>(0);
+final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((ref) {
+  final refresh = ValueNotifier<int>(0);
   ref.listen<AuthState>(
     authControllerProvider,
-    (AuthState? previous, AuthState next) => refresh.value++,
+    (previous, next) => refresh.value++,
   );
 
-  final GoRouter router = createAppRouter(
+  final router = createAppRouter(
     authState: () => ref.read(authControllerProvider),
     refreshListenable: refresh,
     initialLocation: ref.read(initialLocationProvider),

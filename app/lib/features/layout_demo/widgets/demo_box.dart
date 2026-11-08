@@ -1,14 +1,14 @@
 import 'package:material_ui/material_ui.dart';
 
 class DemoBox extends StatelessWidget {
-  const DemoBox({super.key, required this.label, this.height = 56});
+  const new({required this.label, super.key, this.height = 56});
 
   final String label;
   final double height;
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
+    final colors = Theme.of(context).colorScheme;
 
     return Container(
       height: height,

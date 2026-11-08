@@ -1,12 +1,11 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:apply_track/features/proposals/domain/proposal_platform.dart';
 import 'package:apply_track/features/proposals/domain/proposal_status.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('ProposalStatus', () {
     test('apiValue is the index (needed for the O(1) lookup)', () {
-      for (final ProposalStatus s in ProposalStatus.values) {
+      for (final s in ProposalStatus.values) {
         expect(s.apiValue, s.index);
       }
     });
@@ -22,7 +21,7 @@ void main() {
     });
 
     test('fromApi reads every valid number', () {
-      for (final ProposalStatus s in ProposalStatus.values) {
+      for (final s in ProposalStatus.values) {
         expect(ProposalStatus.fromApi(s.apiValue), s);
       }
     });
@@ -35,7 +34,7 @@ void main() {
 
   group('ProposalPlatform', () {
     test('apiValue is the index', () {
-      for (final ProposalPlatform p in ProposalPlatform.values) {
+      for (final p in ProposalPlatform.values) {
         expect(p.apiValue, p.index);
       }
     });
@@ -49,7 +48,7 @@ void main() {
     });
 
     test('fromApi reads every valid number', () {
-      for (final ProposalPlatform p in ProposalPlatform.values) {
+      for (final p in ProposalPlatform.values) {
         expect(ProposalPlatform.fromApi(p.apiValue), p);
       }
     });

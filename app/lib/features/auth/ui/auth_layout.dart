@@ -6,7 +6,7 @@ import 'package:material_ui/material_ui.dart';
 /// Everything is centered on both axes. When the screen is too small
 /// (small phone, open keyboard) the content scrolls instead of overflowing.
 class AuthLayout extends StatelessWidget {
-  const AuthLayout({super.key, required this.description, required this.child});
+  const new({required this.description, required this.child, super.key});
 
   static const double maxWidth = 480;
   static const Key contentKey = Key('auth-layout-content');
@@ -19,7 +19,7 @@ class AuthLayout extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: LayoutBuilder(
-          builder: (BuildContext context, BoxConstraints viewport) {
+          builder: (context, viewport) {
             return SingleChildScrollView(
               child: ConstrainedBox(
                 constraints: BoxConstraints(minHeight: viewport.maxHeight),
@@ -51,13 +51,13 @@ class AuthLayout extends StatelessWidget {
 }
 
 class _BrandHeader extends StatelessWidget {
-  const _BrandHeader({required this.description});
+  const new({required this.description});
 
   final String description;
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
+    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 8,

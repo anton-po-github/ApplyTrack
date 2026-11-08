@@ -1,24 +1,19 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:material_ui/material_ui.dart';
-
 import 'package:apply_track/features/auth/data/google_id_token_provider.dart';
 import 'package:apply_track/features/auth/domain/auth_outcome.dart';
 import 'package:apply_track/features/auth/state/auth_controller.dart';
 import 'package:apply_track/features/auth/state/auth_dependencies.dart';
 import 'package:apply_track/features/auth/ui/google_button_stub.dart'
     if (dart.library.js_interop) 'package:apply_track/features/auth/ui/google_button_web.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// "Continue with Google". One widget, two flows:
 /// - mobile: our own button, `signInWithGoogle()`;
 /// - web: the button drawn by Google. The token arrives on a stream.
 class GoogleSignInButton extends ConsumerStatefulWidget {
-  const GoogleSignInButton({
-    super.key,
-    required this.onStarted,
-    required this.onOutcome,
-  });
+  const new({required this.onStarted, required this.onOutcome, super.key});
 
   /// Tests find Google's button area with this key.
   static const Key renderedButtonKey = ValueKey<String>(
@@ -45,14 +40,14 @@ class _GoogleSignInButtonState extends ConsumerState<GoogleSignInButton> {
   @override
   void initState() {
     super.initState();
-    final GoogleIdTokenProvider google = ref.read(googleSignInProvider);
-    final bool configured = ref.read(appConfigProvider).hasGoogleClientId;
+    final google = ref.read(googleSignInProvider);
+    final configured = ref.read(appConfigProvider).hasGoogleClientId;
 
     if (configured && google.usesRenderedButton) {
       // Listen first, so no token is missed.
       _subscription = google.tokenEvents.listen(_onToken);
       unawaited(
-        google.prepare().then((bool ok) {
+        google.prepare().then((ok) {
           if (mounted) setState(() => _webReady = ok);
         }),
       );
@@ -68,7 +63,7 @@ class _GoogleSignInButtonState extends ConsumerState<GoogleSignInButton> {
   /// Web: the user used Google's button.
   Future<void> _onToken(GoogleTokenResult token) async {
     widget.onStarted();
-    final AuthOutcome outcome = await ref
+    final outcome = await ref
         .read(authControllerProvider.notifier)
         .signInWithGoogleResult(token);
     if (!mounted) return;
@@ -78,7 +73,7 @@ class _GoogleSignInButtonState extends ConsumerState<GoogleSignInButton> {
   /// Mobile: the user tapped our button.
   Future<void> _onPressed() async {
     widget.onStarted();
-    final AuthOutcome outcome = await ref
+    final outcome = await ref
         .read(authControllerProvider.notifier)
         .signInWithGoogle();
     if (!mounted) return;
@@ -87,9 +82,9 @@ class _GoogleSignInButtonState extends ConsumerState<GoogleSignInButton> {
 
   @override
   Widget build(BuildContext context) {
-    final bool busy = ref.watch(authBusyProvider);
-    final bool configured = ref.watch(appConfigProvider).hasGoogleClientId;
-    final bool rendered = ref.watch(googleSignInProvider).usesRenderedButton;
+    final busy = ref.watch(authBusyProvider);
+    final configured = ref.watch(appConfigProvider).hasGoogleClientId;
+    final rendered = ref.watch(googleSignInProvider).usesRenderedButton;
 
     if (configured && rendered) {
       return switch (_webReady) {
@@ -112,7 +107,7 @@ class _GoogleSignInButtonState extends ConsumerState<GoogleSignInButton> {
 }
 
 class _DisabledGoogleButton extends StatelessWidget {
-  const _DisabledGoogleButton();
+  const new();
 
   @override
   Widget build(BuildContext context) {

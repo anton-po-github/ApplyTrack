@@ -1,6 +1,6 @@
 final class Counter {
-  const Counter({this.value = 0, this.max = 5})
-    : assert(value >= 0 && value <= max);
+  const new({this.value = 0, this.max = 5})
+    : assert(value >= 0 && value <= max, 'value must be between 0 and max');
 
   final int value;
   final int max;

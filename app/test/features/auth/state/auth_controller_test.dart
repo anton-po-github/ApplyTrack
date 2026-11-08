@@ -1,16 +1,15 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:apply_track/features/auth/data/auth_repository.dart';
+import 'package:apply_track/features/auth/data/google_id_token_provider.dart';
 import 'package:apply_track/features/auth/data/session.dart';
 import 'package:apply_track/features/auth/domain/auth_outcome.dart';
 import 'package:apply_track/features/auth/domain/user_profile.dart';
 import 'package:apply_track/features/auth/state/auth_controller.dart';
 import 'package:apply_track/features/auth/state/auth_dependencies.dart';
 import 'package:apply_track/features/auth/state/auth_state.dart';
-import 'package:apply_track/features/auth/data/google_id_token_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 import '../../../support/auth_test_helpers.dart';
 
@@ -20,7 +19,7 @@ const UserProfile _user = UserProfile(
   displayName: 'Anton',
 );
 
-final DateTime _now = DateTime.utc(2026, 1, 1);
+final DateTime _now = DateTime.utc(2026);
 final int _nowSeconds = _now.millisecondsSinceEpoch ~/ 1000;
 
 final Session _validSession = Session(
@@ -52,10 +51,10 @@ final class _FakeRepo implements AuthRepository {
   Map<String, String> lastArgs = <String, String>{};
 
   Future<AuthOutcome> _auth() async {
-    final Exception? error = authThrows;
+    final error = authThrows;
     if (error != null) throw error;
-    final Completer<AuthOutcome>? gate = authGate;
-    if (gate != null) return gate.future;
+    final gate = authGate;
+    if (gate != null) return await gate.future;
     return authOutcome;
   }
 
@@ -92,8 +91,8 @@ final class _FakeRepo implements AuthRepository {
   @override
   Future<AuthOutcome> me() async {
     meCalls++;
-    final Completer<AuthOutcome>? gate = meGate;
-    if (gate != null) return gate.future;
+    final gate = meGate;
+    if (gate != null) return await gate.future;
     return meOutcome;
   }
 
@@ -103,7 +102,7 @@ final class _FakeRepo implements AuthRepository {
   @override
   Future<void> signOut() async {
     signOutCalls++;
-    final Exception? error = signOutThrows;
+    final error = signOutThrows;
     if (error != null) throw error;
     session = null;
   }
@@ -113,7 +112,7 @@ ProviderContainer _makeContainer(
   _FakeRepo repo, {
   FakeGoogleIdTokenProvider? google,
 }) {
-  final ProviderContainer container = ProviderContainer(
+  final container = ProviderContainer(
     overrides: [
       authRepositoryProvider.overrideWithValue(repo),
       googleSignInProvider.overrideWithValue(
@@ -131,7 +130,7 @@ Future<ProviderContainer> _start(
   _FakeRepo repo, {
   FakeGoogleIdTokenProvider? google,
 }) async {
-  final ProviderContainer container = _makeContainer(repo, google: google);
+  final container = _makeContainer(repo, google: google);
   container.read(authControllerProvider);
   await pumpEventQueue();
   return container;
@@ -146,13 +145,13 @@ AuthFailure _failureOf(AuthOutcome o) => o as AuthFailure;
 void main() {
   group('start', () {
     test('begins as Unknown', () {
-      final ProviderContainer c = _makeContainer(_FakeRepo());
+      final c = _makeContainer(_FakeRepo());
       expect(_stateOf(c), isA<AuthUnknown>());
     });
 
     test('no session -> SignedOut, no server call', () async {
-      final _FakeRepo repo = _FakeRepo();
-      final ProviderContainer c = await _start(repo);
+      final repo = _FakeRepo();
+      final c = await _start(repo);
 
       expect(_stateOf(c), isA<AuthSignedOut>());
       expect(repo.meCalls, 0);
@@ -160,8 +159,8 @@ void main() {
     });
 
     test('expired session -> SignedOut, session cleared, no /me', () async {
-      final _FakeRepo repo = _FakeRepo()..session = _expiredSession;
-      final ProviderContainer c = await _start(repo);
+      final repo = _FakeRepo()..session = _expiredSession;
+      final c = await _start(repo);
 
       expect(_stateOf(c), isA<AuthSignedOut>());
       expect(repo.signOutCalls, 1);
@@ -169,33 +168,33 @@ void main() {
     });
 
     test('valid session + /me ok -> SignedIn', () async {
-      final _FakeRepo repo = _FakeRepo()..session = _validSession;
-      final ProviderContainer c = await _start(repo);
+      final repo = _FakeRepo()..session = _validSession;
+      final c = await _start(repo);
 
-      final AuthState state = _stateOf(c);
+      final state = _stateOf(c);
       expect(state, isA<AuthSignedIn>());
       expect((state as AuthSignedIn).user, _user);
       expect(repo.signOutCalls, 0);
     });
 
     test('valid session + /me 401 -> SignedOut and cleared', () async {
-      final _FakeRepo repo = _FakeRepo()
+      final repo = _FakeRepo()
         ..session = _validSession
         ..meOutcome = const AuthFailure(
           kind: AuthFailureKind.unauthorized,
           message: 'Please sign in again.',
         );
-      final ProviderContainer c = await _start(repo);
+      final c = await _start(repo);
 
       expect(_stateOf(c), isA<AuthSignedOut>());
       expect(repo.signOutCalls, 1);
     });
 
     test('no network -> Unavailable, token is kept', () async {
-      final _FakeRepo repo = _FakeRepo()
+      final repo = _FakeRepo()
         ..session = _validSession
         ..meOutcome = _network;
-      final ProviderContainer c = await _start(repo);
+      final c = await _start(repo);
 
       expect(_stateOf(c), isA<AuthUnavailable>());
       expect(repo.signOutCalls, 0);
@@ -203,13 +202,13 @@ void main() {
     });
 
     test('server error -> Unavailable, token is kept', () async {
-      final _FakeRepo repo = _FakeRepo()
+      final repo = _FakeRepo()
         ..session = _validSession
         ..meOutcome = const AuthFailure(
           kind: AuthFailureKind.server,
           message: 'Server problem.',
         );
-      final ProviderContainer c = await _start(repo);
+      final c = await _start(repo);
 
       expect(_stateOf(c), isA<AuthUnavailable>());
       expect(repo.signOutCalls, 0);
@@ -218,10 +217,10 @@ void main() {
     test(
       'restore (Retry) leaves Unavailable when the network is back',
       () async {
-        final _FakeRepo repo = _FakeRepo()
+        final repo = _FakeRepo()
           ..session = _validSession
           ..meOutcome = _network;
-        final ProviderContainer c = await _start(repo);
+        final c = await _start(repo);
         expect(_stateOf(c), isA<AuthUnavailable>());
 
         repo.meOutcome = const AuthSuccess(_user);
@@ -233,7 +232,7 @@ void main() {
     );
 
     test('broken storage on read -> SignedOut', () async {
-      final ProviderContainer c = _makeContainer(_ThrowingReadRepo());
+      final c = _makeContainer(_ThrowingReadRepo());
       c.read(authControllerProvider);
       await pumpEventQueue();
 
@@ -244,10 +243,10 @@ void main() {
 
   group('actions', () {
     test('signIn success -> SignedIn', () async {
-      final _FakeRepo repo = _FakeRepo();
-      final ProviderContainer c = await _start(repo);
+      final repo = _FakeRepo();
+      final c = await _start(repo);
 
-      final AuthOutcome o = await _controllerOf(c)
+      final o = await _controllerOf(c)
           .signIn(email: 'a@b.com', password: 'pw123456');
 
       expect(o, isA<AuthSuccess>());
@@ -257,10 +256,10 @@ void main() {
     });
 
     test('signUp success -> SignedIn', () async {
-      final _FakeRepo repo = _FakeRepo();
-      final ProviderContainer c = await _start(repo);
+      final repo = _FakeRepo();
+      final c = await _start(repo);
 
-      final AuthOutcome o = await _controllerOf(c)
+      final o = await _controllerOf(c)
           .signUp(email: 'a@b.com', password: 'pw123456', displayName: 'Anton');
 
       expect(o, isA<AuthSuccess>());
@@ -269,15 +268,15 @@ void main() {
     });
 
     test('failure keeps SignedOut and returns the form fields', () async {
-      final _FakeRepo repo = _FakeRepo()
+      final repo = _FakeRepo()
         ..authOutcome = const AuthFailure(
           kind: AuthFailureKind.validation,
           message: 'Please fix the fields.',
           fields: <String, String>{'email': 'Bad email.'},
         );
-      final ProviderContainer c = await _start(repo);
+      final c = await _start(repo);
 
-      final AuthFailure f = _failureOf(
+      final f = _failureOf(
         await _controllerOf(c).signIn(email: 'x', password: 'y'),
       );
 
@@ -288,17 +287,14 @@ void main() {
     });
 
     test('a double tap runs only one call', () async {
-      final _FakeRepo repo = _FakeRepo()..authGate = Completer<AuthOutcome>();
-      final ProviderContainer c = await _start(repo);
-      final AuthController controller = _controllerOf(c);
+      final repo = _FakeRepo()..authGate = Completer<AuthOutcome>();
+      final c = await _start(repo);
+      final controller = _controllerOf(c);
 
-      final Future<AuthOutcome> first = controller.signIn(
-        email: 'a@b.com',
-        password: 'pw123456',
-      );
+      final first = controller.signIn(email: 'a@b.com', password: 'pw123456');
       expect(_busyOf(c), isTrue);
 
-      final AuthFailure second = _failureOf(
+      final second = _failureOf(
         await controller.signIn(email: 'a@b.com', password: 'pw123456'),
       );
       expect(second.kind, AuthFailureKind.busy);
@@ -312,17 +308,17 @@ void main() {
     });
 
     test('actions are blocked while the start check runs', () async {
-      final _FakeRepo repo = _FakeRepo()
+      final repo = _FakeRepo()
         ..session = _validSession
         ..meGate = Completer<AuthOutcome>();
-      final ProviderContainer c = _makeContainer(repo);
+      final c = _makeContainer(repo);
       c.read(authControllerProvider);
       await pumpEventQueue();
 
       expect(_stateOf(c), isA<AuthUnknown>());
       expect(_busyOf(c), isTrue);
 
-      final AuthFailure f = _failureOf(
+      final f = _failureOf(
         await _controllerOf(c).signIn(email: 'a@b.com', password: 'pw123456'),
       );
       expect(f.kind, AuthFailureKind.busy);
@@ -338,10 +334,10 @@ void main() {
     test(
       'an unexpected exception becomes a failure and frees the lock',
       () async {
-        final _FakeRepo repo = _FakeRepo()..authThrows = Exception('boom');
-        final ProviderContainer c = await _start(repo);
+        final repo = _FakeRepo()..authThrows = Exception('boom');
+        final c = await _start(repo);
 
-        final AuthFailure f = _failureOf(
+        final f = _failureOf(
           await _controllerOf(c).signIn(email: 'a@b.com', password: 'pw123456'),
         );
 
@@ -354,8 +350,8 @@ void main() {
 
   group('sign out', () {
     test('signOut -> SignedOut and the session is cleared', () async {
-      final _FakeRepo repo = _FakeRepo()..session = _validSession;
-      final ProviderContainer c = await _start(repo);
+      final repo = _FakeRepo()..session = _validSession;
+      final c = await _start(repo);
       expect(_stateOf(c), isA<AuthSignedIn>());
 
       await _controllerOf(c).signOut();
@@ -366,10 +362,10 @@ void main() {
     });
 
     test('signOut still ends signed out when the storage fails', () async {
-      final _FakeRepo repo = _FakeRepo()
+      final repo = _FakeRepo()
         ..session = _validSession
         ..signOutThrows = Exception('disk');
-      final ProviderContainer c = await _start(repo);
+      final c = await _start(repo);
 
       await _controllerOf(c).signOut();
 
@@ -380,8 +376,8 @@ void main() {
 
   group('global 401', () {
     test('signs a signed-in user out and clears the session', () async {
-      final _FakeRepo repo = _FakeRepo()..session = _validSession;
-      final ProviderContainer c = await _start(repo);
+      final repo = _FakeRepo()..session = _validSession;
+      final c = await _start(repo);
       expect(_stateOf(c), isA<AuthSignedIn>());
 
       c.read(unauthorizedSignalProvider.notifier).notify();
@@ -392,8 +388,8 @@ void main() {
     });
 
     test('is ignored when the user is already signed out', () async {
-      final _FakeRepo repo = _FakeRepo();
-      final ProviderContainer c = await _start(repo);
+      final repo = _FakeRepo();
+      final c = await _start(repo);
 
       c.read(unauthorizedSignalProvider.notifier).notify();
       await pumpEventQueue();
@@ -405,11 +401,11 @@ void main() {
 
   group('google', () {
     test('success sends the id token and signs in', () async {
-      final _FakeRepo repo = _FakeRepo();
-      final FakeGoogleIdTokenProvider google = FakeGoogleIdTokenProvider();
-      final ProviderContainer c = await _start(repo, google: google);
+      final repo = _FakeRepo();
+      final google = FakeGoogleIdTokenProvider();
+      final c = await _start(repo, google: google);
 
-      final AuthOutcome o = await _controllerOf(c).signInWithGoogle();
+      final o = await _controllerOf(c).signInWithGoogle();
 
       expect(o, isA<AuthSuccess>());
       expect(repo.lastArgs['idToken'], 'google-id-token');
@@ -418,14 +414,12 @@ void main() {
     });
 
     test('a closed dialog is "cancelled" and calls no server', () async {
-      final _FakeRepo repo = _FakeRepo();
-      final FakeGoogleIdTokenProvider google = FakeGoogleIdTokenProvider()
+      final repo = _FakeRepo();
+      final google = FakeGoogleIdTokenProvider()
         ..result = const GoogleTokenCancelled();
-      final ProviderContainer c = await _start(repo, google: google);
+      final c = await _start(repo, google: google);
 
-      final AuthFailure f = _failureOf(
-        await _controllerOf(c).signInWithGoogle(),
-      );
+      final f = _failureOf(await _controllerOf(c).signInWithGoogle());
 
       expect(f.kind, AuthFailureKind.cancelled);
       expect(repo.lastArgs, isEmpty);
@@ -434,14 +428,12 @@ void main() {
     });
 
     test('a plugin failure shows its message and calls no server', () async {
-      final _FakeRepo repo = _FakeRepo();
-      final FakeGoogleIdTokenProvider google = FakeGoogleIdTokenProvider()
+      final repo = _FakeRepo();
+      final google = FakeGoogleIdTokenProvider()
         ..result = const GoogleTokenFailed('Google sign-in failed.');
-      final ProviderContainer c = await _start(repo, google: google);
+      final c = await _start(repo, google: google);
 
-      final AuthFailure f = _failureOf(
-        await _controllerOf(c).signInWithGoogle(),
-      );
+      final f = _failureOf(await _controllerOf(c).signInWithGoogle());
 
       expect(f.kind, AuthFailureKind.googleSignIn);
       expect(f.message, 'Google sign-in failed.');
@@ -450,32 +442,30 @@ void main() {
     });
 
     test('a server rejection is returned and keeps SignedOut', () async {
-      final _FakeRepo repo = _FakeRepo()
+      final repo = _FakeRepo()
         ..authOutcome = const AuthFailure(
           kind: AuthFailureKind.invalidGoogleToken,
           message: 'Google sign-in failed. Please try again.',
         );
-      final ProviderContainer c = await _start(repo);
+      final c = await _start(repo);
 
-      final AuthFailure f = _failureOf(
-        await _controllerOf(c).signInWithGoogle(),
-      );
+      final f = _failureOf(await _controllerOf(c).signInWithGoogle());
 
       expect(f.kind, AuthFailureKind.invalidGoogleToken);
       expect(_stateOf(c), isA<AuthSignedOut>());
     });
 
     test('actions are blocked while the Google dialog is open', () async {
-      final _FakeRepo repo = _FakeRepo();
-      final FakeGoogleIdTokenProvider google = FakeGoogleIdTokenProvider()
+      final repo = _FakeRepo();
+      final google = FakeGoogleIdTokenProvider()
         ..gate = Completer<GoogleTokenResult>();
-      final ProviderContainer c = await _start(repo, google: google);
-      final AuthController controller = _controllerOf(c);
+      final c = await _start(repo, google: google);
+      final controller = _controllerOf(c);
 
-      final Future<AuthOutcome> first = controller.signInWithGoogle();
+      final first = controller.signInWithGoogle();
       expect(_busyOf(c), isTrue);
 
-      final AuthFailure second = _failureOf(
+      final second = _failureOf(
         await controller.signIn(email: 'a@b.com', password: 'pw123456'),
       );
       expect(second.kind, AuthFailureKind.busy);
@@ -487,9 +477,9 @@ void main() {
     });
 
     test('signOut also signs out of Google', () async {
-      final _FakeRepo repo = _FakeRepo()..session = _validSession;
-      final FakeGoogleIdTokenProvider google = FakeGoogleIdTokenProvider();
-      final ProviderContainer c = await _start(repo, google: google);
+      final repo = _FakeRepo()..session = _validSession;
+      final google = FakeGoogleIdTokenProvider();
+      final c = await _start(repo, google: google);
 
       await _controllerOf(c).signOut();
 
@@ -498,9 +488,9 @@ void main() {
     });
 
     test('a global 401 also signs out of Google', () async {
-      final _FakeRepo repo = _FakeRepo()..session = _validSession;
-      final FakeGoogleIdTokenProvider google = FakeGoogleIdTokenProvider();
-      final ProviderContainer c = await _start(repo, google: google);
+      final repo = _FakeRepo()..session = _validSession;
+      final google = FakeGoogleIdTokenProvider();
+      final c = await _start(repo, google: google);
 
       c.read(unauthorizedSignalProvider.notifier).notify();
       await pumpEventQueue();
@@ -512,10 +502,10 @@ void main() {
 
   group('google (web flow)', () {
     test('a token from the web button signs the user in', () async {
-      final _FakeRepo repo = _FakeRepo();
-      final ProviderContainer c = await _start(repo);
+      final repo = _FakeRepo();
+      final c = await _start(repo);
 
-      final AuthOutcome o = await _controllerOf(c)
+      final o = await _controllerOf(c)
           .signInWithGoogleResult(const GoogleTokenOk('web-token'));
 
       expect(o, isA<AuthSuccess>());
@@ -525,10 +515,10 @@ void main() {
     });
 
     test('a cancelled result calls no server', () async {
-      final _FakeRepo repo = _FakeRepo();
-      final ProviderContainer c = await _start(repo);
+      final repo = _FakeRepo();
+      final c = await _start(repo);
 
-      final AuthFailure f = _failureOf(
+      final f = _failureOf(
         await _controllerOf(c)
             .signInWithGoogleResult(const GoogleTokenCancelled()),
       );
@@ -539,10 +529,10 @@ void main() {
     });
 
     test('a failed result shows its message and calls no server', () async {
-      final _FakeRepo repo = _FakeRepo();
-      final ProviderContainer c = await _start(repo);
+      final repo = _FakeRepo();
+      final c = await _start(repo);
 
-      final AuthFailure f = _failureOf(
+      final f = _failureOf(
         await _controllerOf(c).signInWithGoogleResult(
           const GoogleTokenFailed('Google sign-in failed.'),
         ),
@@ -554,14 +544,14 @@ void main() {
     });
 
     test('a second token is ignored while the first one runs', () async {
-      final _FakeRepo repo = _FakeRepo()..authGate = Completer<AuthOutcome>();
-      final ProviderContainer c = await _start(repo);
-      final AuthController controller = _controllerOf(c);
+      final repo = _FakeRepo()..authGate = Completer<AuthOutcome>();
+      final c = await _start(repo);
+      final controller = _controllerOf(c);
 
-      final Future<AuthOutcome> first = controller.signInWithGoogleResult(
+      final first = controller.signInWithGoogleResult(
         const GoogleTokenOk('t1'),
       );
-      final AuthFailure second = _failureOf(
+      final second = _failureOf(
         await controller.signInWithGoogleResult(const GoogleTokenOk('t2')),
       );
 

@@ -6,7 +6,7 @@ extension ProposalFollowUp on Proposal {
   /// True when the client was written to (Sent or Viewed) and the follow-up
   /// date is [today] or earlier. Other statuses never need a follow-up.
   bool isFollowUpDue(CalendarDate today) {
-    final CalendarDate? date = followUpDate;
+    final date = followUpDate;
     if (date == null) {
       return false;
     }

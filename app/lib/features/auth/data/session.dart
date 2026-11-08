@@ -1,5 +1,8 @@
+import 'package:meta/meta.dart';
+
+@immutable
 final class Session {
-  const Session({required this.token, required this.expiresAtUnixSeconds});
+  const new({required this.token, required this.expiresAtUnixSeconds});
 
   final String token;
 

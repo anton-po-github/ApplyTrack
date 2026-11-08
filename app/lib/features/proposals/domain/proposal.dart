@@ -2,10 +2,12 @@ import 'package:apply_track/core/api/json_fields.dart';
 import 'package:apply_track/features/proposals/domain/calendar_date.dart';
 import 'package:apply_track/features/proposals/domain/proposal_platform.dart';
 import 'package:apply_track/features/proposals/domain/proposal_status.dart';
+import 'package:meta/meta.dart';
 
 /// One proposal as the server sends it (`ProposalResponse` in 07).
+@immutable
 final class Proposal {
-  const Proposal({
+  const new({
     required this.id,
     required this.title,
     required this.platform,
@@ -20,8 +22,8 @@ final class Proposal {
   });
 
   /// A wrong shape throws [FormatException].
-  factory Proposal.fromJson(Map<String, Object?> json) {
-    final String? followUp = json.optionalString('followUpDate');
+  factory fromJson(Map<String, Object?> json) {
+    final followUp = json.optionalString('followUpDate');
     return Proposal(
       id: json.requireString('id'),
       title: json.requireString('title'),

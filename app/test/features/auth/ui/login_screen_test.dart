@@ -1,15 +1,13 @@
 import 'dart:async';
 
+import 'package:apply_track/features/auth/data/google_id_token_provider.dart';
+import 'package:apply_track/features/auth/domain/auth_outcome.dart';
+import 'package:apply_track/features/auth/ui/auth_widgets.dart';
+import 'package:apply_track/features/auth/ui/login_screen.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 
-import 'package:apply_track/features/auth/domain/auth_outcome.dart';
-import 'package:apply_track/features/auth/ui/login_screen.dart';
-
 import '../../../support/auth_test_helpers.dart';
-
-import 'package:apply_track/features/auth/data/google_id_token_provider.dart';
-import 'package:apply_track/features/auth/ui/auth_widgets.dart';
 
 void main() {
   late FakeAuthRepository repo;
@@ -131,7 +129,7 @@ void main() {
     });
 
     testWidgets('a closed dialog shows no error', (tester) async {
-      final FakeGoogleIdTokenProvider google = FakeGoogleIdTokenProvider()
+      final google = FakeGoogleIdTokenProvider()
         ..result = const GoogleTokenCancelled();
       await pumpAuthScreen(tester, repo, const LoginScreen(), google: google);
 
@@ -143,7 +141,7 @@ void main() {
     });
 
     testWidgets('a Google error shows one clear message', (tester) async {
-      final FakeGoogleIdTokenProvider google = FakeGoogleIdTokenProvider()
+      final google = FakeGoogleIdTokenProvider()
         ..result = const GoogleTokenFailed('Google sign-in failed.');
       await pumpAuthScreen(tester, repo, const LoginScreen(), google: google);
 

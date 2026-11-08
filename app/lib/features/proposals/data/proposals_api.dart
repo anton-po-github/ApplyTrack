@@ -36,7 +36,7 @@ abstract interface class ProposalsApi {
 }
 
 final class HttpProposalsApi implements ProposalsApi {
-  const HttpProposalsApi(this._client);
+  const new(this._client);
 
   static const String _base = '/api/proposals';
 
@@ -61,7 +61,7 @@ final class HttpProposalsApi implements ProposalsApi {
 
   @override
   Future<ApiResult<Proposal>> get(String id) {
-    final String? path = _pathFor(id);
+    final path = _pathFor(id);
     if (path == null) {
       return Future<ApiResult<Proposal>>.value(_badId<Proposal>());
     }
@@ -74,7 +74,7 @@ final class HttpProposalsApi implements ProposalsApi {
 
   @override
   Future<ApiResult<Proposal>> update(String id, ProposalDraft draft) {
-    final String? path = _pathFor(id);
+    final path = _pathFor(id);
     if (path == null) {
       return Future<ApiResult<Proposal>>.value(_badId<Proposal>());
     }
@@ -87,7 +87,7 @@ final class HttpProposalsApi implements ProposalsApi {
 
   @override
   Future<ApiResult<void>> delete(String id) {
-    final String? path = _pathFor(id);
+    final path = _pathFor(id);
     if (path == null) return Future<ApiResult<void>>.value(_badId<void>());
     return _client.delete(path);
   }

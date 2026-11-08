@@ -1,5 +1,4 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:material_ui/material_ui.dart';
+import 'dart:async';
 
 import 'package:apply_track/features/auth/domain/auth_outcome.dart';
 import 'package:apply_track/features/auth/state/auth_dependencies.dart';
@@ -13,6 +12,8 @@ import 'package:apply_track/features/proposals/ui/proposal_list_screen.dart';
 import 'package:apply_track/features/shell/app_shell.dart';
 import 'package:apply_track/router/app_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../support/app_test_helpers.dart';
 import '../support/auth_test_helpers.dart';
@@ -20,7 +21,7 @@ import '../support/auth_test_helpers.dart';
 void main() {
   group('authRedirect', () {
     test('Unknown and Unavailable wait on the startup screen', () {
-      for (final AuthState s in <AuthState>[
+      for (final s in <AuthState>[
         const AuthUnknown(),
         const AuthUnavailable(),
       ]) {
@@ -119,7 +120,7 @@ void main() {
     testWidgets('no network at start: Retry brings the user in', (
       tester,
     ) async {
-      final FakeAuthRepository repo = signedInRepo()
+      final repo = signedInRepo()
         ..meOutcome = const AuthFailure(
           kind: AuthFailureKind.network,
           message: 'No connection.',
@@ -174,7 +175,7 @@ void main() {
     testWidgets('a 401 from the server sends the user to login', (
       tester,
     ) async {
-      final FakeAuthRepository repo = signedInRepo();
+      final repo = signedInRepo();
       await pumpApp(tester, repo);
       expect(find.byType(AppShell), findsOneWidget);
 
@@ -258,7 +259,9 @@ void main() {
     testWidgets('back from a page opened on top of the shell', (tester) async {
       await pumpApp(tester, signedInRepo());
 
-      routerOf(tester, find.byType(AppShell)).push(AppRoutes.proposalNew);
+      unawaited(
+        routerOf(tester, find.byType(AppShell)).push(AppRoutes.proposalNew),
+      );
       await tester.pumpAndSettle();
       expect(find.byType(ProposalFormScreen), findsOneWidget);
 

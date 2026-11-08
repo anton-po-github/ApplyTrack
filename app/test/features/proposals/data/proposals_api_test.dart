@@ -1,5 +1,3 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:apply_track/core/api/api_error.dart';
 import 'package:apply_track/core/api/api_result.dart';
 import 'package:apply_track/features/proposals/data/proposals_api.dart';
@@ -9,6 +7,7 @@ import 'package:apply_track/features/proposals/domain/proposal_draft.dart';
 import 'package:apply_track/features/proposals/domain/proposal_page.dart';
 import 'package:apply_track/features/proposals/domain/proposal_platform.dart';
 import 'package:apply_track/features/proposals/domain/proposal_status.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 import '../../../support/fake_api_client.dart';
 
@@ -58,7 +57,7 @@ void main() {
     });
 
     test('GET /api/proposals with only the default limit', () async {
-      final ApiResult<ProposalPage> r = await api.list();
+      final r = await api.list();
 
       expect(client.last.method, 'GET');
       expect(client.last.path, '/api/proposals');
@@ -69,7 +68,7 @@ void main() {
         'cursor': null,
         'limit': 20,
       });
-      final ProposalPage page = (r as ApiOk<ProposalPage>).value;
+      final page = (r as ApiOk<ProposalPage>).value;
       expect(page.items.single.id, id);
       expect(page.nextCursor, 'next-1');
     });
@@ -125,7 +124,7 @@ void main() {
     test('GET /api/proposals/{id}', () async {
       client.json = proposalJson();
 
-      final ApiResult<Proposal> r = await api.get(id);
+      final r = await api.get(id);
 
       expect(client.last.method, 'GET');
       expect(client.last.path, '/api/proposals/$id');
@@ -143,7 +142,7 @@ void main() {
     });
 
     test('a bad id sends nothing and gives bad_request', () async {
-      for (final String bad in <String>[
+      for (final bad in <String>[
         '',
         'abc',
         '../auth/me',
@@ -152,7 +151,7 @@ void main() {
         '$id ',
         '0190a1b2-0000-7000-8000-00000000000g',
       ]) {
-        final ApiResult<Proposal> r = await api.get(bad);
+        final r = await api.get(bad);
         expect(errorOf(r).code, ApiErrorCodes.badRequest, reason: bad);
       }
       expect(client.calls, isEmpty);
@@ -163,7 +162,7 @@ void main() {
     test('POST /api/proposals with all 8 keys', () async {
       client.json = proposalJson();
 
-      final ApiResult<Proposal> r = await api.create(draft());
+      final r = await api.create(draft());
 
       expect(client.last.method, 'POST');
       expect(client.last.path, '/api/proposals');
@@ -188,7 +187,7 @@ void main() {
         fields: <String, String>{'title': 'Title is required.'},
       );
 
-      final ApiError e = errorOf(await api.create(draft()));
+      final e = errorOf(await api.create(draft()));
 
       expect(e.code, ApiErrorCodes.validation);
       expect(e.fields, <String, String>{'title': 'Title is required.'});
@@ -208,7 +207,7 @@ void main() {
     test('PUT /api/proposals/{id} with all 8 keys', () async {
       client.json = proposalJson();
 
-      final ApiResult<Proposal> r = await api.update(id, draft());
+      final r = await api.update(id, draft());
 
       expect(client.last.method, 'PUT');
       expect(client.last.path, '/api/proposals/$id');
@@ -219,7 +218,7 @@ void main() {
     });
 
     test('a bad id sends nothing and gives bad_request', () async {
-      final ApiResult<Proposal> r = await api.update('nope', draft());
+      final r = await api.update('nope', draft());
 
       expect(errorOf(r).code, ApiErrorCodes.badRequest);
       expect(client.calls, isEmpty);
@@ -237,7 +236,7 @@ void main() {
 
   group('delete', () {
     test('DELETE /api/proposals/{id}', () async {
-      final ApiResult<void> r = await api.delete(id);
+      final r = await api.delete(id);
 
       expect(client.last.method, 'DELETE');
       expect(client.last.path, '/api/proposals/$id');
@@ -255,7 +254,7 @@ void main() {
     });
 
     test('a bad id sends nothing and gives bad_request', () async {
-      final ApiResult<void> r = await api.delete('../x');
+      final r = await api.delete('../x');
 
       expect(errorOf(r).code, ApiErrorCodes.badRequest);
       expect(client.calls, isEmpty);

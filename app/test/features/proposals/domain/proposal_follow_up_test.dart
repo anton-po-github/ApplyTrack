@@ -1,13 +1,12 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:apply_track/features/proposals/domain/calendar_date.dart';
 import 'package:apply_track/features/proposals/domain/proposal_follow_up.dart';
 import 'package:apply_track/features/proposals/domain/proposal_status.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 import '../../../support/proposal_fixtures.dart';
 
 void main() {
-  final CalendarDate today = CalendarDate(2026, 11, 6);
+  final today = CalendarDate(2026, 11, 6);
 
   bool due(ProposalStatus status, CalendarDate? date) =>
       makeProposal(1, status: status, followUpDate: date).isFollowUpDue(today);
@@ -32,7 +31,7 @@ void main() {
   });
 
   test('other statuses are never due', () {
-    for (final ProposalStatus status in <ProposalStatus>[
+    for (final status in <ProposalStatus>[
       ProposalStatus.draft,
       ProposalStatus.interview,
       ProposalStatus.won,

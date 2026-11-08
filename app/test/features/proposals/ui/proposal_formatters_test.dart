@@ -1,8 +1,7 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:apply_track/features/proposals/domain/calendar_date.dart';
 import 'package:apply_track/features/proposals/domain/proposal_validators.dart';
 import 'package:apply_track/features/proposals/ui/proposal_formatters.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('formatBudget', () {
@@ -34,7 +33,7 @@ void main() {
     });
 
     test('every month has its own name', () {
-      final List<String> names = <String>[
+      final names = <String>[
         for (int m = 1; m <= 12; m++)
           formatCalendarDate(CalendarDate(2026, m, 1)).split(' ')[1],
       ];
@@ -56,7 +55,7 @@ void main() {
     });
 
     test('the text passes the budget validator', () {
-      for (final double value in <double>[0, 1, 1500, 1234.5, 0.05]) {
+      for (final value in <double>[0, 1, 1500, 1234.5, 0.05]) {
         expect(ProposalValidators.budget(formatBudgetInput(value)), isNull);
       }
     });

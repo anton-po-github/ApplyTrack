@@ -1,5 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:apply_track/core/config/app_config.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('default API URL is https and has no trailing slash', () {
@@ -8,7 +8,7 @@ void main() {
   });
 
   test('hasGoogleClientId is false when the id is empty', () {
-    const AppConfig config = AppConfig(
+    const config = AppConfig(
       apiBaseUrl: 'https://example.com',
       googleServerClientId: '',
     );
@@ -16,7 +16,7 @@ void main() {
   });
 
   test('hasGoogleClientId is true when the id is set', () {
-    const AppConfig config = AppConfig(
+    const config = AppConfig(
       apiBaseUrl: 'https://example.com',
       googleServerClientId: 'abc.apps.googleusercontent.com',
     );

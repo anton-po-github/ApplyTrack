@@ -13,7 +13,7 @@ abstract final class AuthValidators {
       (value ?? '').trim().toLowerCase();
 
   static String? email(String? value) {
-    final String text = normalizeEmail(value);
+    final text = normalizeEmail(value);
     if (text.isEmpty) return 'Email is required';
     if (text.length > emailMax || !_hasValidShape(text)) {
       return 'Enter a valid email';
@@ -22,7 +22,7 @@ abstract final class AuthValidators {
   }
 
   static String? signupPassword(String? value) {
-    final String text = value ?? '';
+    final text = value ?? '';
     if (text.isEmpty) return 'Password is required';
     if (text.length < passwordMin) {
       return 'Use at least $passwordMin characters';
@@ -32,14 +32,14 @@ abstract final class AuthValidators {
   }
 
   static String? signinPassword(String? value) {
-    final String text = value ?? '';
+    final text = value ?? '';
     if (text.isEmpty) return 'Password is required';
     if (text.length > passwordMax) return 'Use at most $passwordMax characters';
     return null;
   }
 
   static String? displayName(String? value) {
-    final String text = (value ?? '').trim();
+    final text = (value ?? '').trim();
     if (text.isEmpty) return 'Name is required';
     if (text.length > displayNameMax) return 'Name is too long';
     if (text.codeUnits.any(_isControl)) return 'Name has invalid characters';
@@ -47,15 +47,15 @@ abstract final class AuthValidators {
   }
 
   static bool _hasValidShape(String text) {
-    for (final int unit in text.codeUnits) {
+    for (final unit in text.codeUnits) {
       // ASCII only, no space, no control characters.
       if (unit <= 0x20 || unit >= 0x7F) return false;
       if (_forbiddenEmailChars.contains(unit)) return false;
     }
-    final int at = text.indexOf('@');
+    final at = text.indexOf('@');
     if (at <= 0 || at != text.lastIndexOf('@')) return false;
-    final String local = text.substring(0, at);
-    final String domain = text.substring(at + 1);
+    final local = text.substring(0, at);
+    final domain = text.substring(at + 1);
     if (local.length > emailLocalMax) return false;
     return domain.contains('.') &&
         !domain.startsWith('.') &&

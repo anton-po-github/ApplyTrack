@@ -1,17 +1,16 @@
+import 'package:apply_track/features/counter/counter_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:apply_track/features/counter/counter.dart';
-import 'package:apply_track/features/counter/counter_providers.dart';
 
 class CounterScreen extends ConsumerWidget {
-  const CounterScreen({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final ThemeData theme = Theme.of(context);
-    final Counter counter = ref.watch(counterProvider);
-    final CounterNotifier notifier = ref.read(counterProvider.notifier);
-    final bool canAdd = counter.canIncrement;
+    final theme = Theme.of(context);
+    final counter = ref.watch(counterProvider);
+    final notifier = ref.read(counterProvider.notifier);
+    final canAdd = counter.canIncrement;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Counter')),

@@ -1,9 +1,11 @@
 import 'package:apply_track/core/api/json_fields.dart';
 import 'package:apply_track/features/proposals/domain/proposal_status.dart';
+import 'package:meta/meta.dart';
 
 /// Counters from `GET /api/stats` (`StatsResponse` in 07).
+@immutable
 final class ProposalStats {
-  const ProposalStats({
+  const new({
     required this.total,
     required this.draft,
     required this.sent,
@@ -13,7 +15,7 @@ final class ProposalStats {
     required this.lost,
   });
 
-  factory ProposalStats.fromJson(Map<String, Object?> json) => ProposalStats(
+  factory fromJson(Map<String, Object?> json) => ProposalStats(
     total: json.requireInt('total'),
     draft: json.requireInt('draft'),
     sent: json.requireInt('sent'),
@@ -44,7 +46,7 @@ final class ProposalStats {
   /// Won / (Won + Lost), from 0.0 to 1.0.
   /// Null when nothing is decided yet (the UI shows a dash).
   double? get winRate {
-    final int decided = won + lost;
+    final decided = won + lost;
     return decided == 0 ? null : won / decided;
   }
 

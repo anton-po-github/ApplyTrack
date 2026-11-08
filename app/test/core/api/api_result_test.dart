@@ -1,6 +1,6 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:apply_track/core/api/api_error.dart';
 import 'package:apply_track/core/api/api_result.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 String describe(ApiResult<int> result) => switch (result) {
   ApiOk<int>(:final int value) => 'ok $value',

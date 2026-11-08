@@ -1,8 +1,7 @@
 import 'dart:convert';
 
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-
 import 'package:apply_track/features/auth/data/session.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 abstract interface class TokenStorage {
   /// Returns null when there is no session or the stored data is broken.
@@ -16,7 +15,7 @@ abstract interface class TokenStorage {
 
 /// For tests (and fakes). Nothing is saved to disk.
 final class InMemoryTokenStorage implements TokenStorage {
-  InMemoryTokenStorage([this._session]);
+  new([this._session]);
 
   Session? _session;
 
@@ -33,7 +32,7 @@ final class InMemoryTokenStorage implements TokenStorage {
 /// Android Keystore / iOS Keychain. On web it uses `localStorage`.
 /// The whole session is ONE key, so a save is all or nothing.
 final class SecureTokenStorage implements TokenStorage {
-  SecureTokenStorage({FlutterSecureStorage? storage})
+  new({FlutterSecureStorage? storage})
     : _storage = storage ?? const FlutterSecureStorage();
 
   static const String storageKey = 'applytrack.session';
@@ -51,7 +50,7 @@ final class SecureTokenStorage implements TokenStorage {
     }
     if (raw == null) return null;
 
-    final Session? session = _decode(raw);
+    final session = _decode(raw);
     if (session == null) await _safeClear();
     return session;
   }
@@ -85,8 +84,8 @@ final class SecureTokenStorage implements TokenStorage {
       return null;
     }
     if (json is! Map<String, Object?>) return null;
-    final Object? token = json['token'];
-    final Object? exp = json['exp'];
+    final token = json['token'];
+    final exp = json['exp'];
     if (token is! String || token.isEmpty) return null;
     if (exp is! int || exp <= 0) return null;
     return Session(token: token, expiresAtUnixSeconds: exp);

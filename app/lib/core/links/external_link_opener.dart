@@ -16,7 +16,7 @@ Future<bool> _launchInExternalApp(Uri uri) =>
 /// The real opener (`url_launcher`). It checks the scheme again, so no other
 /// caller can open `javascript:`, `file:` or app links by mistake.
 final class UrlLauncherLinkOpener implements ExternalLinkOpener {
-  const UrlLauncherLinkOpener({this._launch = _launchInExternalApp});
+  const new({this._launch = _launchInExternalApp});
 
   final UriLauncher _launch;
 

@@ -31,7 +31,7 @@ abstract interface class AuthRepository {
 }
 
 final class DefaultAuthRepository implements AuthRepository {
-  const DefaultAuthRepository({required this._api, required this._storage});
+  const new({required this._api, required this._storage});
 
   final AuthApi _api;
   final TokenStorage _storage;
@@ -67,7 +67,7 @@ final class DefaultAuthRepository implements AuthRepository {
 
   @override
   Future<AuthOutcome> me() async {
-    final ApiResult<UserProfile> result = await _api.me();
+    final result = await _api.me();
     return switch (result) {
       ApiOk<UserProfile>(:final UserProfile value) => AuthSuccess(value),
       ApiErr<UserProfile>(:final ApiError error) => _failure(error),
@@ -83,7 +83,7 @@ final class DefaultAuthRepository implements AuthRepository {
   Future<AuthOutcome> _authenticate(
     Future<ApiResult<AuthResponse>> call,
   ) async {
-    final ApiResult<AuthResponse> result = await call;
+    final result = await call;
     switch (result) {
       case ApiErr<AuthResponse>(:final ApiError error):
         return _failure(error);
@@ -123,7 +123,7 @@ final class DefaultAuthRepository implements AuthRepository {
           fields: error.fields,
         );
       case ApiErrorCodes.emailTaken:
-        const String text = 'This email is already used.';
+        const text = 'This email is already used.';
         return AuthFailure(
           kind: AuthFailureKind.emailTaken,
           message: text,
@@ -135,7 +135,7 @@ final class DefaultAuthRepository implements AuthRepository {
           message: 'Wrong email or password.',
         );
       case ApiErrorCodes.rateLimited:
-        final int? seconds = error.retryAfterSeconds;
+        final seconds = error.retryAfterSeconds;
         return AuthFailure(
           kind: AuthFailureKind.rateLimited,
           message: seconds == null

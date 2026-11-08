@@ -1,11 +1,11 @@
 /// Result of asking Google for an ID token. Like a TypeScript union.
 /// The provider never throws.
 sealed class GoogleTokenResult {
-  const GoogleTokenResult();
+  const new();
 }
 
 final class GoogleTokenOk extends GoogleTokenResult {
-  const GoogleTokenOk(this.idToken);
+  const new(this.idToken);
 
   /// Send this to the server as `credential`. Not the access token.
   final String idToken;
@@ -13,11 +13,11 @@ final class GoogleTokenOk extends GoogleTokenResult {
 
 /// The user closed the dialog. This is not an error.
 final class GoogleTokenCancelled extends GoogleTokenResult {
-  const GoogleTokenCancelled();
+  const new();
 }
 
 final class GoogleTokenFailed extends GoogleTokenResult {
-  const GoogleTokenFailed(this.message);
+  const new(this.message);
 
   /// Safe to show to the user.
   final String message;

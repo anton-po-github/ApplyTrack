@@ -4,7 +4,7 @@ import 'package:apply_track/core/api/api_result.dart';
 
 /// One call that reached the fake client.
 final class RecordedCall {
-  const RecordedCall({
+  const new({
     required this.method,
     required this.path,
     required this.requiresAuth,
@@ -30,7 +30,7 @@ final class FakeApiClient implements ApiClient {
   RecordedCall get last => calls.last;
 
   ApiResult<T> _answer<T>(JsonParser<T> parse) {
-    final ApiError? failure = error;
+    final failure = error;
     if (failure != null) return ApiErr<T>(failure);
     return ApiOk<T>(parse(json));
   }
@@ -97,7 +97,7 @@ final class FakeApiClient implements ApiClient {
     calls.add(
       RecordedCall(method: 'DELETE', path: path, requiresAuth: requiresAuth),
     );
-    final ApiError? failure = error;
+    final failure = error;
     if (failure != null) return ApiErr<void>(failure);
     return const ApiOk<void>(null);
   }

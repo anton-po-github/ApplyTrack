@@ -1,10 +1,9 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:apply_track/core/api/api_client.dart';
 import 'package:apply_track/core/api/api_result.dart';
 import 'package:apply_track/features/auth/data/auth_api.dart';
 import 'package:apply_track/features/auth/domain/auth_response.dart';
 import 'package:apply_track/features/auth/domain/user_profile.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 final class _FakeClient implements ApiClient {
   String? method;
@@ -62,7 +61,7 @@ void main() {
     api = HttpAuthApi(client);
   });
 
-  final Map<String, Object?> authJson = <String, Object?>{
+  final authJson = <String, Object?>{
     'token': 'tok',
     'expiresAtUnixSeconds': 1767225600,
     'user': <String, Object?>{
@@ -75,7 +74,7 @@ void main() {
   test('signup: path, body, no auth', () async {
     client.json = authJson;
 
-    final ApiResult<AuthResponse> r = await api.signup(
+    final r = await api.signup(
       email: 'a@b.com',
       password: 'pw123456',
       displayName: 'Anton',
@@ -124,7 +123,7 @@ void main() {
       'displayName': 'Anton',
     };
 
-    final ApiResult<UserProfile> r = await api.me();
+    final r = await api.me();
 
     expect((r as ApiOk<UserProfile>).value.displayName, 'Anton');
     expect(client.method, 'GET');

@@ -2,7 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 /// Temporary content for a tab. Step 11 replaces it.
 class PlaceholderBody extends StatelessWidget {
-  const PlaceholderBody({super.key, required this.text});
+  const new({required this.text, super.key});
 
   final String text;
 

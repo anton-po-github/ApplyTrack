@@ -1,6 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:apply_track/features/proposals/domain/proposal_id.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('accepts a GUID in any letter case', () {
@@ -9,7 +8,7 @@ void main() {
   });
 
   test('rejects everything else', () {
-    for (final String? bad in <String?>[
+    for (final bad in <String?>[
       null,
       '',
       'abc',

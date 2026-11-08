@@ -1,12 +1,11 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:apply_track/features/auth/data/session.dart';
 import 'package:apply_track/features/auth/data/storage_token_reader.dart';
 import 'package:apply_track/features/auth/data/token_storage.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  final DateTime now = DateTime.utc(2026, 1, 1);
-  final int nowSeconds = now.millisecondsSinceEpoch ~/ 1000;
+  final now = DateTime.utc(2026);
+  final nowSeconds = now.millisecondsSinceEpoch ~/ 1000;
 
   StorageTokenReader readerFor(Session? session) => StorageTokenReader(
     storage: InMemoryTokenStorage(session),
@@ -14,7 +13,7 @@ void main() {
   );
 
   test('returns the token of a valid session', () async {
-    final StorageTokenReader reader = readerFor(
+    final reader = readerFor(
       Session(token: 'tok', expiresAtUnixSeconds: nowSeconds + 60),
     );
     expect(await reader.readToken(), 'tok');
@@ -25,7 +24,7 @@ void main() {
   });
 
   test('returns null for an expired session', () async {
-    final StorageTokenReader reader = readerFor(
+    final reader = readerFor(
       Session(token: 'tok', expiresAtUnixSeconds: nowSeconds),
     );
     expect(await reader.readToken(), isNull);

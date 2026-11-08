@@ -9,7 +9,7 @@ import 'package:apply_track/features/proposals/domain/proposal_status.dart';
 
 /// The arguments of one `list` call.
 final class ListCall {
-  const ListCall({this.status, this.q, this.cursor, required this.limit});
+  const new({required this.limit, this.status, this.q, this.cursor});
 
   final ProposalStatus? status;
   final String? q;
@@ -29,12 +29,12 @@ final class FakeProposalsApi implements ProposalsApi {
   final List<ProposalDraft> updateDrafts = <ProposalDraft>[];
   final List<String> deleteIds = <String>[];
 
-  ListHandler listHandler = (ListCall call) async =>
+  ListHandler listHandler = (call) async =>
       const ApiOk<ProposalPage>(ProposalPage(items: <Proposal>[]));
 
   /// By default it gives a proposal with the asked id.
-  Future<ApiResult<Proposal>> Function(String id) getHandler =
-      (String id) async => ApiOk<Proposal>(
+  Future<ApiResult<Proposal>> Function(String id) getHandler = (id) async =>
+      ApiOk<Proposal>(
         Proposal(
           id: id,
           title: 'Proposal from server',
@@ -46,16 +46,15 @@ final class FakeProposalsApi implements ProposalsApi {
       );
 
   Future<ApiResult<Proposal>> Function(ProposalDraft draft) createHandler = (
-    ProposalDraft draft,
+    draft,
   ) async => const ApiErr<Proposal>(ApiError.badResponse());
 
   Future<ApiResult<Proposal>> Function(String id, ProposalDraft draft)
-  updateHandler = (String id, ProposalDraft draft) async =>
+  updateHandler = (id, draft) async =>
       const ApiErr<Proposal>(ApiError.badResponse());
 
-  Future<ApiResult<void>> Function(String id) deleteHandler = (
-    String id,
-  ) async => const ApiOk<void>(null);
+  Future<ApiResult<void>> Function(String id) deleteHandler = (id) async =>
+      const ApiOk<void>(null);
 
   @override
   Future<ApiResult<ProposalPage>> list({
@@ -64,12 +63,7 @@ final class FakeProposalsApi implements ProposalsApi {
     String? cursor,
     int limit = ProposalsApi.defaultLimit,
   }) {
-    final ListCall call = ListCall(
-      status: status,
-      q: q,
-      cursor: cursor,
-      limit: limit,
-    );
+    final call = ListCall(status: status, q: q, cursor: cursor, limit: limit);
     listCalls.add(call);
     return listHandler(call);
   }

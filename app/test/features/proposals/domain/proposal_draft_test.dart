@@ -1,10 +1,9 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:apply_track/features/proposals/domain/calendar_date.dart';
 import 'package:apply_track/features/proposals/domain/proposal.dart';
 import 'package:apply_track/features/proposals/domain/proposal_draft.dart';
 import 'package:apply_track/features/proposals/domain/proposal_platform.dart';
 import 'package:apply_track/features/proposals/domain/proposal_status.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 const List<String> _allKeys = <String>[
   'title',
@@ -20,7 +19,7 @@ const List<String> _allKeys = <String>[
 void main() {
   group('toJson', () {
     test('always has all 8 keys (PUT is a full replace)', () {
-      final Map<String, Object?> json = const ProposalDraft(
+      final json = const ProposalDraft(
         title: 'Hello',
         platform: ProposalPlatform.upwork,
         status: ProposalStatus.draft,
@@ -35,7 +34,7 @@ void main() {
     });
 
     test('sends enums as numbers and the date as yyyy-MM-dd', () {
-      final Map<String, Object?> json = ProposalDraft(
+      final json = ProposalDraft(
         title: 'Hello',
         platform: ProposalPlatform.email,
         status: ProposalStatus.won,
@@ -48,13 +47,13 @@ void main() {
     });
 
     test('has no id and no userId', () {
-      final Map<String, Object?> json = const ProposalDraft.empty().toJson();
+      final json = const ProposalDraft.empty().toJson();
       expect(json.containsKey('id'), isFalse);
       expect(json.containsKey('userId'), isFalse);
     });
 
     test('trims title, company and link', () {
-      final Map<String, Object?> json = const ProposalDraft(
+      final json = const ProposalDraft(
         title: '  Hi there  ',
         company: '  Acme ',
         link: ' https://a.b ',
@@ -68,7 +67,7 @@ void main() {
     });
 
     test('blank optional text becomes null', () {
-      final Map<String, Object?> json = const ProposalDraft(
+      final json = const ProposalDraft(
         title: 'Hello',
         company: '   ',
         link: '',
@@ -83,7 +82,7 @@ void main() {
     });
 
     test('notes keep their line breaks', () {
-      final Map<String, Object?> json = const ProposalDraft(
+      final json = const ProposalDraft(
         title: 'Hello',
         notes: 'a\n\tb',
         platform: ProposalPlatform.upwork,
@@ -108,7 +107,7 @@ void main() {
   });
 
   group('fromProposal', () {
-    final Proposal proposal = Proposal.fromJson(<String, Object?>{
+    final proposal = Proposal.fromJson(const <String, Object?>{
       'id': 'abc',
       'title': 'Flutter app',
       'company': 'Acme',
@@ -123,7 +122,7 @@ void main() {
     });
 
     test('copies the editable fields', () {
-      final ProposalDraft draft = ProposalDraft.fromProposal(proposal);
+      final draft = ProposalDraft.fromProposal(proposal);
 
       expect(draft.title, 'Flutter app');
       expect(draft.company, 'Acme');
@@ -136,8 +135,7 @@ void main() {
     });
 
     test('toJson of an unchanged draft keeps the server values', () {
-      final Map<String, Object?> json = ProposalDraft.fromProposal(proposal)
-          .toJson();
+      final json = ProposalDraft.fromProposal(proposal).toJson();
 
       expect(json, <String, Object?>{
         'title': 'Flutter app',
@@ -152,8 +150,8 @@ void main() {
     });
 
     test('withStatus changes only the status', () {
-      final ProposalDraft draft = ProposalDraft.fromProposal(proposal);
-      final ProposalDraft next = draft.withStatus(ProposalStatus.interview);
+      final draft = ProposalDraft.fromProposal(proposal);
+      final next = draft.withStatus(ProposalStatus.interview);
 
       expect(next.status, ProposalStatus.interview);
       expect(next.title, draft.title);
@@ -163,7 +161,7 @@ void main() {
   });
 
   test('empty draft starts as Upwork and Draft', () {
-    const ProposalDraft draft = ProposalDraft.empty();
+    const draft = ProposalDraft.empty();
     expect(draft.title, '');
     expect(draft.platform, ProposalPlatform.upwork);
     expect(draft.status, ProposalStatus.draft);

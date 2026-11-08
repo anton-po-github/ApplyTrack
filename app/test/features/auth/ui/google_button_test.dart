@@ -1,9 +1,8 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:material_ui/material_ui.dart';
-
 import 'package:apply_track/features/auth/data/google_id_token_provider.dart';
 import 'package:apply_track/features/auth/domain/auth_outcome.dart';
 import 'package:apply_track/features/auth/ui/google_button.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../support/auth_test_helpers.dart';
 
@@ -11,7 +10,7 @@ void main() {
   late FakeAuthRepository repo;
   late FakeGoogleIdTokenProvider google;
   AuthOutcome? lastOutcome;
-  int started = 0;
+  var started = 0;
 
   setUp(() {
     repo = FakeAuthRepository();
@@ -29,7 +28,7 @@ void main() {
     Scaffold(
       body: GoogleSignInButton(
         onStarted: () => started++,
-        onOutcome: (AuthOutcome outcome) => lastOutcome = outcome,
+        onOutcome: (outcome) => lastOutcome = outcome,
       ),
     ),
     google: google,
@@ -102,7 +101,7 @@ void main() {
       await tester.pump();
       await tester.pumpAndSettle();
 
-      final AuthFailure f = lastOutcome! as AuthFailure;
+      final f = lastOutcome! as AuthFailure;
       expect(f.kind, AuthFailureKind.googleSignIn);
       expect(f.message, 'Google sign-in failed.');
       expect(repo.lastArgs, isEmpty);

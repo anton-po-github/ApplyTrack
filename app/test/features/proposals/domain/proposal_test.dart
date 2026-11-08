@@ -1,9 +1,8 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:apply_track/features/proposals/domain/calendar_date.dart';
 import 'package:apply_track/features/proposals/domain/proposal.dart';
 import 'package:apply_track/features/proposals/domain/proposal_platform.dart';
 import 'package:apply_track/features/proposals/domain/proposal_status.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 Map<String, Object?> fullJson() => <String, Object?>{
   'id': '0190a1b2-0000-7000-8000-000000000001',
@@ -22,7 +21,7 @@ Map<String, Object?> fullJson() => <String, Object?>{
 void main() {
   group('Proposal.fromJson', () {
     test('reads all fields', () {
-      final Proposal p = Proposal.fromJson(fullJson());
+      final p = Proposal.fromJson(fullJson());
 
       expect(p.id, '0190a1b2-0000-7000-8000-000000000001');
       expect(p.title, 'Flutter app');
@@ -38,14 +37,14 @@ void main() {
     });
 
     test('the optional fields can be null', () {
-      final Map<String, Object?> json = fullJson()
+      final json = fullJson()
         ..['company'] = null
         ..['budget'] = null
         ..['followUpDate'] = null
         ..['link'] = null
         ..['notes'] = null;
 
-      final Proposal p = Proposal.fromJson(json);
+      final p = Proposal.fromJson(json);
 
       expect(p.company, isNull);
       expect(p.budget, isNull);
@@ -55,7 +54,7 @@ void main() {
     });
 
     test('the optional fields can be missing', () {
-      final Map<String, Object?> json = fullJson()
+      final json = fullJson()
         ..remove('company')
         ..remove('budget')
         ..remove('followUpDate')
@@ -66,7 +65,7 @@ void main() {
     });
 
     test('budget as a whole number becomes a double', () {
-      final Proposal p = Proposal.fromJson(fullJson()..['budget'] = 100);
+      final p = Proposal.fromJson(fullJson()..['budget'] = 100);
       expect(p.budget, 100.0);
       expect(p.budget, isA<double>());
     });
@@ -76,7 +75,7 @@ void main() {
     });
 
     test('createdAt and updatedAt use milliseconds', () {
-      final Proposal p = Proposal.fromJson(fullJson());
+      final p = Proposal.fromJson(fullJson());
       expect(p.createdAt, DateTime.fromMillisecondsSinceEpoch(1767225600000));
       expect(p.updatedAt, DateTime.fromMillisecondsSinceEpoch(1767225700000));
     });
@@ -119,7 +118,7 @@ void main() {
     });
 
     test('throws FormatException when a required key is missing', () {
-      for (final String key in <String>[
+      for (final key in <String>[
         'id',
         'title',
         'platform',

@@ -1,10 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
-import 'package:material_ui/material_ui.dart';
-
 import 'package:apply_track/core/api/api_error.dart';
 import 'package:apply_track/core/api/api_result.dart';
 import 'package:apply_track/features/auth/state/auth_dependencies.dart';
@@ -16,13 +11,17 @@ import 'package:apply_track/features/proposals/domain/proposal_status.dart';
 import 'package:apply_track/features/proposals/state/proposals_dependencies.dart';
 import 'package:apply_track/features/proposals/ui/proposal_detail_screen.dart';
 import 'package:apply_track/router/app_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../support/app_test_helpers.dart';
 import '../../../support/fake_external_link_opener.dart';
 import '../../../support/fake_proposals_api.dart';
 
 void main() {
-  const String dash = '\u2014';
+  const dash = '\u2014';
 
   late FakeProposalsApi api;
   late FakeExternalLinkOpener opener;
@@ -57,11 +56,11 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
 
-    final GoRouter router = GoRouter(
+    final router = GoRouter(
       routes: <RouteBase>[
         GoRoute(
           path: '/',
-          builder: (BuildContext context, GoRouterState state) => Scaffold(
+          builder: (context, state) => Scaffold(
             body: Column(
               children: <Widget>[
                 const Text('HOME'),
@@ -77,12 +76,12 @@ void main() {
         ),
         GoRoute(
           path: '/proposals/:id',
-          builder: (BuildContext context, GoRouterState state) =>
+          builder: (context, state) =>
               ProposalDetailScreen(proposalId: state.pathParameters['id']!),
         ),
         GoRoute(
           path: '/proposals/:id/edit',
-          builder: (BuildContext context, GoRouterState state) => Scaffold(
+          builder: (context, state) => Scaffold(
             appBar: AppBar(title: const Text('EDIT PAGE')),
             body: TextButton(
               key: const Key('edit-done'),
@@ -124,14 +123,13 @@ void main() {
     api = FakeProposalsApi();
     opener = FakeExternalLinkOpener();
     served = proposalWith();
-    api.getHandler = (String id) async => ApiOk<Proposal>(served);
+    api.getHandler = (id) async => ApiOk<Proposal>(served);
   });
 
   group('loading', () {
     testWidgets('shows a spinner first, then the proposal', (tester) async {
-      final Completer<ApiResult<Proposal>> gate =
-          Completer<ApiResult<Proposal>>();
-      api.getHandler = (String id) => gate.future;
+      final gate = Completer<ApiResult<Proposal>>();
+      api.getHandler = (id) => gate.future;
       await pumpHome(tester);
 
       await tester.tap(key('open-detail'));
@@ -187,7 +185,7 @@ void main() {
     });
 
     testWidgets('not found shows a message and Back returns', (tester) async {
-      api.getHandler = (String id) async => const ApiErr<Proposal>(
+      api.getHandler = (id) async => const ApiErr<Proposal>(
         ApiError(code: ApiErrorCodes.notFound, message: 'Not found'),
       );
       await openDetail(tester);
@@ -202,8 +200,7 @@ void main() {
     });
 
     testWidgets('an error shows Retry, and Retry loads again', (tester) async {
-      api.getHandler = (String id) async =>
-          const ApiErr<Proposal>(ApiError.network());
+      api.getHandler = (id) async => const ApiErr<Proposal>(ApiError.network());
       await openDetail(tester);
 
       expect(key('detail-load-error'), findsOneWidget);
@@ -212,7 +209,7 @@ void main() {
         findsOneWidget,
       );
 
-      api.getHandler = (String id) async => ApiOk<Proposal>(served);
+      api.getHandler = (id) async => ApiOk<Proposal>(served);
       await tester.tap(find.text('Retry'));
       await tester.pumpAndSettle();
 
@@ -339,14 +336,13 @@ void main() {
         notes: 'Keep me',
       );
       // The server may change other things too. The screen must show this.
-      api.updateHandler = (String id, ProposalDraft draft) async =>
-          ApiOk<Proposal>(
-            proposalWith(
-              title: 'Title from the server',
-              status: ProposalStatus.sent,
-              company: 'Acme',
-            ),
-          );
+      api.updateHandler = (id, draft) async => ApiOk<Proposal>(
+        proposalWith(
+          title: 'Title from the server',
+          status: ProposalStatus.sent,
+          company: 'Acme',
+        ),
+      );
       await openDetail(tester);
 
       await tester.tap(key('advance-sent'));
@@ -357,7 +353,7 @@ void main() {
         api.updateDrafts.single,
         ProposalDraft.fromProposal(served).withStatus(ProposalStatus.sent),
       );
-      final Map<String, Object?> body = api.updateDrafts.single.toJson();
+      final body = api.updateDrafts.single.toJson();
       expect(body, hasLength(8));
       expect(body['status'], ProposalStatus.sent.apiValue);
       expect(body['notes'], 'Keep me');
@@ -372,9 +368,8 @@ void main() {
     });
 
     testWidgets('two fast taps send one request', (tester) async {
-      final Completer<ApiResult<Proposal>> gate =
-          Completer<ApiResult<Proposal>>();
-      api.updateHandler = (String id, ProposalDraft draft) => gate.future;
+      final gate = Completer<ApiResult<Proposal>>();
+      api.updateHandler = (id, draft) => gate.future;
       await openDetail(tester);
 
       await tester.tap(key('advance-sent'));
@@ -398,14 +393,13 @@ void main() {
     testWidgets('an error shows a banner and keeps the old status', (
       tester,
     ) async {
-      api.updateHandler = (String id, ProposalDraft draft) async =>
-          const ApiErr<Proposal>(
-            ApiError(
-              code: ApiErrorCodes.rateLimited,
-              message: 'Slow down',
-              retryAfterSeconds: 5,
-            ),
-          );
+      api.updateHandler = (id, draft) async => const ApiErr<Proposal>(
+        ApiError(
+          code: ApiErrorCodes.rateLimited,
+          message: 'Slow down',
+          retryAfterSeconds: 5,
+        ),
+      );
       await openDetail(tester);
 
       await tester.tap(key('advance-sent'));
@@ -431,14 +425,14 @@ void main() {
     });
 
     testWidgets('the next tap clears the old error', (tester) async {
-      api.updateHandler = (String id, ProposalDraft draft) async =>
+      api.updateHandler = (id, draft) async =>
           const ApiErr<Proposal>(ApiError.network());
       await openDetail(tester);
       await tester.tap(key('advance-sent'));
       await tester.pumpAndSettle();
       expect(key('detail-error-banner'), findsOneWidget);
 
-      api.updateHandler = (String id, ProposalDraft draft) async =>
+      api.updateHandler = (id, draft) async =>
           ApiOk<Proposal>(proposalWith(status: ProposalStatus.sent));
       await tester.tap(key('advance-sent'));
       await tester.pumpAndSettle();
@@ -449,10 +443,9 @@ void main() {
     testWidgets('not found on update shows the not found message', (
       tester,
     ) async {
-      api.updateHandler = (String id, ProposalDraft draft) async =>
-          const ApiErr<Proposal>(
-            ApiError(code: ApiErrorCodes.notFound, message: 'Not found'),
-          );
+      api.updateHandler = (id, draft) async => const ApiErr<Proposal>(
+        ApiError(code: ApiErrorCodes.notFound, message: 'Not found'),
+      );
       await openDetail(tester);
 
       await tester.tap(key('advance-sent'));
@@ -485,8 +478,7 @@ void main() {
     testWidgets('a failed reload keeps the old data on screen', (tester) async {
       await openDetail(tester);
 
-      api.getHandler = (String id) async =>
-          const ApiErr<Proposal>(ApiError.network());
+      api.getHandler = (id) async => const ApiErr<Proposal>(ApiError.network());
       await tester.tap(key('detail-edit'));
       await tester.pumpAndSettle();
       await tester.tap(key('edit-done'));
@@ -526,7 +518,7 @@ void main() {
     });
 
     testWidgets('not found counts as already deleted', (tester) async {
-      api.deleteHandler = (String id) async => const ApiErr<void>(
+      api.deleteHandler = (id) async => const ApiErr<void>(
         ApiError(code: ApiErrorCodes.notFound, message: 'Not found'),
       );
       await openDetail(tester);
@@ -543,7 +535,7 @@ void main() {
     testWidgets('another error keeps the screen and shows a banner', (
       tester,
     ) async {
-      api.deleteHandler = (String id) async => const ApiErr<void>(
+      api.deleteHandler = (id) async => const ApiErr<void>(
         ApiError(code: ApiErrorCodes.serverError, message: 'Boom'),
       );
       await openDetail(tester);

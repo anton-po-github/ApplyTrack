@@ -1,18 +1,17 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:apply_track/core/api/api_error.dart';
 import 'package:apply_track/core/api/api_result.dart';
 import 'package:apply_track/features/proposals/domain/proposal_stats.dart';
 import 'package:apply_track/features/proposals/state/proposals_dependencies.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// The numbers for the stats screen.
 ///
 /// [stats] is the last good answer. It stays while a new request runs and
 /// after a failed request, so the screen never goes blank on a refresh.
 final class StatsState {
-  const StatsState({this.stats, this.isLoading = false, this.error});
+  const new({this.stats, this.isLoading = false, this.error});
 
   static const Object _keep = Object();
 
@@ -60,13 +59,13 @@ class StatsController extends Notifier<StatsState> {
 
   @override
   StatsState build() {
-    final String? userId = ref.watch(currentUserIdProvider);
+    final userId = ref.watch(currentUserIdProvider);
     _buildUserId = userId;
     _request++;
     // Not `watch`: a write must not drop the last good numbers.
     ref.listen<int>(
       proposalsChangedProvider,
-      (int? previous, int next) => unawaited(refresh()),
+      (previous, next) => unawaited(refresh()),
     );
     if (userId != null) {
       unawaited(Future<void>.microtask(refresh));
@@ -80,12 +79,10 @@ class StatsController extends Notifier<StatsState> {
     if (!ref.mounted || ref.read(currentUserIdProvider) == null) {
       return;
     }
-    final int request = ++_request;
+    final request = ++_request;
     state = state.copyWith(isLoading: true, error: null);
 
-    final ApiResult<ProposalStats> result = await ref
-        .read(statsApiProvider)
-        .getStats();
+    final result = await ref.read(statsApiProvider).getStats();
     if (!_isCurrent(request)) {
       return;
     }

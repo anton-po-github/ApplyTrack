@@ -1,5 +1,3 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:apply_track/core/api/api_result.dart';
 import 'package:apply_track/features/auth/data/auth_api.dart';
 import 'package:apply_track/features/auth/data/auth_repository.dart';
@@ -7,6 +5,7 @@ import 'package:apply_track/features/auth/data/session.dart';
 import 'package:apply_track/features/auth/data/token_storage.dart';
 import 'package:apply_track/features/auth/domain/auth_response.dart';
 import 'package:apply_track/features/auth/domain/user_profile.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 final class _NoCallsApi implements AuthApi {
   @override
@@ -32,8 +31,8 @@ final class _NoCallsApi implements AuthApi {
 
 void main() {
   test('readSession returns the saved session', () async {
-    const Session saved = Session(token: 'tok', expiresAtUnixSeconds: 100);
-    final DefaultAuthRepository repo = DefaultAuthRepository(
+    const saved = Session(token: 'tok', expiresAtUnixSeconds: 100);
+    final repo = DefaultAuthRepository(
       api: _NoCallsApi(),
       storage: InMemoryTokenStorage(saved),
     );
@@ -41,7 +40,7 @@ void main() {
   });
 
   test('readSession returns null when nothing is saved', () async {
-    final DefaultAuthRepository repo = DefaultAuthRepository(
+    final repo = DefaultAuthRepository(
       api: _NoCallsApi(),
       storage: InMemoryTokenStorage(),
     );

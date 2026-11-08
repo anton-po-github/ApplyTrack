@@ -1,18 +1,17 @@
 import 'dart:typed_data';
 
-import 'package:dio/dio.dart';
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:apply_track/core/api/api_error.dart';
 import 'package:apply_track/core/api/api_result.dart';
 import 'package:apply_track/core/api/dio_api_client.dart';
 import 'package:apply_track/core/api/json_fields.dart';
 import 'package:apply_track/core/api/token_reader.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 typedef _Handler = Future<ResponseBody> Function(RequestOptions options);
 
 final class _FakeAdapter implements HttpClientAdapter {
-  _FakeAdapter(this._handler);
+  new(this._handler);
 
   final _Handler _handler;
   final List<RequestOptions> requests = <RequestOptions>[];
@@ -32,7 +31,7 @@ final class _FakeAdapter implements HttpClientAdapter {
 }
 
 final class _FakeTokenReader implements TokenReader {
-  _FakeTokenReader(this.token);
+  new(this.token);
 
   final String? token;
   int calls = 0;
@@ -80,13 +79,10 @@ void main() {
     test('GET parses JSON and sends the Bearer header', () async {
       setUpClient((_) async => _json('{"name":"Anton"}', 200));
 
-      final ApiResult<String> r = await client.get<String>(
-        '/api/auth/me',
-        parse: _parseName,
-      );
+      final r = await client.get<String>('/api/auth/me', parse: _parseName);
 
       expect((r as ApiOk<String>).value, 'Anton');
-      final RequestOptions sent = adapter.requests.single;
+      final sent = adapter.requests.single;
       expect(sent.uri.toString(), 'https://example.test/api/auth/me');
       expect(sent.headers['Authorization'], 'Bearer tok-123');
       expect(sent.followRedirects, isFalse);
@@ -95,14 +91,14 @@ void main() {
     test('POST sends the JSON body and accepts 201', () async {
       setUpClient((_) async => _json('{"name":"ok"}', 201));
 
-      final ApiResult<String> r = await client.post<String>(
+      final r = await client.post<String>(
         '/api/proposals',
         body: <String, Object?>{'title': 'Hello'},
         parse: _parseName,
       );
 
       expect(r, isA<ApiOk<String>>());
-      final RequestOptions sent = adapter.requests.single;
+      final sent = adapter.requests.single;
       expect(sent.method, 'POST');
       expect(sent.data, <String, Object?>{'title': 'Hello'});
       expect(sent.contentType, startsWith('application/json'));
@@ -128,14 +124,14 @@ void main() {
     test('PUT sends the JSON body with the Bearer header', () async {
       setUpClient((_) async => _json('{"name":"updated"}', 200));
 
-      final ApiResult<String> r = await client.put<String>(
+      final r = await client.put<String>(
         '/api/proposals/abc',
         body: <String, Object?>{'title': 'New', 'company': null},
         parse: _parseName,
       );
 
       expect((r as ApiOk<String>).value, 'updated');
-      final RequestOptions sent = adapter.requests.single;
+      final sent = adapter.requests.single;
       expect(sent.method, 'PUT');
       expect(sent.uri.toString(), 'https://example.test/api/proposals/abc');
       // A null value stays in the body: PUT is a full replace.
@@ -146,13 +142,13 @@ void main() {
     test('PUT 400 validation keeps the fields', () async {
       setUpClient(
         (_) async => _json(
-          '{"code":"validation","message":"Fix it.",'
+          '{"code":"validation","message":"Fix it.", '
           '"fields":{"title":"Title is required."}}',
           400,
         ),
       );
 
-      final ApiError e = errorOf(
+      final e = errorOf(
         await client.put<String>('/api/proposals/abc', parse: _parseName),
       );
 
@@ -164,10 +160,10 @@ void main() {
     test('DELETE 204 with no body is success', () async {
       setUpClient((_) async => _json('', 204));
 
-      final ApiResult<void> r = await client.delete('/api/proposals/abc');
+      final r = await client.delete('/api/proposals/abc');
 
       expect(r, isA<ApiOk<void>>());
-      final RequestOptions sent = adapter.requests.single;
+      final sent = adapter.requests.single;
       expect(sent.method, 'DELETE');
       expect(sent.headers['Authorization'], 'Bearer tok-123');
       expect(unauthorizedCalls, 0);
@@ -185,7 +181,7 @@ void main() {
             _json('{"code":"not_found","message":"No proposal."}', 404),
       );
 
-      final ApiResult<void> r = await client.delete('/api/proposals/abc');
+      final r = await client.delete('/api/proposals/abc');
 
       expect((r as ApiErr<void>).error.code, ApiErrorCodes.notFound);
       expect(unauthorizedCalls, 0);
@@ -194,7 +190,7 @@ void main() {
     test('DELETE 401 calls onUnauthorized once', () async {
       setUpClient((_) async => _json('', 401));
 
-      final ApiResult<void> r = await client.delete('/api/proposals/abc');
+      final r = await client.delete('/api/proposals/abc');
 
       expect((r as ApiErr<void>).error.code, ApiErrorCodes.unauthorized);
       expect(unauthorizedCalls, 1);
@@ -203,7 +199,7 @@ void main() {
     test('PUT 401 calls onUnauthorized once', () async {
       setUpClient((_) async => _json('', 401));
 
-      final ApiError e = errorOf(
+      final e = errorOf(
         await client.put<String>('/api/proposals/abc', parse: _parseName),
       );
 
@@ -222,22 +218,22 @@ void main() {
         ),
       );
 
-      final ApiResult<void> r = await client.delete('/api/proposals/abc');
+      final r = await client.delete('/api/proposals/abc');
 
-      final ApiError e = (r as ApiErr<void>).error;
+      final e = (r as ApiErr<void>).error;
       expect(e.code, ApiErrorCodes.rateLimited);
       expect(e.retryAfterSeconds, 12);
     });
 
     test('DELETE with no network becomes network_error', () async {
       setUpClient(
-        (RequestOptions o) async => throw DioException(
+        (o) async => throw DioException(
           requestOptions: o,
           type: DioExceptionType.connectionError,
         ),
       );
 
-      final ApiResult<void> r = await client.delete('/api/proposals/abc');
+      final r = await client.delete('/api/proposals/abc');
 
       expect((r as ApiErr<void>).error.code, ApiErrorCodes.network);
     });
@@ -276,13 +272,13 @@ void main() {
     test('400 validation keeps code, message and fields', () async {
       setUpClient(
         (_) async => _json(
-          '{"code":"validation","message":"Fix it.",'
+          '{"code":"validation","message":"Fix it.", '
           '"fields":{"title":"Title is required."}}',
           400,
         ),
       );
 
-      final ApiError e = errorOf(
+      final e = errorOf(
         await client.post<String>('/api/proposals', parse: _parseName),
       );
 
@@ -295,7 +291,7 @@ void main() {
     test('401 with an empty body on a protected call', () async {
       setUpClient((_) async => _json('', 401));
 
-      final ApiError e = errorOf(
+      final e = errorOf(
         await client.get<String>('/api/stats', parse: _parseName),
       );
 
@@ -311,7 +307,7 @@ void main() {
         ),
       );
 
-      final ApiError e = errorOf(
+      final e = errorOf(
         await client.post<String>(
           '/api/auth/signin',
           requiresAuth: false,
@@ -334,7 +330,7 @@ void main() {
           httpClientAdapter: adapter,
         );
 
-        final ApiError e = errorOf(
+        final e = errorOf(
           await client.get<String>('/api/stats', parse: _parseName),
         );
 
@@ -353,7 +349,7 @@ void main() {
         ),
       );
 
-      final ApiError e = errorOf(
+      final e = errorOf(
         await client.get<String>('/api/stats', parse: _parseName),
       );
 
@@ -373,7 +369,7 @@ void main() {
         ),
       );
 
-      final ApiError e = errorOf(
+      final e = errorOf(
         await client.get<String>('/api/stats', parse: _parseName),
       );
 
@@ -393,7 +389,7 @@ void main() {
         ),
       );
 
-      final ApiError e = errorOf(
+      final e = errorOf(
         await client.get<String>('/api/stats', parse: _parseName),
       );
 
@@ -411,7 +407,7 @@ void main() {
         ),
       );
 
-      final ApiError e = errorOf(
+      final e = errorOf(
         await client.get<String>('/api/stats', parse: _parseName),
       );
 
@@ -421,7 +417,7 @@ void main() {
     test('413 with an empty body becomes bad_request', () async {
       setUpClient((_) async => _json('', 413));
 
-      final ApiError e = errorOf(
+      final e = errorOf(
         await client.post<String>('/api/proposals', parse: _parseName),
       );
 
@@ -431,7 +427,7 @@ void main() {
     test('an error body without a code uses the status fallback', () async {
       setUpClient((_) async => _json('{"title":"Not Found"}', 404));
 
-      final ApiError e = errorOf(
+      final e = errorOf(
         await client.get<String>('/api/proposals/x', parse: _parseName),
       );
 
@@ -441,7 +437,7 @@ void main() {
     test('a redirect is not followed and is an error', () async {
       setUpClient((_) async => _json('', 302));
 
-      final ApiError e = errorOf(
+      final e = errorOf(
         await client.get<String>('/api/stats', parse: _parseName),
       );
 
@@ -451,7 +447,7 @@ void main() {
   });
 
   group('transport errors', () {
-    for (final DioExceptionType type in <DioExceptionType>[
+    for (final type in <DioExceptionType>[
       DioExceptionType.connectionTimeout,
       DioExceptionType.sendTimeout,
       DioExceptionType.receiveTimeout,
@@ -460,11 +456,10 @@ void main() {
     ]) {
       test('$type becomes network_error', () async {
         setUpClient(
-          (RequestOptions o) async =>
-              throw DioException(requestOptions: o, type: type),
+          (o) async => throw DioException(requestOptions: o, type: type),
         );
 
-        final ApiError e = errorOf(
+        final e = errorOf(
           await client.get<String>('/api/stats', parse: _parseName),
         );
 
@@ -478,7 +473,7 @@ void main() {
     test('invalid JSON on 200 becomes bad_response', () async {
       setUpClient((_) async => _json('<html>oops</html>', 200));
 
-      final ApiError e = errorOf(
+      final e = errorOf(
         await client.get<String>('/api/stats', parse: _parseName),
       );
 
@@ -488,7 +483,7 @@ void main() {
     test('a JSON array on 200 becomes bad_response', () async {
       setUpClient((_) async => _json('[1,2,3]', 200));
 
-      final ApiError e = errorOf(
+      final e = errorOf(
         await client.get<String>('/api/stats', parse: _parseName),
       );
 
@@ -498,7 +493,7 @@ void main() {
     test('a wrong shape (parser throws) becomes bad_response', () async {
       setUpClient((_) async => _json('{"name":42}', 200));
 
-      final ApiError e = errorOf(
+      final e = errorOf(
         await client.get<String>('/api/stats', parse: _parseName),
       );
 
@@ -509,7 +504,7 @@ void main() {
   group('path guard', () {
     setUp(() => setUpClient((_) async => _json('{"name":"ok"}', 200)));
 
-    for (final String bad in <String>[
+    for (final bad in <String>[
       'https://evil.test/steal',
       '//evil.test/steal',
       'api/stats',

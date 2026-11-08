@@ -23,7 +23,7 @@ abstract final class ProposalValidators {
   // ---------------------------------------------------------------- title
 
   static String? title(String? value) {
-    final String text = (value ?? '').trim();
+    final text = (value ?? '').trim();
     if (text.isEmpty) return 'Title is required';
     if (text.length < titleMin) return 'Use at least $titleMin characters';
     if (text.length > titleMax) return 'Use at most $titleMax characters';
@@ -34,7 +34,7 @@ abstract final class ProposalValidators {
   // -------------------------------------------------------------- company
 
   static String? company(String? value) {
-    final String text = (value ?? '').trim();
+    final text = (value ?? '').trim();
     if (text.isEmpty) return null; // Optional.
     if (text.length > companyMax) return 'Use at most $companyMax characters';
     if (_hasControlOrLineBreak(text)) return 'Company has invalid characters';
@@ -48,7 +48,7 @@ abstract final class ProposalValidators {
       (value ?? '').trim().replaceAll(',', '.');
 
   static String? budget(String? value) {
-    final String text = normalizeBudgetText(value);
+    final text = normalizeBudgetText(value);
     if (text.isEmpty) return null; // Optional.
     if (text.startsWith('-')) return 'Budget cannot be negative';
     if (_tooManyDecimals.hasMatch(text)) return 'Use at most 2 decimals';
@@ -61,7 +61,7 @@ abstract final class ProposalValidators {
   /// Call it only after [budget] returned null.
   /// Gives null for an empty or a bad text.
   static double? parseBudget(String? value) {
-    final String text = normalizeBudgetText(value);
+    final text = normalizeBudgetText(value);
     if (text.isEmpty || budget(value) != null) return null;
     return double.tryParse(text);
   }
@@ -82,11 +82,11 @@ abstract final class ProposalValidators {
   // ----------------------------------------------------------------- link
 
   static String? link(String? value) {
-    final String text = (value ?? '').trim();
+    final text = (value ?? '').trim();
     if (text.isEmpty) return null; // Optional.
     if (text.length > linkMax) return 'Link is too long';
-    final bool http = text.startsWith('http://');
-    final bool https = text.startsWith('https://');
+    final http = text.startsWith('http://');
+    final https = text.startsWith('https://');
     if (!http && !https) return 'Link must start with http:// or https://';
     if (text.length == (https ? 8 : 7)) return 'Enter a full link';
     if (_whitespace.hasMatch(text) || _hasControlOrLineBreak(text)) {
@@ -98,9 +98,9 @@ abstract final class ProposalValidators {
   // ---------------------------------------------------------------- notes
 
   static String? notes(String? value) {
-    final String text = value ?? '';
+    final text = value ?? '';
     if (text.length > notesMax) return 'Use at most $notesMax characters';
-    for (final int unit in text.codeUnits) {
+    for (final unit in text.codeUnits) {
       // Line breaks and tabs are allowed. Other control characters are not.
       if (unit == 0x0A || unit == 0x0D || unit == 0x09) continue;
       if (_isControl(unit)) return 'Notes have invalid characters';
@@ -112,12 +112,12 @@ abstract final class ProposalValidators {
 
   /// The text for the `q` query. Null means "no search".
   static String? normalizeSearchQuery(String? value) {
-    final String text = (value ?? '').trim();
+    final text = (value ?? '').trim();
     return text.isEmpty ? null : text;
   }
 
   static String? searchQuery(String? value) {
-    final String text = (value ?? '').trim();
+    final text = (value ?? '').trim();
     if (text.length > searchMax) return 'Use at most $searchMax characters';
     if (_hasControlOrLineBreak(text)) return 'Search has invalid characters';
     return null;
@@ -127,14 +127,14 @@ abstract final class ProposalValidators {
 
   /// Checks a whole draft before we send it. Empty map = all good.
   static Map<ProposalField, String> draft(ProposalDraft value) {
-    final Map<ProposalField, String> errors = <ProposalField, String>{};
+    final errors = <ProposalField, String>{};
     void add(ProposalField field, String? message) {
       if (message != null) errors[field] = message;
     }
 
     add(ProposalField.title, title(value.title));
     add(ProposalField.company, company(value.company));
-    final double? budget = value.budget;
+    final budget = value.budget;
     if (budget != null) add(ProposalField.budget, budgetValue(budget));
     add(ProposalField.link, link(value.link));
     add(ProposalField.notes, notes(value.notes));
@@ -144,7 +144,7 @@ abstract final class ProposalValidators {
   // -------------------------------------------------------------- helpers
 
   static bool _hasControlOrLineBreak(String text) {
-    for (final int unit in text.codeUnits) {
+    for (final unit in text.codeUnits) {
       // 0x2028 and 0x2029 are Unicode line breaks.
       if (_isControl(unit) || unit == 0x2028 || unit == 0x2029) return true;
     }

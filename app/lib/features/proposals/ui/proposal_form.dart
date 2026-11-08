@@ -1,7 +1,3 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:material_ui/material_ui.dart';
-
 import 'package:apply_track/core/api/api_error.dart';
 import 'package:apply_track/core/api/api_error_message.dart';
 import 'package:apply_track/core/api/api_result.dart';
@@ -17,10 +13,14 @@ import 'package:apply_track/features/proposals/domain/proposal_validators.dart';
 import 'package:apply_track/features/proposals/state/proposal_list_controller.dart';
 import 'package:apply_track/features/proposals/ui/proposal_formatters.dart';
 import 'package:apply_track/router/app_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// The raw values of the inputs. Used to know if the user changed anything.
+@immutable
 final class _FormValues {
-  const _FormValues({
+  const new({
     required this.title,
     required this.company,
     required this.budget,
@@ -73,7 +73,7 @@ final class _FormValues {
 /// - The list controller does the request, so the list and the stats stay
 ///   in sync.
 class ProposalForm extends ConsumerStatefulWidget {
-  const ProposalForm({super.key, required this.initial, this.proposalId});
+  const new({required this.initial, super.key, this.proposalId});
 
   final ProposalDraft initial;
   final String? proposalId;
@@ -109,8 +109,8 @@ class _ProposalFormState extends ConsumerState<ProposalForm> {
   @override
   void initState() {
     super.initState();
-    final ProposalDraft initial = widget.initial;
-    final double? budget = initial.budget;
+    final initial = widget.initial;
+    final budget = initial.budget;
     _title = TextEditingController(text: initial.title);
     _company = TextEditingController(text: initial.company ?? '');
     _budget = TextEditingController(
@@ -176,7 +176,7 @@ class _ProposalFormState extends ConsumerState<ProposalForm> {
   String? _serverError(ProposalField field) => _server.byField[field];
 
   void _showError(ApiError error) {
-    final ServerFieldErrors fields = ServerFieldErrors.from(error.fields);
+    final fields = ServerFieldErrors.from(error.fields);
     final String? banner;
     if (error.code == ApiErrorCodes.proposalLimit) {
       banner = _limitMessage;
@@ -204,7 +204,7 @@ class _ProposalFormState extends ConsumerState<ProposalForm> {
     if (_saving) {
       return;
     }
-    final FormState? form = _formKey.currentState;
+    final form = _formKey.currentState;
     if (form == null) {
       return;
     }
@@ -218,10 +218,10 @@ class _ProposalFormState extends ConsumerState<ProposalForm> {
     }
 
     setState(() => _saving = true);
-    final ProposalListController list = ref.read(proposalListProvider.notifier);
-    final ProposalDraft draft = _buildDraft();
-    final String? id = widget.proposalId;
-    final ApiResult<Proposal> result = id == null
+    final list = ref.read(proposalListProvider.notifier);
+    final draft = _buildDraft();
+    final id = widget.proposalId;
+    final result = id == null
         ? await list.create(draft)
         : await list.update(id, draft);
     if (!mounted) {
@@ -244,14 +244,14 @@ class _ProposalFormState extends ConsumerState<ProposalForm> {
       context.pop();
       return;
     }
-    final String? id = widget.proposalId;
+    final id = widget.proposalId;
     context.go(id == null ? AppRoutes.home : AppRoutes.proposal(id));
   }
 
   Future<bool> _confirmDiscard() async {
-    final bool? discard = await showDialog<bool>(
+    final discard = await showDialog<bool>(
       context: context,
-      builder: (BuildContext dialogContext) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Discard changes?'),
         content: const Text('Your changes have not been saved.'),
         actions: <Widget>[
@@ -273,7 +273,7 @@ class _ProposalFormState extends ConsumerState<ProposalForm> {
     if (didPop || _saving) {
       return;
     }
-    final bool discard = await _confirmDiscard();
+    final discard = await _confirmDiscard();
     if (discard && mounted) {
       _navigateBack();
     }
@@ -282,10 +282,10 @@ class _ProposalFormState extends ConsumerState<ProposalForm> {
   // ---------------------------------------------------------------- date
 
   Future<void> _pickDate() async {
-    final DateTime now = ref.read(clockProvider)();
-    final DateTime first = DateTime(2000);
-    final DateTime last = DateTime(2100, 12, 31);
-    DateTime initial =
+    final now = ref.read(clockProvider)();
+    final first = DateTime(2000);
+    final last = DateTime(2100, 12, 31);
+    var initial =
         _followUp?.toDateTime() ?? DateTime(now.year, now.month, now.day);
     if (initial.isBefore(first)) {
       initial = first;
@@ -293,7 +293,7 @@ class _ProposalFormState extends ConsumerState<ProposalForm> {
     if (initial.isAfter(last)) {
       initial = last;
     }
-    final DateTime? picked = await showDatePicker(
+    final picked = await showDatePicker(
       context: context,
       initialDate: initial,
       firstDate: first,
@@ -315,7 +315,7 @@ class _ProposalFormState extends ConsumerState<ProposalForm> {
 
   @override
   Widget build(BuildContext context) {
-    final String? banner = _banner;
+    final banner = _banner;
     return PopScope(
       canPop: !_isDirty,
       onPopInvokedWithResult: _onPopBlocked,
@@ -340,9 +340,8 @@ class _ProposalFormState extends ConsumerState<ProposalForm> {
                       border: OutlineInputBorder(),
                     ),
                     textInputAction: TextInputAction.next,
-                    onChanged: (String _) =>
-                        _clearServerError(ProposalField.title),
-                    validator: (String? value) =>
+                    onChanged: (_) => _clearServerError(ProposalField.title),
+                    validator: (value) =>
                         _serverError(ProposalField.title) ??
                         ProposalValidators.title(value),
                   ),
@@ -354,9 +353,8 @@ class _ProposalFormState extends ConsumerState<ProposalForm> {
                       border: OutlineInputBorder(),
                     ),
                     textInputAction: TextInputAction.next,
-                    onChanged: (String _) =>
-                        _clearServerError(ProposalField.company),
-                    validator: (String? value) =>
+                    onChanged: (_) => _clearServerError(ProposalField.company),
+                    validator: (value) =>
                         _serverError(ProposalField.company) ??
                         ProposalValidators.company(value),
                   ),
@@ -375,15 +373,14 @@ class _ProposalFormState extends ConsumerState<ProposalForm> {
                           child: Text(platform.label),
                         ),
                     ],
-                    onChanged: (ProposalPlatform? value) {
+                    onChanged: (value) {
                       if (value == null) {
                         return;
                       }
                       setState(() => _platform = value);
                       _clearServerError(ProposalField.platform);
                     },
-                    validator: (ProposalPlatform? _) =>
-                        _serverError(ProposalField.platform),
+                    validator: (_) => _serverError(ProposalField.platform),
                   ),
                   DropdownButtonFormField<ProposalStatus>(
                     key: const Key('field-status'),
@@ -399,15 +396,14 @@ class _ProposalFormState extends ConsumerState<ProposalForm> {
                           child: Text(status.label),
                         ),
                     ],
-                    onChanged: (ProposalStatus? value) {
+                    onChanged: (value) {
                       if (value == null) {
                         return;
                       }
                       setState(() => _status = value);
                       _clearServerError(ProposalField.status);
                     },
-                    validator: (ProposalStatus? _) =>
-                        _serverError(ProposalField.status),
+                    validator: (_) => _serverError(ProposalField.status),
                   ),
                   TextFormField(
                     key: const Key('field-budget'),
@@ -420,9 +416,8 @@ class _ProposalFormState extends ConsumerState<ProposalForm> {
                       decimal: true,
                     ),
                     textInputAction: TextInputAction.next,
-                    onChanged: (String _) =>
-                        _clearServerError(ProposalField.budget),
-                    validator: (String? value) =>
+                    onChanged: (_) => _clearServerError(ProposalField.budget),
+                    validator: (value) =>
                         _serverError(ProposalField.budget) ??
                         ProposalValidators.budget(value),
                   ),
@@ -443,9 +438,8 @@ class _ProposalFormState extends ConsumerState<ProposalForm> {
                     keyboardType: TextInputType.url,
                     textInputAction: TextInputAction.next,
                     autocorrect: false,
-                    onChanged: (String _) =>
-                        _clearServerError(ProposalField.link),
-                    validator: (String? value) =>
+                    onChanged: (_) => _clearServerError(ProposalField.link),
+                    validator: (value) =>
                         _serverError(ProposalField.link) ??
                         ProposalValidators.link(value),
                   ),
@@ -462,9 +456,8 @@ class _ProposalFormState extends ConsumerState<ProposalForm> {
                     minLines: 4,
                     maxLines: 8,
                     keyboardType: TextInputType.multiline,
-                    onChanged: (String _) =>
-                        _clearServerError(ProposalField.notes),
-                    validator: (String? value) =>
+                    onChanged: (_) => _clearServerError(ProposalField.notes),
+                    validator: (value) =>
                         _serverError(ProposalField.notes) ??
                         ProposalValidators.notes(value),
                   ),
@@ -491,7 +484,7 @@ class _ProposalFormState extends ConsumerState<ProposalForm> {
 }
 
 class _DateField extends StatelessWidget {
-  const _DateField({
+  const new({
     required this.date,
     required this.errorText,
     required this.onPick,
@@ -505,7 +498,7 @@ class _DateField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final CalendarDate? value = date;
+    final value = date;
     return InkWell(
       key: const Key('field-follow-up'),
       onTap: onPick,
@@ -538,13 +531,13 @@ class _DateField extends StatelessWidget {
 }
 
 class _FormErrorBanner extends StatelessWidget {
-  const _FormErrorBanner({required this.message});
+  const new({required this.message});
 
   final String message;
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme scheme = Theme.of(context).colorScheme;
+    final scheme = Theme.of(context).colorScheme;
     return DecoratedBox(
       key: const Key('form-error-banner'),
       decoration: BoxDecoration(

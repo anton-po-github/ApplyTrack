@@ -1,17 +1,16 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:apply_track/core/api/json_fields.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('requireNum', () {
     test('reads int and double', () {
-      final Map<String, Object?> json = <String, Object?>{'a': 5, 'b': 5.5};
+      final json = <String, Object?>{'a': 5, 'b': 5.5};
       expect(json.requireNum('a'), 5);
       expect(json.requireNum('b'), 5.5);
     });
 
     test('throws on a string, null or missing key', () {
-      final Map<String, Object?> json = <String, Object?>{'a': '5', 'b': null};
+      final json = <String, Object?>{'a': '5', 'b': null};
       expect(() => json.requireNum('a'), throwsFormatException);
       expect(() => json.requireNum('b'), throwsFormatException);
       expect(() => json.requireNum('c'), throwsFormatException);
@@ -19,7 +18,7 @@ void main() {
   });
 
   group('optional readers', () {
-    final Map<String, Object?> json = <String, Object?>{
+    final json = <String, Object?>{
       's': 'text',
       'i': 3,
       'n': 2.5,
@@ -47,12 +46,12 @@ void main() {
     });
 
     test('the error message never has the value', () {
-      final Map<String, Object?> secret = <String, Object?>{'t': 12345};
+      final secret = <String, Object?>{'t': 12345};
       expect(
         () => secret.optionalString('t'),
         throwsA(
           isA<FormatException>().having(
-            (FormatException e) => e.message,
+            (e) => e.message,
             'message',
             isNot(contains('12345')),
           ),
@@ -63,24 +62,21 @@ void main() {
 
   group('requireObjectList', () {
     test('reads a list of objects and the list cannot be changed', () {
-      final Map<String, Object?> json = <String, Object?>{
+      final json = <String, Object?>{
         'items': <Object?>[
           <String, Object?>{'id': 'a'},
           <String, Object?>{'id': 'b'},
         ],
       };
 
-      final List<Map<String, Object?>> items = json.requireObjectList('items');
+      final items = json.requireObjectList('items');
 
-      expect(items.map((Map<String, Object?> m) => m['id']), <Object?>[
-        'a',
-        'b',
-      ]);
+      expect(items.map((m) => m['id']), <Object?>['a', 'b']);
       expect(() => items.add(<String, Object?>{}), throwsUnsupportedError);
     });
 
     test('an empty list is fine', () {
-      final Map<String, Object?> json = <String, Object?>{'items': <Object?>[]};
+      final json = <String, Object?>{'items': <Object?>[]};
       expect(json.requireObjectList('items'), isEmpty);
     });
 

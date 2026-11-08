@@ -1,7 +1,6 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:apply_track/features/proposals/domain/proposal_status.dart';
 import 'package:apply_track/features/proposals/domain/proposal_status_flow.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('ProposalStatusFlow.next', () {
@@ -30,7 +29,7 @@ void main() {
     });
 
     test('every status has an answer and never points to itself', () {
-      for (final ProposalStatus status in ProposalStatus.values) {
+      for (final status in ProposalStatus.values) {
         expect(ProposalStatusFlow.next(status), isNot(contains(status)));
       }
     });

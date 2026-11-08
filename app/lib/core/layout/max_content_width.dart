@@ -1,7 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 class MaxContentWidth extends StatelessWidget {
-  const MaxContentWidth({super.key, required this.child, this.maxWidth = 600});
+  const new({required this.child, super.key, this.maxWidth = 600});
 
   final Widget child;
   final double maxWidth;
