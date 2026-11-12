@@ -32,6 +32,7 @@ analyzer:
     - android/**
     - web/**
     - ios/**
+    - '**/*.g.dart'
 
   # CHANGED: this block was a top-level `language:` key. The analyzer only
   # reads it inside `analyzer:`, so it was ignored. It is now in the right place.

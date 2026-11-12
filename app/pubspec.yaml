@@ -40,6 +40,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   # HTTP client (all API calls go through DioApiClient).
   dio: 5.9.1
+  drift: 2.35.3
+  drift_flutter: ^0.3.1
   flutter:
     sdk: flutter
   # State management and dependency injection (providers).
@@ -80,6 +82,8 @@ flutter_launcher_icons:
 dev_dependencies:
 
   # Generates the app icons for Android, iOS and web.
+  build_runner: ^2.17.1
+  drift_dev: 2.35.3
   flutter_launcher_icons: ^0.14.0
 
   flutter_test:
