@@ -1,3 +1,4 @@
+import 'package:apply_track/features/proposals/state/proposal_cache_cleaner.dart';
 import 'package:apply_track/router/app_router.dart';
 import 'package:apply_track/theme/app_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,6 +27,8 @@ class AppRoot extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Keeps the saved proposal list clean when a user leaves.
+    ref.watch(proposalCacheCleanerProvider);
     return App(router: ref.watch(appRouterProvider));
   }
 }
