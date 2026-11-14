@@ -1061,5 +1061,41 @@ void main() {
       expect(read().isEmpty, isTrue);
       expect(read().showsSavedData, isFalse);
     });
+
+    test('after an update and a delete the cache equals the list', () async {
+      api.listHandler = (call) async =>
+          pageOf([makeProposal(3), makeProposal(2), makeProposal(1)]);
+      await start();
+
+      api.updateHandler = (id, draft) async =>
+          ApiOk<Proposal>(makeProposal(2, title: 'Changed'));
+      await controller().update(proposalId(2), validDraft());
+      await pumpEventQueue();
+
+      var saved = await cache.firstPage('u1');
+      expect([for (final p in saved) p.id], read().ids);
+      expect(saved.singleWhere((p) => p.id == proposalId(2)).title, 'Changed');
+
+      await controller().delete(proposalId(3));
+      await pumpEventQueue();
+
+      saved = await cache.firstPage('u1');
+      expect([for (final p in saved) p.id], [proposalId(2), proposalId(1)]);
+      expect([for (final p in saved) p.id], read().ids);
+
+      // Under a status filter the cache is not touched.
+      api.listHandler = (call) async =>
+          pageOf([makeProposal(2, status: ProposalStatus.won)]);
+      await controller().setStatus(ProposalStatus.won);
+      api.updateHandler = (id, draft) async => ApiOk<Proposal>(
+        makeProposal(2, title: 'Other', status: ProposalStatus.won),
+      );
+      await controller().update(proposalId(2), validDraft());
+      await pumpEventQueue();
+
+      expect(read().proposalAt(0).title, 'Other');
+      saved = await cache.firstPage('u1');
+      expect(saved.singleWhere((p) => p.id == proposalId(2)).title, 'Changed');
+    });
   });
 }

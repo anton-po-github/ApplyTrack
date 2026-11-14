@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:apply_track/core/api/api_error.dart';
 import 'package:apply_track/core/api/api_result.dart';
+import 'package:apply_track/features/proposals/data/proposal_cache.dart';
 import 'package:apply_track/features/proposals/data/proposals_api.dart';
 import 'package:apply_track/features/proposals/domain/proposal.dart';
 import 'package:apply_track/features/proposals/domain/proposal_draft.dart';
@@ -328,6 +329,7 @@ class ProposalListController extends Notifier<ProposalListState> {
     final map = Map<String, Proposal>.of(state.byId);
     map[updated.id] = updated;
     state = state.copyWith(byId: Map<String, Proposal>.unmodifiable(map));
+    _saveVisible();
   }
 
   void _removeLocal(String id) {
@@ -340,6 +342,7 @@ class ProposalListController extends Notifier<ProposalListState> {
       byId: Map<String, Proposal>.unmodifiable(map),
       ids: List<String>.unmodifiable(ids),
     );
+    _saveVisible();
   }
 
   // ---------------------------------------------------------- saved copy
@@ -381,6 +384,21 @@ class ProposalListController extends Notifier<ProposalListState> {
         () => ref.read(proposalCacheProvider).replaceFirstPage(userId, items),
       ),
     );
+  }
+
+  /// After a local patch (update, delete) the saved copy follows the list on
+  /// screen. The list is always the newest part of the server list, so the
+  /// copy never gets a hole, and no extra server call is needed. Other views
+  /// (status filter, search) are not saved.
+  void _saveVisible() {
+    final userId = _buildUserId;
+    if (userId == null || !_isAllView(state.status, state.query)) {
+      return;
+    }
+    _saveFirstPage(userId, <Proposal>[
+      for (final String id in state.ids.take(ProposalCache.maxItems))
+        state.byId[id]!,
+    ]);
   }
 
   Future<void> _ignoreStorageErrors(Future<void> Function() action) async {
