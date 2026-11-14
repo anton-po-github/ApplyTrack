@@ -1,9 +1,12 @@
 import 'dart:async';
 
+import 'package:apply_track/core/db/app_database_provider.dart';
 import 'package:apply_track/core/links/external_link_opener.dart';
 import 'package:apply_track/features/auth/state/auth_controller.dart';
 import 'package:apply_track/features/auth/state/auth_dependencies.dart';
 import 'package:apply_track/features/auth/state/auth_state.dart';
+import 'package:apply_track/features/proposals/data/drift_proposal_cache.dart';
+import 'package:apply_track/features/proposals/data/proposal_cache.dart';
 import 'package:apply_track/features/proposals/data/proposals_api.dart';
 import 'package:apply_track/features/proposals/data/stats_api.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,6 +19,12 @@ final Provider<ProposalsApi> proposalsApiProvider = Provider<ProposalsApi>(
 
 final Provider<StatsApi> statsApiProvider = Provider<StatsApi>(
   (ref) => HttpStatsApi(ref.watch(apiClientProvider)),
+);
+
+/// The saved first page of the list. It uses the local database, which opens
+/// on the first query. Tests replace it with a fake.
+final Provider<ProposalCache> proposalCacheProvider = Provider<ProposalCache>(
+  (ref) => DriftProposalCache(ref.watch(appDatabaseProvider)),
 );
 
 /// Opens links in the system browser. Tests replace it with a fake.
