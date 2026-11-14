@@ -87,6 +87,8 @@ class _ProposalListScreenState extends ConsumerState<ProposalListScreen> {
       );
     }
 
+    final showsBanner = list.phase == ProposalListPhase.error && !list.isEmpty;
+
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
         key: const Key('add-proposal'),
@@ -131,8 +133,11 @@ class _ProposalListScreenState extends ConsumerState<ProposalListScreen> {
               selected: list.status,
               onSelected: _controller.setStatus,
             ),
-            if (list.phase == ProposalListPhase.error && !list.isEmpty)
-              _ErrorBanner(error: list.error, onRetry: _controller.retry),
+            if (showsBanner)
+              if (list.showsSavedData)
+                _OfflineBanner(onRetry: _controller.retry)
+              else
+                _ErrorBanner(error: list.error, onRetry: _controller.retry),
             Expanded(
               child: _Content(
                 list: list,
@@ -358,6 +363,39 @@ class _ErrorBanner extends StatelessWidget {
                     ? 'Something went wrong.'
                     : apiErrorMessage(error!),
                 style: TextStyle(color: scheme.onErrorContainer),
+              ),
+            ),
+            TextButton(onPressed: onRetry, child: const Text('Retry')),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The server did not answer, and the rows on screen are the saved copy.
+class _OfflineBanner extends StatelessWidget {
+  const new({required this.onRetry});
+
+  final Future<void> Function() onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Card(
+      key: const Key('list-offline-banner'),
+      color: scheme.secondaryContainer,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        child: Row(
+          children: <Widget>[
+            Icon(Icons.cloud_off, color: scheme.onSecondaryContainer),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Offline. Showing saved data.',
+                style: TextStyle(color: scheme.onSecondaryContainer),
               ),
             ),
             TextButton(onPressed: onRetry, child: const Text('Retry')),

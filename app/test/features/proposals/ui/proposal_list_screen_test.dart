@@ -27,6 +27,7 @@ typedef Gate = Completer<ApiResult<ProposalPage>>;
 void main() {
   late FakeProposalsApi api;
   late FakeDebounceTimers timers;
+  late FakeProposalCache cache;
 
   // "Today" in all tests: 6 Nov 2026.
   final now = DateTime(2026, 11, 6, 10);
@@ -63,7 +64,7 @@ void main() {
       ProviderScope(
         overrides: [
           proposalsApiProvider.overrideWithValue(api),
-          proposalCacheProvider.overrideWithValue(FakeProposalCache()),
+          proposalCacheProvider.overrideWithValue(cache),
           currentUserIdProvider.overrideWithValue('u1'),
           debounceTimerFactoryProvider.overrideWithValue(timers.create),
           clockProvider.overrideWithValue(() => now),
@@ -91,6 +92,7 @@ void main() {
   setUp(() {
     api = FakeProposalsApi();
     timers = FakeDebounceTimers();
+    cache = FakeProposalCache();
   });
 
   group('loading', () {
@@ -424,6 +426,41 @@ void main() {
       expect(find.byKey(const Key('list-error-banner')), findsNothing);
       expect(card(2), findsOneWidget);
     });
+
+    testWidgets(
+      'a failed server call with saved rows shows the offline banner',
+      (tester) async {
+        await cache.replaceFirstPage('u1', <Proposal>[
+          makeProposal(2),
+          makeProposal(1),
+        ]);
+        api.listHandler = (call) async =>
+            const ApiErr<ProposalPage>(ApiError.network());
+
+        await pumpList(tester);
+
+        expect(find.byKey(const Key('list-offline-banner')), findsOneWidget);
+        expect(find.text('Offline. Showing saved data.'), findsOneWidget);
+        expect(find.byKey(const Key('list-error-banner')), findsNothing);
+        expect(find.byKey(const Key('list-error')), findsNothing);
+        expect(find.byKey(const Key('list-loading')), findsNothing);
+        expect(card(2), findsOneWidget);
+        expect(card(1), findsOneWidget);
+
+        api.listHandler = (call) async => pageOf(<Proposal>[makeProposal(3)]);
+        await tester.tap(
+          find.descendant(
+            of: find.byKey(const Key('list-offline-banner')),
+            matching: find.text('Retry'),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('list-offline-banner')), findsNothing);
+        expect(card(3), findsOneWidget);
+        expect(card(1), findsNothing);
+      },
+    );
   });
 
   group('paging and refresh', () {
