@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'auth_test_helpers.dart';
+import 'fake_proposal_cache.dart';
 import 'fake_proposals_api.dart';
 import 'fake_stats_api.dart';
 
@@ -37,6 +38,7 @@ Future<void> pumpApp(
         proposalsApiProvider.overrideWithValue(
           proposalsApi ?? FakeProposalsApi(),
         ),
+        proposalCacheProvider.overrideWithValue(FakeProposalCache()),
         statsApiProvider.overrideWithValue(statsApi ?? FakeStatsApi()),
         initialLocationProvider.overrideWithValue(location),
       ],

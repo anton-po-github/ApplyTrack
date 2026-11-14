@@ -14,6 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../support/fake_proposal_cache.dart';
 import '../../../support/fake_proposals_api.dart';
 import '../../../support/fake_stats_api.dart';
 
@@ -68,6 +69,7 @@ void main() {
         overrides: [
           statsApiProvider.overrideWithValue(statsApi),
           proposalsApiProvider.overrideWithValue(proposalsApi),
+          proposalCacheProvider.overrideWithValue(FakeProposalCache()),
           currentUserIdProvider.overrideWithValue('u1'),
         ],
         child: MaterialApp.router(routerConfig: router),

@@ -26,6 +26,7 @@ final class ProposalListState {
     this.phase = ProposalListPhase.loading,
     this.error,
     this.isWriting = false,
+    this.showsSavedData = false,
   });
 
   static const Object _keep = Object();
@@ -50,6 +51,11 @@ final class ProposalListState {
   /// True while a create, update or delete runs. Use it to block double taps.
   final bool isWriting;
 
+  /// True while the rows come from the local cache and not from the server.
+  /// The screen shows the "saved data" banner when this is true and the last
+  /// request failed.
+  final bool showsSavedData;
+
   int get length => ids.length;
   bool get isEmpty => ids.isEmpty;
   bool get hasMore => nextCursor != null;
@@ -72,6 +78,7 @@ final class ProposalListState {
     Object? error = _keep,
     ProposalListPhase? phase,
     bool? isWriting,
+    bool? showsSavedData,
   }) => ProposalListState(
     byId: byId ?? this.byId,
     ids: ids ?? this.ids,
@@ -83,5 +90,6 @@ final class ProposalListState {
     phase: phase ?? this.phase,
     error: identical(error, _keep) ? this.error : error as ApiError?,
     isWriting: isWriting ?? this.isWriting,
+    showsSavedData: showsSavedData ?? this.showsSavedData,
   );
 }

@@ -18,6 +18,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../support/app_test_helpers.dart';
 import '../../../support/fake_external_link_opener.dart';
+import '../../../support/fake_proposal_cache.dart';
 import '../../../support/fake_proposals_api.dart';
 
 void main() {
@@ -98,6 +99,7 @@ void main() {
       ProviderScope(
         overrides: [
           proposalsApiProvider.overrideWithValue(api),
+          proposalCacheProvider.overrideWithValue(FakeProposalCache()),
           externalLinkOpenerProvider.overrideWithValue(opener),
           currentUserIdProvider.overrideWithValue('u1'),
           clockProvider.overrideWithValue(() => DateTime(2026, 11, 6, 10)),

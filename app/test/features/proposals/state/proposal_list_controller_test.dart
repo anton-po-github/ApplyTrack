@@ -16,6 +16,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../../support/auth_test_helpers.dart';
 import '../../../support/fake_debounce_timers.dart';
+import '../../../support/fake_proposal_cache.dart';
 import '../../../support/fake_proposals_api.dart';
 import '../../../support/proposal_fixtures.dart';
 
@@ -39,6 +40,7 @@ typedef Gate = Completer<ApiResult<ProposalPage>>;
 void main() {
   late FakeProposalsApi api;
   late FakeDebounceTimers timers;
+  late FakeProposalCache cache;
   late ProviderContainer container;
 
   ProposalListState read() => container.read(proposalListProvider);
@@ -72,9 +74,11 @@ void main() {
   setUp(() {
     api = FakeProposalsApi();
     timers = FakeDebounceTimers();
+    cache = FakeProposalCache();
     container = ProviderContainer(
       overrides: [
         proposalsApiProvider.overrideWithValue(api),
+        proposalCacheProvider.overrideWithValue(cache),
         currentUserIdProvider.overrideWith(
           (ref) => ref.watch(testUserIdProvider),
         ),
@@ -600,6 +604,7 @@ void main() {
           authRepositoryProvider.overrideWithValue(repo),
           googleSignInProvider.overrideWithValue(FakeGoogleIdTokenProvider()),
           proposalsApiProvider.overrideWithValue(api),
+          proposalCacheProvider.overrideWithValue(cache),
         ],
       );
       addTearDown(real.dispose);

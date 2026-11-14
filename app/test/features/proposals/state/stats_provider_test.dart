@@ -10,6 +10,7 @@ import 'package:apply_track/features/proposals/state/stats_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../support/fake_proposal_cache.dart';
 import '../../../support/fake_proposals_api.dart';
 import '../../../support/fake_stats_api.dart';
 import '../../../support/proposal_fixtures.dart';
@@ -63,6 +64,7 @@ void main() {
       overrides: [
         statsApiProvider.overrideWithValue(api),
         proposalsApiProvider.overrideWithValue(proposalsApi),
+        proposalCacheProvider.overrideWithValue(FakeProposalCache()),
         currentUserIdProvider.overrideWith(
           (ref) => ref.watch(testUserIdProvider),
         ),
