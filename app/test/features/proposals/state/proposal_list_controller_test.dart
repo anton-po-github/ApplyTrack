@@ -965,4 +965,101 @@ void main() {
       expect(api.listCalls, hasLength(1));
     });
   });
+
+  group('saved first page', () {
+    Future<List<String>> savedIds([String userId = 'u1']) async => [
+      for (final proposal in await cache.firstPage(userId)) proposal.id,
+    ];
+
+    test('saves the server page only for All without search', () async {
+      api.listHandler = (call) async =>
+          pageOf([makeProposal(2), makeProposal(1)]);
+      await start();
+      expect(await savedIds(), [proposalId(2), proposalId(1)]);
+
+      api.listHandler = (call) async => pageOf([makeProposal(9)]);
+      controller().setQuery('flutter');
+      timers.last.fire();
+      await pumpEventQueue();
+      expect(read().ids, [proposalId(9)]);
+      expect(await savedIds(), [proposalId(2), proposalId(1)]);
+
+      await controller().setStatus(ProposalStatus.won);
+      expect(read().ids, [proposalId(9)]);
+      expect(await savedIds(), [proposalId(2), proposalId(1)]);
+    });
+
+    test('shows own saved rows at once, then the server page', () async {
+      await cache.replaceFirstPage('u1', [makeProposal(3), makeProposal(2)]);
+      await cache.replaceFirstPage('u2', [makeProposal(9)]);
+      final gates = gateEveryList();
+
+      await start();
+
+      expect(read().phase, ProposalListPhase.loading);
+      expect(read().ids, [proposalId(3), proposalId(2)]);
+      expect(read().showsSavedData, isTrue);
+      expect(read().nextCursor, isNull);
+
+      gates.single.complete(
+        pageOf([makeProposal(4), makeProposal(3)], next: 'c1'),
+      );
+      await pumpEventQueue();
+
+      expect(read().phase, ProposalListPhase.loaded);
+      expect(read().ids, [proposalId(4), proposalId(3)]);
+      expect(read().nextCursor, 'c1');
+      expect(read().showsSavedData, isFalse);
+    });
+
+    test('a failed server call keeps the saved rows', () async {
+      await cache.replaceFirstPage('u1', [makeProposal(2), makeProposal(1)]);
+      api.listHandler = (call) async =>
+          const ApiErr<ProposalPage>(ApiError.network());
+
+      await start();
+
+      expect(read().phase, ProposalListPhase.error);
+      expect(read().error?.code, ApiErrorCodes.network);
+      expect(read().ids, [proposalId(2), proposalId(1)]);
+      expect(read().showsSavedData, isTrue);
+    });
+
+    test('a slow read never replaces the server page', () async {
+      await cache.replaceFirstPage('u1', [makeProposal(1)]);
+      final gate = Completer<void>();
+      cache.firstPageGate = gate;
+      api.listHandler = (call) async => pageOf([makeProposal(5)]);
+
+      await start();
+      expect(read().ids, [proposalId(5)]);
+
+      gate.complete();
+      await pumpEventQueue();
+
+      expect(read().ids, [proposalId(5)]);
+      expect(read().phase, ProposalListPhase.loaded);
+      expect(read().showsSavedData, isFalse);
+    });
+
+    test('a broken cache does not stop the list', () async {
+      cache.throwOnAccess = true;
+      api.listHandler = (call) async => pageOf([makeProposal(1)]);
+
+      await start();
+
+      expect(read().phase, ProposalListPhase.loaded);
+      expect(read().ids, [proposalId(1)]);
+      expect(read().showsSavedData, isFalse);
+
+      await controller().setStatus(ProposalStatus.won);
+      api.listHandler = (call) async =>
+          const ApiErr<ProposalPage>(ApiError.network());
+      await controller().setStatus(null);
+
+      expect(read().phase, ProposalListPhase.error);
+      expect(read().isEmpty, isTrue);
+      expect(read().showsSavedData, isFalse);
+    });
+  });
 }

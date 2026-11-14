@@ -43,6 +43,10 @@ class ProposalListController extends Notifier<ProposalListState> {
   /// with the current one and drop such an answer.
   String? _buildUserId;
 
+  /// The most time we wait for the local storage. The server never waits
+  /// for it, but an error answer waits for the saved rows.
+  static const Duration _cacheReadLimit = Duration(seconds: 2);
+
   Timer? _debounce;
 
   /// Which action the Retry button repeats after an error.
@@ -66,6 +70,11 @@ class ProposalListController extends Notifier<ProposalListState> {
 
   /// Loads page 1 again with the current filter. Items stay visible while
   /// it runs. Used by pull to refresh and by Retry.
+  ///
+  /// When nothing is on screen yet and the view is "All" without search, the
+  /// saved first page is read at the same time. It shows at once if it is
+  /// ready before the server answers, and it stays on screen if the server
+  /// fails. The server call never waits for the storage.
   Future<void> refresh() async {
     if (!_canRun) {
       return;
@@ -74,7 +83,14 @@ class ProposalListController extends Notifier<ProposalListState> {
     _retryLoadMore = false;
     final status = state.status;
     final query = state.query;
+    final userId = ref.read(currentUserIdProvider);
+    final saved = userId != null && state.isEmpty && _isAllView(status, query)
+        ? _readSaved(userId)
+        : null;
     state = state.copyWith(phase: ProposalListPhase.loading, error: null);
+    if (saved != null) {
+      unawaited(_showSavedWhileLoading(saved, request));
+    }
 
     final result = await ref
         .read(proposalsApiProvider)
@@ -85,7 +101,19 @@ class ProposalListController extends Notifier<ProposalListState> {
     switch (result) {
       case ApiOk<ProposalPage>(:final ProposalPage value):
         state = _withPage(value, append: false);
+        if (userId != null && _isAllView(status, query)) {
+          _saveFirstPage(userId, value.items);
+        }
       case ApiErr<ProposalPage>(:final ApiError error):
+        if (saved != null) {
+          final rows = await saved;
+          if (!_isCurrent(request)) {
+            return;
+          }
+          if (rows.isNotEmpty && state.isEmpty) {
+            state = _withSaved(rows);
+          }
+        }
         state = state.copyWith(phase: ProposalListPhase.error, error: error);
     }
   }
@@ -314,7 +342,60 @@ class ProposalListController extends Notifier<ProposalListState> {
     );
   }
 
+  // ---------------------------------------------------------- saved copy
+
+  /// The saved first page of [userId]. It never throws: a storage error or a
+  /// slow storage gives an empty list, which means "nothing saved".
+  Future<List<Proposal>> _readSaved(String userId) async {
+    try {
+      return await ref
+          .read(proposalCacheProvider)
+          .firstPage(userId)
+          .timeout(_cacheReadLimit, onTimeout: () => const <Proposal>[]);
+    } on Exception {
+      return const <Proposal>[];
+    }
+  }
+
+  /// Shows the saved rows, but only while the server has not answered yet
+  /// (the list is empty and the phase is still `loading`). A saved copy never
+  /// replaces a newer server answer.
+  Future<void> _showSavedWhileLoading(
+    Future<List<Proposal>> saved,
+    int request,
+  ) async {
+    final rows = await saved;
+    if (rows.isEmpty || !_isCurrent(request)) {
+      return;
+    }
+    if (state.isEmpty && state.phase == ProposalListPhase.loading) {
+      state = _withSaved(rows);
+    }
+  }
+
+  /// Saves page 1 for later. Nobody waits for it and a storage error is
+  /// ignored: the cache is optional.
+  void _saveFirstPage(String userId, List<Proposal> items) {
+    unawaited(
+      _ignoreStorageErrors(
+        () => ref.read(proposalCacheProvider).replaceFirstPage(userId, items),
+      ),
+    );
+  }
+
+  Future<void> _ignoreStorageErrors(Future<void> Function() action) async {
+    try {
+      await action();
+    } on Exception {
+      // The cache is optional. The server answer is the truth.
+    }
+  }
+
   // -------------------------------------------------------------- helpers
+
+  /// Only the "All" view without search is saved and read from the cache.
+  static bool _isAllView(ProposalStatus? status, String? query) =>
+      status == null && query == null;
 
   bool get _canRun => ref.mounted && ref.read(currentUserIdProvider) != null;
 
@@ -339,6 +420,25 @@ class ProposalListController extends Notifier<ProposalListState> {
         isWriting: state.isWriting,
       );
 
+  /// Rows from the saved copy. No cursor: we do not know the next page.
+  ProposalListState _withSaved(List<Proposal> rows) {
+    final map = <String, Proposal>{};
+    final ids = <String>[];
+    for (final item in rows) {
+      if (!map.containsKey(item.id)) {
+        ids.add(item.id);
+      }
+      map[item.id] = item;
+    }
+    return state.copyWith(
+      byId: Map<String, Proposal>.unmodifiable(map),
+      ids: List<String>.unmodifiable(ids),
+      nextCursor: null,
+      showsSavedData: true,
+      error: null,
+    );
+  }
+
   ProposalListState _withPage(ProposalPage page, {required bool append}) {
     final map = append
         ? Map<String, Proposal>.of(state.byId)
@@ -360,6 +460,7 @@ class ProposalListController extends Notifier<ProposalListState> {
       nextCursor: next,
       phase: ProposalListPhase.loaded,
       error: null,
+      showsSavedData: false,
     );
   }
 }
