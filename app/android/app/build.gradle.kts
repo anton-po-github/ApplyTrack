@@ -6,10 +6,13 @@ plugins {
 
 android {
     namespace = "com.antonpo.applytrack"
-    compileSdk = flutter.compileSdkVersion
+    // The notification plugin needs compileSdk 37 or newer.
+    compileSdk = maxOf(flutter.compileSdkVersion, 37)
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
+        // The notification plugin needs desugaring (scheduled notifications).
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -27,6 +30,7 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        multiDexEnabled = true
     }
 
     buildTypes {
@@ -42,6 +46,10 @@ kotlin {
     compilerOptions {
         jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
     }
+}
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
 
 flutter {
