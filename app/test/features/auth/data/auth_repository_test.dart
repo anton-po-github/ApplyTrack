@@ -92,6 +92,7 @@ void main() {
   const expectedSession = Session(
     token: 'tok',
     expiresAtUnixSeconds: 1767225600,
+    user: _user,
   );
 
   group('success', () {
@@ -112,7 +113,7 @@ void main() {
       expect(await storage.read(), expectedSession);
     });
 
-    test('signIn cleans the email and saves the session', () async {
+    test('signIn cleans the email and saves the session and user', () async {
       final o = await repo.signIn(email: ' A@B.com ', password: 'pw123456');
 
       expect(o, isA<AuthSuccess>());
@@ -130,8 +131,10 @@ void main() {
       expect(await storage.read(), expectedSession);
     });
 
-    test('me returns the user and does not touch the session', () async {
-      await storage.write(expectedSession);
+    test('me adds the user to an old session and keeps the token', () async {
+      await storage.write(
+        const Session(token: 'tok', expiresAtUnixSeconds: 1767225600),
+      );
 
       final o = await repo.me();
 

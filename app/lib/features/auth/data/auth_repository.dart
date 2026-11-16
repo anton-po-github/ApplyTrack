@@ -20,7 +20,9 @@ abstract interface class AuthRepository {
 
   Future<AuthOutcome> signInWithGoogle({required String idToken});
 
-  /// Current user from the server. It does not change the saved session.
+  /// Current user from the server. The token and expiry of the saved session
+  /// do not change. Only the saved user is brought up to date (or added to a
+  /// session from an older version of the app).
   Future<AuthOutcome> me();
 
   /// The saved session, or null. Does not call the server.
@@ -68,10 +70,34 @@ final class DefaultAuthRepository implements AuthRepository {
   @override
   Future<AuthOutcome> me() async {
     final result = await _api.me();
-    return switch (result) {
-      ApiOk<UserProfile>(:final UserProfile value) => AuthSuccess(value),
-      ApiErr<UserProfile>(:final ApiError error) => _failure(error),
-    };
+    switch (result) {
+      case ApiOk<UserProfile>(:final UserProfile value):
+        await _rememberUser(value);
+        return AuthSuccess(value);
+      case ApiErr<UserProfile>(:final ApiError error):
+        return _failure(error);
+    }
+  }
+
+  /// Keeps the saved user equal to the server answer, so the app can start
+  /// offline next time. The token and expiry stay as they are. A storage
+  /// error is ignored: the saved user is only a help.
+  Future<void> _rememberUser(UserProfile user) async {
+    try {
+      final session = await _storage.read();
+      if (session == null || session.user == user) {
+        return;
+      }
+      await _storage.write(
+        Session(
+          token: session.token,
+          expiresAtUnixSeconds: session.expiresAtUnixSeconds,
+          user: user,
+        ),
+      );
+    } on Exception {
+      // The saved user is optional.
+    }
   }
 
   @override
@@ -93,6 +119,7 @@ final class DefaultAuthRepository implements AuthRepository {
             Session(
               token: value.token,
               expiresAtUnixSeconds: value.expiresAtUnixSeconds,
+              user: value.user,
             ),
           );
         } on Exception {

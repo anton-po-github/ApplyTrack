@@ -83,7 +83,7 @@ class AuthController extends Notifier<AuthState> {
     try {
       outcome = await ref.read(authRepositoryProvider).me();
     } on Exception {
-      return const AuthUnavailable();
+      return _startWithoutServer(session);
     }
     switch (outcome) {
       case AuthSuccess(:final UserProfile user):
@@ -93,8 +93,21 @@ class AuthController extends Notifier<AuthState> {
         return const AuthSignedOut();
       case AuthFailure():
         // No network, server error, anything else: keep the token.
-        return const AuthUnavailable();
+        return _startWithoutServer(session);
     }
+  }
+
+  /// The server did not answer. If this device knows the user, start signed
+  /// in with the saved user, so the saved data can open offline. The server
+  /// is still the truth: the first API call with a bad token gets a 401, and
+  /// then `_handleUnauthorized` signs the user out. Without a saved user (a
+  /// session from an older version) we cannot start, so Retry shows.
+  AuthState _startWithoutServer(Session session) {
+    final user = session.user;
+    if (user == null) {
+      return const AuthUnavailable();
+    }
+    return AuthSignedIn(user);
   }
 
   // -------------------------------------------------------------- actions

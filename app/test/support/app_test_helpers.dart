@@ -24,6 +24,7 @@ Future<void> pumpApp(
   String location = AppRoutes.home,
   double? width,
   FakeProposalsApi? proposalsApi,
+  FakeProposalCache? proposalCache,
   FakeStatsApi? statsApi,
 }) async {
   if (width != null) {
@@ -38,7 +39,9 @@ Future<void> pumpApp(
         proposalsApiProvider.overrideWithValue(
           proposalsApi ?? FakeProposalsApi(),
         ),
-        proposalCacheProvider.overrideWithValue(FakeProposalCache()),
+        proposalCacheProvider.overrideWithValue(
+          proposalCache ?? FakeProposalCache(),
+        ),
         statsApiProvider.overrideWithValue(statsApi ?? FakeStatsApi()),
         initialLocationProvider.overrideWithValue(location),
       ],

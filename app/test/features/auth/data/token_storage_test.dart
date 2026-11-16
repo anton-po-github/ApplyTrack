@@ -1,5 +1,6 @@
 import 'package:apply_track/features/auth/data/session.dart';
 import 'package:apply_track/features/auth/data/token_storage.dart';
+import 'package:apply_track/features/auth/domain/user_profile.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -109,6 +110,37 @@ void main() {
       await storage.clear();
       expect(await storage.read(), isNull);
     });
+
+    test('a session with a user is read back with the user', () async {
+      const withUser = Session(
+        token: 'abc',
+        expiresAtUnixSeconds: 1767225600,
+        user: UserProfile(id: 'u1', email: 'a@b.com', displayName: 'Anton'),
+      );
+
+      await storage.write(withUser);
+
+      expect(await storage.read(), withUser);
+      expect(fake.data.keys, <String>[SecureTokenStorage.storageKey]);
+    });
+
+    for (final old in <String, String>{
+      'old session without a user': '{"token":"abc","exp":1767225600}',
+      'user is not an object': '{"token":"abc","exp":1767225600,"user":"u1"}',
+      'user has no email':
+          '{"token":"abc","exp":1767225600,'
+          '"user":{"id":"u1","displayName":"A"}}',
+      'user has an empty id':
+          '{"token":"abc","exp":1767225600,'
+          '"user":{"id":"","email":"a@b.com","displayName":"A"}}',
+    }.entries) {
+      test('${old.key} still gives a valid session, user is null', () async {
+        fake.data[SecureTokenStorage.storageKey] = old.value;
+
+        expect(await storage.read(), session);
+        expect(fake.data, isNotEmpty);
+      });
+    }
 
     for (final bad in <String, String>{
       'not json': 'not json',

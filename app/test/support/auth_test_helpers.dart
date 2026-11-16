@@ -19,9 +19,11 @@ const UserProfile testUser = UserProfile(
 );
 
 /// A session that is valid for one hour from now.
-Session validSession() => Session(
+/// Pass [user] for a session that knows its user (saved offline start).
+Session validSession({UserProfile? user}) => Session(
   token: 'tok',
   expiresAtUnixSeconds: DateTime.now().millisecondsSinceEpoch ~/ 1000 + 3600,
+  user: user,
 );
 
 final class FakeAuthRepository implements AuthRepository {

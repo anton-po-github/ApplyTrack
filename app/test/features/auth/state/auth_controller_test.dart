@@ -201,6 +201,23 @@ void main() {
       expect(repo.session, _validSession);
     });
 
+    test('no network and a saved user -> signed in with that user', () async {
+      final repo = _FakeRepo()
+        ..session = Session(
+          token: 'tok',
+          expiresAtUnixSeconds: _nowSeconds + 3600,
+          user: _user,
+        )
+        ..meOutcome = _network;
+      final c = await _start(repo);
+
+      final state = _stateOf(c);
+      expect(state, isA<AuthSignedIn>());
+      expect((state as AuthSignedIn).user, _user);
+      expect(repo.signOutCalls, 0);
+      expect(repo.session, isNotNull);
+    });
+
     test('server error -> Unavailable, token is kept', () async {
       final repo = _FakeRepo()
         ..session = _validSession

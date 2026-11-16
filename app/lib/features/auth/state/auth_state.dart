@@ -21,7 +21,9 @@ final class AuthSignedIn extends AuthState {
 }
 
 /// We have a saved session, but the server did not answer
-/// (no network, server error). The token is kept. The UI shows Retry.
+/// (no network, server error) and we do not know the user (the session is from
+/// an older version of the app). The token is kept. The UI shows Retry.
+/// With a saved user, the app starts as `AuthSignedIn` instead.
 final class AuthUnavailable extends AuthState {
   const new();
 }

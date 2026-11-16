@@ -1,4 +1,8 @@
+import 'package:apply_track/core/api/api_error.dart';
+import 'package:apply_track/core/api/api_result.dart';
+import 'package:apply_track/features/auth/domain/auth_outcome.dart';
 import 'package:apply_track/features/auth/ui/login_screen.dart';
+import 'package:apply_track/features/proposals/domain/proposal_page.dart';
 import 'package:apply_track/features/proposals/ui/proposal_list_screen.dart';
 import 'package:apply_track/features/proposals/ui/stats_screen.dart';
 import 'package:apply_track/features/shell/app_shell.dart';
@@ -7,6 +11,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../support/app_test_helpers.dart';
+import '../../support/auth_test_helpers.dart';
+import '../../support/fake_proposal_cache.dart';
+import '../../support/fake_proposals_api.dart';
+import '../../support/proposal_fixtures.dart';
 
 void main() {
   String currentPath(WidgetTester tester) => routerOf(
@@ -169,6 +177,43 @@ void main() {
 
       expect(find.text('Anton'), findsOneWidget);
       expect(find.byTooltip('Sign out'), findsOneWidget);
+    });
+  });
+
+  group('offline start', () {
+    testWidgets('no network: the saved user and the saved list open', (
+      tester,
+    ) async {
+      final repo = FakeAuthRepository(session: validSession(user: testUser))
+        ..meOutcome = const AuthFailure(
+          kind: AuthFailureKind.network,
+          message: 'No connection.',
+        );
+      final cache = FakeProposalCache();
+      await cache.replaceFirstPage(testUser.id, [
+        makeProposal(2),
+        makeProposal(1),
+      ]);
+      final api = FakeProposalsApi()
+        ..listHandler = (call) async =>
+            const ApiErr<ProposalPage>(ApiError.network());
+
+      await pumpApp(
+        tester,
+        repo,
+        width: 400,
+        proposalsApi: api,
+        proposalCache: cache,
+      );
+
+      expect(find.byType(AppShell), findsOneWidget);
+      expect(find.byKey(const Key('list-offline-banner')), findsOneWidget);
+      for (final n in <int>[2, 1]) {
+        expect(
+          find.byKey(ValueKey<String>('proposal-card-${proposalId(n)}')),
+          findsOneWidget,
+        );
+      }
     });
   });
 }
