@@ -1,4 +1,5 @@
 import 'package:apply_track/app.dart';
+import 'package:apply_track/core/notifications/notification_scheduler_provider.dart';
 import 'package:apply_track/features/auth/state/auth_dependencies.dart';
 import 'package:apply_track/features/proposals/state/proposals_dependencies.dart';
 import 'package:apply_track/features/shell/app_shell.dart';
@@ -9,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'auth_test_helpers.dart';
+import 'fake_notification_scheduler.dart';
 import 'fake_proposal_cache.dart';
 import 'fake_proposals_api.dart';
 import 'fake_stats_api.dart';
@@ -26,6 +28,7 @@ Future<void> pumpApp(
   FakeProposalsApi? proposalsApi,
   FakeProposalCache? proposalCache,
   FakeStatsApi? statsApi,
+  FakeNotificationScheduler? notificationScheduler,
 }) async {
   if (width != null) {
     tester.view.physicalSize = Size(width, 900);
@@ -43,6 +46,9 @@ Future<void> pumpApp(
           proposalCache ?? FakeProposalCache(),
         ),
         statsApiProvider.overrideWithValue(statsApi ?? FakeStatsApi()),
+        notificationSchedulerProvider.overrideWithValue(
+          notificationScheduler ?? FakeNotificationScheduler(),
+        ),
         initialLocationProvider.overrideWithValue(location),
       ],
       child: const AppRoot(),
