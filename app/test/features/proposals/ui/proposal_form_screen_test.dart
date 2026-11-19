@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:apply_track/core/api/api_error.dart';
 import 'package:apply_track/core/api/api_result.dart';
+import 'package:apply_track/core/notifications/notification_scheduler_provider.dart';
 import 'package:apply_track/features/auth/state/auth_dependencies.dart';
 import 'package:apply_track/features/proposals/domain/calendar_date.dart';
 import 'package:apply_track/features/proposals/domain/proposal.dart';
@@ -17,6 +18,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../support/app_test_helpers.dart';
+import '../../../support/fake_notification_scheduler.dart';
 import '../../../support/fake_proposal_cache.dart';
 import '../../../support/fake_proposals_api.dart';
 import '../../../support/proposal_fixtures.dart';
@@ -85,6 +87,9 @@ void main() {
         overrides: [
           proposalsApiProvider.overrideWithValue(api),
           proposalCacheProvider.overrideWithValue(FakeProposalCache()),
+          notificationSchedulerProvider.overrideWithValue(
+            FakeNotificationScheduler(),
+          ),
           currentUserIdProvider.overrideWithValue('u1'),
           clockProvider.overrideWithValue(() => DateTime(2026, 11, 6, 10)),
         ],

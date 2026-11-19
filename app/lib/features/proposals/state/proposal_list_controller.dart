@@ -10,6 +10,7 @@ import 'package:apply_track/features/proposals/domain/proposal_field.dart';
 import 'package:apply_track/features/proposals/domain/proposal_page.dart';
 import 'package:apply_track/features/proposals/domain/proposal_status.dart';
 import 'package:apply_track/features/proposals/domain/proposal_validators.dart';
+import 'package:apply_track/features/proposals/state/follow_up_reminder_service.dart';
 import 'package:apply_track/features/proposals/state/proposal_list_state.dart';
 import 'package:apply_track/features/proposals/state/proposals_dependencies.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -105,6 +106,7 @@ class ProposalListController extends Notifier<ProposalListState> {
         if (userId != null && _isAllView(status, query)) {
           _saveFirstPage(userId, value.items);
         }
+        _reconcileReminders(value.items);
       case ApiErr<ProposalPage>(:final ApiError error):
         if (saved != null) {
           final rows = await saved;
@@ -227,7 +229,10 @@ class ProposalListController extends Notifier<ProposalListState> {
     }
     return _write<Proposal>(
       call: (api) => api.create(draft),
-      onOk: (_) => unawaited(refresh()),
+      onOk: (created) {
+        _syncReminder(created);
+        unawaited(refresh());
+      },
     );
   }
 
@@ -240,8 +245,11 @@ class ProposalListController extends Notifier<ProposalListState> {
     }
     return _write<Proposal>(
       call: (api) => api.update(id, draft),
-      onOk: _applyUpdated,
-      onNotFound: () => _removeLocal(id),
+      onOk: (updated) {
+        _syncReminder(updated);
+        _applyUpdated(updated);
+      },
+      onNotFound: () => _forget(id),
     );
   }
 
@@ -249,8 +257,8 @@ class ProposalListController extends Notifier<ProposalListState> {
   /// from the list too, and still return the error.
   Future<ApiResult<void>> delete(String id) => _write<void>(
     call: (api) => api.delete(id),
-    onOk: (_) => _removeLocal(id),
-    onNotFound: () => _removeLocal(id),
+    onOk: (_) => _forget(id),
+    onNotFound: () => _forget(id),
   );
 
   /// One write at a time. The check and the flag run without any `await`,
@@ -313,6 +321,27 @@ class ProposalListController extends Notifier<ProposalListState> {
 
   void _announceChange() {
     ref.read(proposalsChangedProvider.notifier).notify();
+  }
+
+  // ------------------------------------------------------------ reminders
+
+  /// Reminders follow the server answer. The reminder service owns the rules
+  /// and never throws, so nobody waits for it.
+  void _syncReminder(Proposal proposal) {
+    unawaited(ref.read(followUpReminderServiceProvider).sync(proposal));
+  }
+
+  /// Page 1 from the server is the truth: every row gets its reminder set,
+  /// replaced or removed. Saved rows never come here.
+  void _reconcileReminders(List<Proposal> items) {
+    unawaited(ref.read(followUpReminderServiceProvider).reconcile(items));
+  }
+
+  /// The item is gone on the server: it leaves the list and loses its
+  /// reminder.
+  void _forget(String id) {
+    unawaited(ref.read(followUpReminderServiceProvider).remove(id));
+    _removeLocal(id);
   }
 
   // -------------------------------------------------------- local patches

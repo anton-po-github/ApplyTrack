@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:apply_track/core/api/api_error.dart';
 import 'package:apply_track/core/api/api_result.dart';
 import 'package:apply_track/core/layout/window_size.dart';
+import 'package:apply_track/core/notifications/notification_scheduler_provider.dart';
 import 'package:apply_track/features/proposals/domain/proposal_stats.dart';
 import 'package:apply_track/features/proposals/domain/proposal_status.dart';
 import 'package:apply_track/features/proposals/state/proposal_list_controller.dart';
@@ -14,6 +15,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../support/fake_notification_scheduler.dart';
 import '../../../support/fake_proposal_cache.dart';
 import '../../../support/fake_proposals_api.dart';
 import '../../../support/fake_stats_api.dart';
@@ -70,6 +72,9 @@ void main() {
           statsApiProvider.overrideWithValue(statsApi),
           proposalsApiProvider.overrideWithValue(proposalsApi),
           proposalCacheProvider.overrideWithValue(FakeProposalCache()),
+          notificationSchedulerProvider.overrideWithValue(
+            FakeNotificationScheduler(),
+          ),
           currentUserIdProvider.overrideWithValue('u1'),
         ],
         child: MaterialApp.router(routerConfig: router),

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:apply_track/core/api/api_error.dart';
 import 'package:apply_track/core/api/api_result.dart';
+import 'package:apply_track/core/notifications/notification_scheduler_provider.dart';
 import 'package:apply_track/features/auth/state/auth_controller.dart';
 import 'package:apply_track/features/auth/state/auth_dependencies.dart';
 import 'package:apply_track/features/auth/state/auth_state.dart';
@@ -16,6 +17,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../../support/auth_test_helpers.dart';
 import '../../../support/fake_debounce_timers.dart';
+import '../../../support/fake_notification_scheduler.dart';
 import '../../../support/fake_proposal_cache.dart';
 import '../../../support/fake_proposals_api.dart';
 import '../../../support/proposal_fixtures.dart';
@@ -79,6 +81,9 @@ void main() {
       overrides: [
         proposalsApiProvider.overrideWithValue(api),
         proposalCacheProvider.overrideWithValue(cache),
+        notificationSchedulerProvider.overrideWithValue(
+          FakeNotificationScheduler(),
+        ),
         currentUserIdProvider.overrideWith(
           (ref) => ref.watch(testUserIdProvider),
         ),
@@ -605,6 +610,9 @@ void main() {
           googleSignInProvider.overrideWithValue(FakeGoogleIdTokenProvider()),
           proposalsApiProvider.overrideWithValue(api),
           proposalCacheProvider.overrideWithValue(cache),
+          notificationSchedulerProvider.overrideWithValue(
+            FakeNotificationScheduler(),
+          ),
         ],
       );
       addTearDown(real.dispose);
