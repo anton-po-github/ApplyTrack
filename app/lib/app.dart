@@ -1,3 +1,4 @@
+import 'package:apply_track/features/proposals/state/follow_up_reminder_cleaner.dart';
 import 'package:apply_track/features/proposals/state/proposal_cache_cleaner.dart';
 import 'package:apply_track/router/app_router.dart';
 import 'package:apply_track/theme/app_theme.dart';
@@ -29,6 +30,8 @@ class AppRoot extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Keeps the saved proposal list clean when a user leaves.
     ref.watch(proposalCacheCleanerProvider);
+    // Removes the phone reminders when a user leaves.
+    ref.watch(followUpReminderCleanerProvider);
     return App(router: ref.watch(appRouterProvider));
   }
 }
