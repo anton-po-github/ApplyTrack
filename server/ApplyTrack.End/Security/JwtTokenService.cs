@@ -8,7 +8,7 @@ namespace ApplyTrack.End.Security;
 
 public sealed class JwtTokenService : ITokenService
 {
-    private static readonly TimeSpan Lifetime = TimeSpan.FromHours(12);
+    private const int LifetimeYears = 10;
     private const int MinSecretBytes = 32;
 
     private readonly JsonWebTokenHandler _handler = new();
@@ -36,7 +36,7 @@ public sealed class JwtTokenService : ITokenService
     public TokenResult Create(Guid userId)
     {
         DateTimeOffset now = _time.GetUtcNow();
-        DateTimeOffset expires = now.Add(Lifetime);
+        DateTimeOffset expires = now.AddYears(LifetimeYears);
 
         var descriptor = new SecurityTokenDescriptor
         {

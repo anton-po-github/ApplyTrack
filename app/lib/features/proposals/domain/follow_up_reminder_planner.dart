@@ -1,4 +1,5 @@
 import 'package:apply_track/core/notifications/notification_id.dart';
+import 'package:apply_track/features/proposals/domain/calendar_date.dart';
 import 'package:apply_track/features/proposals/domain/proposal.dart';
 import 'package:apply_track/features/proposals/domain/proposal_status.dart';
 import 'package:meta/meta.dart';
@@ -41,16 +42,29 @@ final class ReminderPlan {
 /// Pure and O(1). [now] is a parameter, so tests control the time.
 ReminderPlan? planReminder(Proposal proposal, DateTime now) {
   final date = proposal.followUpDate;
-  if (date == null) {
+  if (date == null || _isClosed(proposal.status)) {
     return null;
   }
-  if (proposal.status == ProposalStatus.won ||
-      proposal.status == ProposalStatus.lost) {
-    return null;
-  }
-  final when = DateTime(date.year, date.month, date.day, followUpReminderHour);
+  final when = _reminderTime(date);
   if (!when.isAfter(now)) {
     return null;
   }
   return ReminderPlan(id: notificationIdFor(proposal.id), when: when);
 }
+
+/// True when the proposal is still open and its reminder time has passed.
+/// Its reminder already came, so nothing is waiting for it. The notification
+/// may still sit on the phone, because the user has not seen it yet.
+bool hasReminderTimePassed(Proposal proposal, DateTime now) {
+  final date = proposal.followUpDate;
+  if (date == null || _isClosed(proposal.status)) {
+    return false;
+  }
+  return !_reminderTime(date).isAfter(now);
+}
+
+bool _isClosed(ProposalStatus status) =>
+    status == ProposalStatus.won || status == ProposalStatus.lost;
+
+DateTime _reminderTime(CalendarDate date) =>
+    DateTime(date.year, date.month, date.day, followUpReminderHour);

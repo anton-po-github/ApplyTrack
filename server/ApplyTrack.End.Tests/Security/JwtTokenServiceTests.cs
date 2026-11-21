@@ -57,14 +57,14 @@ public class JwtTokenServiceTests
     }
 
     [Fact]
-    public void Create_ExpiresInTwelveHours()
+    public void Create_ExpiresInTenYears()
     {
         var start = DateTimeOffset.UtcNow;
         var time = new FakeTimeProvider(start);
 
         TokenResult token = CreateService(time).Create(Guid.CreateVersion7());
 
-        Assert.Equal(start.AddHours(12).ToUnixTimeSeconds(), token.ExpiresAtUnixSeconds);
+        Assert.Equal(start.AddYears(10).ToUnixTimeSeconds(), token.ExpiresAtUnixSeconds);
     }
 
     [Fact]

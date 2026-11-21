@@ -70,7 +70,7 @@ public class MeEndpointTests(ApiFactory factory)
     [Fact]
     public async Task ExpiredToken_Returns401()
     {
-        var time = new FakeTimeProvider(DateTimeOffset.UtcNow.AddHours(-13)); // 12 h life + 1 h
+        var time = new FakeTimeProvider(DateTimeOffset.UtcNow.AddYears(-10).AddHours(-1)); // 10 y life + 1 h
         string token = TokenService(time).Create(Guid.CreateVersion7()).Token;
 
         Assert.Equal(HttpStatusCode.Unauthorized, await GetMeAsync(token));

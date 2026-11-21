@@ -18,6 +18,12 @@ Reminders work on Android and iOS only. The web version shows none.
 - On some Samsung phones reminders can be late until the app is opened again.
   Set the battery use of the app to Unrestricted (Settings > Apps >
   ApplyTrack > Battery) and take it out of Sleeping apps.
+- After a new sign in, reminders outside the first page of the list are gone
+  until you save those proposals again.
+- If you move a follow-up date into the past on another device, the old
+  reminder on this phone can still come once.
+- A reminder that came stays on the phone until you swipe it away. Opening
+  the app does not remove it.
 - A reminder does not wake the screen. This depends on the phone settings
   (for example Always On Display or Edge lighting).
 

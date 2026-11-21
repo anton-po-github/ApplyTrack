@@ -122,4 +122,25 @@ void main() {
       notificationIdFor(proposalId(2)),
     ]);
   });
+
+  test('reconcile keeps the notification of a reminder that came', () async {
+    // Row 4: Sent, the date was yesterday. Its reminder came already, and
+    // the user may not have seen it yet. Row 5 is Won: nothing to remind.
+    api.listHandler = (call) async => pageOf([
+      makeProposal(
+        4,
+        status: ProposalStatus.sent,
+        followUpDate: CalendarDate(2026, 11, 18),
+      ),
+      makeProposal(5, status: ProposalStatus.won, followUpDate: tomorrow),
+    ]);
+
+    await start();
+
+    expect(
+      scheduler.cancelledIds,
+      isNot(contains(notificationIdFor(proposalId(4)))),
+    );
+    expect(scheduler.cancelledIds, contains(notificationIdFor(proposalId(5))));
+  });
 }

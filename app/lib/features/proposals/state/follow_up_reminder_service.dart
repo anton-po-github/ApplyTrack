@@ -58,11 +58,17 @@ class FollowUpReminderService {
 
   /// Runs [sync] for every row, one after the other. [proposals] must come
   /// from a server answer. It stops when [clearAll] runs meanwhile.
+  ///
+  /// A row whose reminder already came is skipped. A cancel would also remove
+  /// its notification from the phone before the user has seen it.
   Future<void> reconcile(Iterable<Proposal> proposals) async {
     final generation = _generation;
     for (final proposal in proposals) {
       if (generation != _generation) {
         return;
+      }
+      if (hasReminderTimePassed(proposal, _clock())) {
+        continue;
       }
       await sync(proposal);
     }
