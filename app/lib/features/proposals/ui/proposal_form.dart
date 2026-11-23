@@ -2,6 +2,7 @@ import 'package:apply_track/core/api/api_error.dart';
 import 'package:apply_track/core/api/api_error_message.dart';
 import 'package:apply_track/core/api/api_result.dart';
 import 'package:apply_track/core/layout/max_content_width.dart';
+import 'package:apply_track/core/notifications/app_settings_opener.dart';
 import 'package:apply_track/core/notifications/reminder_permission_flow.dart';
 import 'package:apply_track/features/auth/state/auth_dependencies.dart';
 import 'package:apply_track/features/proposals/domain/calendar_date.dart';
@@ -344,8 +345,8 @@ class _ProposalFormState extends ConsumerState<ProposalForm> {
     }
   }
 
-  Future<void> _showBatteryHint() {
-    return showDialog<void>(
+  Future<void> _showBatteryHint() async {
+    final openSettings = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         key: const Key('battery-hint-dialog'),
@@ -354,12 +355,20 @@ class _ProposalFormState extends ConsumerState<ProposalForm> {
         actions: <Widget>[
           TextButton(
             key: const Key('battery-hint-ok'),
-            onPressed: () => Navigator.of(dialogContext).pop(),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
             child: const Text('Got it'),
+          ),
+          FilledButton(
+            key: const Key('battery-hint-settings'),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Open settings'),
           ),
         ],
       ),
     );
+    if ((openSettings ?? false) && mounted) {
+      await ref.read(appSettingsOpenerProvider).open();
+    }
   }
 
   // ---------------------------------------------------------------- build
