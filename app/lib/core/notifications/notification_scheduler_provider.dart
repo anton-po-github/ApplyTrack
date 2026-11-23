@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:apply_track/core/notifications/local_notification_scheduler.dart';
 import 'package:apply_track/core/notifications/noop_notification_scheduler.dart';
 import 'package:apply_track/core/notifications/notification_scheduler.dart';
@@ -13,7 +15,10 @@ final Provider<NotificationScheduler> notificationSchedulerProvider =
           !kIsWeb &&
           (defaultTargetPlatform == TargetPlatform.android ||
               defaultTargetPlatform == TargetPlatform.iOS);
-      return supported
-          ? LocalNotificationScheduler()
-          : const NoopNotificationScheduler();
+      if (!supported) {
+        return const NoopNotificationScheduler();
+      }
+      final scheduler = LocalNotificationScheduler();
+      ref.onDispose(() => unawaited(scheduler.dispose()));
+      return scheduler;
     });

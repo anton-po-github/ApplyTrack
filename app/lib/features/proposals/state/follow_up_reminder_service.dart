@@ -50,6 +50,8 @@ class FollowUpReminderService {
       title: _title,
       body: _bodyFor(proposal),
       when: plan.when,
+      // The tap handler reads this id and opens the proposal.
+      payload: proposal.id,
     );
   }
 

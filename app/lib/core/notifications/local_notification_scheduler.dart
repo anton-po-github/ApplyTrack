@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:apply_track/core/notifications/notification_scheduler.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -38,7 +40,33 @@ final class LocalNotificationScheduler implements NotificationScheduler {
 
   final FlutterLocalNotificationsPlugin _plugin;
   final DateTime Function() _now;
+  final StreamController<String> _taps = StreamController<String>.broadcast();
   Future<bool>? _initialization;
+
+  @override
+  bool get isSupported => true;
+
+  @override
+  Stream<String> get taps => _taps.stream;
+
+  /// Stops the tap stream. Call it when the app is torn down.
+  Future<void> dispose() => _taps.close();
+
+  @override
+  Future<String?> launchPayload() async {
+    if (!await _ensureInitialized()) {
+      return null;
+    }
+    try {
+      final details = await _plugin.getNotificationAppLaunchDetails();
+      if (details == null || !details.didNotificationLaunchApp) {
+        return null;
+      }
+      return _payloadOf(details.notificationResponse);
+    } on Exception {
+      return null;
+    }
+  }
 
   @override
   Future<bool> requestPermission() async {
@@ -77,6 +105,7 @@ final class LocalNotificationScheduler implements NotificationScheduler {
     required String title,
     required String body,
     required DateTime when,
+    String? payload,
   }) async {
     if (!when.isAfter(_now())) {
       return false;
@@ -92,6 +121,7 @@ final class LocalNotificationScheduler implements NotificationScheduler {
         // One exact moment. UTC is enough, so no device time zone is needed.
         scheduledDate: tz.TZDateTime.from(when, tz.UTC),
         notificationDetails: _details,
+        payload: payload,
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       );
       return true;
@@ -143,10 +173,29 @@ final class LocalNotificationScheduler implements NotificationScheduler {
 
   Future<bool> _initialize() async {
     try {
-      await _plugin.initialize(settings: _settings);
+      await _plugin.initialize(
+        settings: _settings,
+        onDidReceiveNotificationResponse: _onResponse,
+      );
       return true;
     } on Exception {
       return false;
     }
+  }
+
+  void _onResponse(NotificationResponse response) {
+    final payload = _payloadOf(response);
+    if (payload != null && !_taps.isClosed) {
+      _taps.add(payload);
+    }
+  }
+
+  /// An empty payload is the same as no payload.
+  static String? _payloadOf(NotificationResponse? response) {
+    final payload = response?.payload;
+    if (payload == null || payload.isEmpty) {
+      return null;
+    }
+    return payload;
   }
 }

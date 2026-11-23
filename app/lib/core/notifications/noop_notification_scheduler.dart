@@ -6,6 +6,9 @@ final class NoopNotificationScheduler implements NotificationScheduler {
   const new();
 
   @override
+  bool get isSupported => false;
+
+  @override
   Future<bool> requestPermission() async => false;
 
   @override
@@ -14,6 +17,7 @@ final class NoopNotificationScheduler implements NotificationScheduler {
     required String title,
     required String body,
     required DateTime when,
+    String? payload,
   }) async => false;
 
   @override
@@ -21,4 +25,10 @@ final class NoopNotificationScheduler implements NotificationScheduler {
 
   @override
   Future<void> cancelAll() async {}
+
+  @override
+  Stream<String> get taps => const Stream<String>.empty();
+
+  @override
+  Future<String?> launchPayload() async => null;
 }

@@ -67,6 +67,7 @@ void main() {
     expect(scheduler.pending.single.id, notificationIdFor(proposalId(1)));
     expect(scheduler.pending.single.when, DateTime(2026, 11, 20, 9));
     expect(scheduler.pending.single.body, 'Proposal 1');
+    expect(scheduler.pending.single.payload, proposalId(1));
 
     // Update with another date: the same reminder moves.
     api.updateHandler = (id, draft) async => ApiOk<Proposal>(
