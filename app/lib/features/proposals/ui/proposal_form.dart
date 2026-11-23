@@ -2,6 +2,7 @@ import 'package:apply_track/core/api/api_error.dart';
 import 'package:apply_track/core/api/api_error_message.dart';
 import 'package:apply_track/core/api/api_result.dart';
 import 'package:apply_track/core/layout/max_content_width.dart';
+import 'package:apply_track/core/notifications/reminder_permission_flow.dart';
 import 'package:apply_track/features/auth/state/auth_dependencies.dart';
 import 'package:apply_track/features/proposals/domain/calendar_date.dart';
 import 'package:apply_track/features/proposals/domain/proposal.dart';
@@ -87,6 +88,12 @@ class _ProposalFormState extends ConsumerState<ProposalForm> {
       'Proposal limit reached. Delete one to add a new one.';
   static const String _goneMessage =
       'This proposal was not found. It may have been deleted.';
+  static const String _remindersOffHint =
+      'Reminders are off. Allow notifications for ApplyTrack in Settings.';
+  static const String _batteryHint =
+      'Some phones show reminders late. Open Settings > Apps > ApplyTrack > '
+      'Battery and choose "Unrestricted". Also keep the app out of '
+      '"Sleeping apps", and turn off Power saving.';
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
@@ -103,6 +110,7 @@ class _ProposalFormState extends ConsumerState<ProposalForm> {
   ServerFieldErrors _server = ServerFieldErrors.empty;
   String? _banner;
   bool _saving = false;
+  bool _remindersOff = false;
 
   bool get _isEdit => widget.proposalId != null;
 
@@ -304,11 +312,54 @@ class _ProposalFormState extends ConsumerState<ProposalForm> {
     }
     setState(() => _followUp = CalendarDate.fromDateTime(picked));
     _clearServerError(ProposalField.followUpDate);
+    await _askForReminders();
   }
 
   void _clearDate() {
-    setState(() => _followUp = null);
+    setState(() {
+      _followUp = null;
+      _remindersOff = false;
+    });
     _clearServerError(ProposalField.followUpDate);
+  }
+
+  /// The first date the user picks asks for the notification permission.
+  /// Later picks do not ask again (the flow remembers it).
+  Future<void> _askForReminders() async {
+    final flow = ref.read(reminderPermissionFlowProvider);
+    final outcome = await flow.onDatePicked();
+    if (!mounted) {
+      return;
+    }
+    switch (outcome) {
+      case ReminderPermissionOutcome.denied:
+        setState(() => _remindersOff = true);
+      case ReminderPermissionOutcome.granted:
+        if (await flow.takeBatteryHint() && mounted) {
+          await _showBatteryHint();
+        }
+      case ReminderPermissionOutcome.unsupported:
+      case ReminderPermissionOutcome.alreadyAsked:
+        break;
+    }
+  }
+
+  Future<void> _showBatteryHint() {
+    return showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        key: const Key('battery-hint-dialog'),
+        title: const Text('Reminders can be late'),
+        content: const Text(_batteryHint),
+        actions: <Widget>[
+          TextButton(
+            key: const Key('battery-hint-ok'),
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Got it'),
+          ),
+        ],
+      ),
+    );
   }
 
   // ---------------------------------------------------------------- build
@@ -424,6 +475,7 @@ class _ProposalFormState extends ConsumerState<ProposalForm> {
                   _DateField(
                     date: _followUp,
                     errorText: _serverError(ProposalField.followUpDate),
+                    helperText: _remindersOff ? _remindersOffHint : null,
                     onPick: _pickDate,
                     onClear: _clearDate,
                   ),
@@ -487,12 +539,14 @@ class _DateField extends StatelessWidget {
   const new({
     required this.date,
     required this.errorText,
+    required this.helperText,
     required this.onPick,
     required this.onClear,
   });
 
   final CalendarDate? date;
   final String? errorText;
+  final String? helperText;
   final VoidCallback onPick;
   final VoidCallback onClear;
 
@@ -507,6 +561,8 @@ class _DateField extends StatelessWidget {
           labelText: 'Follow-up date',
           border: const OutlineInputBorder(),
           errorText: errorText,
+          helperText: helperText,
+          helperMaxLines: 3,
           suffixIcon: Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[

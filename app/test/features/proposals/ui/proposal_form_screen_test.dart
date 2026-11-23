@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:apply_track/core/api/api_error.dart';
 import 'package:apply_track/core/api/api_result.dart';
+import 'package:apply_track/core/notifications/notification_prefs_store.dart';
 import 'package:apply_track/core/notifications/notification_scheduler_provider.dart';
 import 'package:apply_track/features/auth/state/auth_dependencies.dart';
 import 'package:apply_track/features/proposals/domain/calendar_date.dart';
@@ -25,6 +26,10 @@ import '../../../support/proposal_fixtures.dart';
 
 void main() {
   late FakeProposalsApi api;
+  late FakeNotificationScheduler scheduler;
+  // By default the permission question is already answered and the battery
+  // hint is already shown, so other tests see no dialog.
+  late InMemoryNotificationPrefsStore prefs;
 
   // A proposal with every field filled. Its id is [routeTestId].
   final fullProposal = Proposal(
@@ -87,9 +92,8 @@ void main() {
         overrides: [
           proposalsApiProvider.overrideWithValue(api),
           proposalCacheProvider.overrideWithValue(FakeProposalCache()),
-          notificationSchedulerProvider.overrideWithValue(
-            FakeNotificationScheduler(),
-          ),
+          notificationSchedulerProvider.overrideWithValue(scheduler),
+          notificationPrefsStoreProvider.overrideWithValue(prefs),
           currentUserIdProvider.overrideWithValue('u1'),
           clockProvider.overrideWithValue(() => DateTime(2026, 11, 6, 10)),
         ],
@@ -131,6 +135,8 @@ void main() {
       null;
 
   setUp(() {
+    scheduler = FakeNotificationScheduler();
+    prefs = InMemoryNotificationPrefsStore(asked: true, batteryHintShown: true);
     api = FakeProposalsApi();
     api.createHandler = (draft) async => ApiOk<Proposal>(makeProposal(1));
     api.updateHandler = (id, draft) async => ApiOk<Proposal>(fullProposal);
@@ -311,6 +317,53 @@ void main() {
 
       expect(api.createCalls.single.followUpDate, CalendarDate(2026, 11, 6));
       expect(api.createCalls.single.toJson()['followUpDate'], '2026-11-06');
+    });
+  });
+
+  group('reminder permission', () {
+    const offHint =
+        'Reminders are off. Allow notifications for ApplyTrack in Settings.';
+
+    Future<void> pickDate(WidgetTester tester) async {
+      await tester.tap(find.byKey(const Key('field-follow-up')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('a denied answer shows the hint once', (tester) async {
+      prefs = InMemoryNotificationPrefsStore();
+      scheduler.permissionResult = false;
+      await openNew(tester);
+
+      await pickDate(tester);
+      expect(find.text(offHint), findsOneWidget);
+      expect(find.byKey(const Key('battery-hint-dialog')), findsNothing);
+
+      // The user picks a date again: no new question, no hint.
+      await tester.tap(find.byKey(const Key('follow-up-clear')));
+      await tester.pumpAndSettle();
+      await pickDate(tester);
+      expect(find.text(offHint), findsNothing);
+      expect(scheduler.permissionRequests, 1);
+    });
+
+    testWidgets('an allowed answer shows the battery hint once', (
+      tester,
+    ) async {
+      prefs = InMemoryNotificationPrefsStore();
+      await openNew(tester);
+
+      await pickDate(tester);
+      expect(find.byKey(const Key('battery-hint-dialog')), findsOneWidget);
+      expect(find.text(offHint), findsNothing);
+
+      await tester.tap(find.byKey(const Key('battery-hint-ok')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('follow-up-clear')));
+      await tester.pumpAndSettle();
+      await pickDate(tester);
+      expect(find.byKey(const Key('battery-hint-dialog')), findsNothing);
     });
   });
 
